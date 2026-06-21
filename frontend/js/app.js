@@ -215,6 +215,7 @@ function rateCard(rating) {
   if (cardTimer) { clearInterval(cardTimer); cardTimer = null; }
   if (!flipped) { flipCard(); return; }
   const cardIdx = deckQueue[deckIndex];
+  if (cardIdx === undefined) return;
   const card = DECKS[currentDeck][cardIdx];
   const today = new Date().toISOString().slice(0, 10);
   apiCall('POST', '/api/flashcard/log', {deck: currentDeck, card_word: card.word, rating});

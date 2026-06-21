@@ -1,20 +1,30 @@
-"""Generic SQL fallback endpoints (for daily_tasks and internal ops)."""
+"""Safe internal operations (no raw SQL execution)."""
 from fastapi import APIRouter
 from ..database import get_db
 
 router = APIRouter(prefix="/api", tags=["generic"])
 
-_FORBIDDEN_SQL = ['DROP', 'ALTER', 'CREATE', 'TRUNCATE']
-
 
 @router.post("/run")
-async def run_sql(body: dict):
+async def run_safe(body: dict):
+    """Only allow INSERT for daily_tasks and card_srs tables."""
     sql = body.get("sql", "").strip()
     params = body.get("params", [])
-    sql_upper = sql.upper()
-    for keyword in _FORBIDDEN_SQL:
-        if sql_upper.startswith(keyword) or f' {keyword} ' in sql_upper:
-            return {"ok": False, "error": f"Operation not allowed: {keyword}"}
+    upper = sql.upper()
+
+    allowed = False
+    if upper.startswith("INSERT") or upper.startswith("UPDATE"):
+        if "daily_tasks" in upper:
+            allowed = True
+        elif "card_srs" in upper and "INSERT OR IGNORE" in upper:
+            allowed = True
+
+    if not allowed:
+        return {"ok": False, "error": "This endpoint only accepts daily_tasks and card_srs operations"}
+
+    if any(kw in upper for kw in ['DROP', 'ALTER', 'CREATE', 'TRUNCATE', 'DELETE']):
+        return {"ok": False, "error": "Destructive operations not allowed"}
+
     conn = get_db()
     try:
         conn.execute(sql, params)
@@ -22,15 +32,3 @@ async def run_sql(body: dict):
     finally:
         conn.close()
     return {"ok": True}
-
-
-@router.post("/query")
-async def query_sql(body: dict):
-    sql = body.get("sql", "")
-    params = body.get("params", [])
-    conn = get_db()
-    try:
-        rows = conn.execute(sql, params).fetchall()
-    finally:
-        conn.close()
-    return {"rows": [list(r) for r in rows]}
