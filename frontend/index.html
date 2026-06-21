@@ -30,7 +30,7 @@
 
   <!-- 方法分组 — 默认折叠 -->
   <div class="nav-group">
-    <div class="nav-group-title" onclick="toggleGroup('method')">🧠 方法 <span class="arrow">▸</span></div>
+    <div class="nav-group-title" onclick="toggleGroup('method');navigate('method')">🧠 方法 <span class="arrow">▸</span></div>
     <div class="nav-group-body collapsed" id="group-method">
       <div id="methodSidebar"></div>
     </div>
@@ -275,7 +275,7 @@
     <p style="font-size:13px;margin-bottom:8px;">💡 闪卡训练核心方法是<strong>费曼闪卡法（间隔重复）</strong></p>
     <button class="btn-small" onclick="navigate('method',false);setTimeout(function(){document.getElementById('method-flashcard').scrollIntoView({behavior:'smooth'});},150)" style="font-size:13px;padding:8px 18px;">🧠 查看方法详解 →</button>
   </div>
-  <div class="card" id="flashcard">
+  <div class="card">
     <h3>🃏 费曼闪卡</h3>
     <div class="deck-selector" id="deckSelector">
       <button class="deck-btn active" data-deck="shici">文言实词 (58)</button>
