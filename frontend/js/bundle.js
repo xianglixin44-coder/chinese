@@ -322,9 +322,11 @@ async function checkApi() {
   try {
     const r = await fetch(`${API_BASE}/api/health`, { signal: AbortSignal.timeout(2000) });
     apiAvailable = r.ok;
+    window.apiAvailable = apiAvailable;
     if (apiAvailable) console.log('✅ API connected:', API_BASE);
   } catch(e) {
     apiAvailable = false;
+    window.apiAvailable = false;
     console.log('📴 Offline mode (local DB)');
   }
 }
@@ -332,7 +334,7 @@ async function checkApi() {
 async function apiCall(method, path, body) {
   if (!apiAvailable) return null;
   try {
-    const opts = { method, headers: { 'Content-Type': 'application/json' }, signal: AbortSignal.timeout(3000) };
+    const opts = { method, headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + AUTH_TOKEN }, signal: AbortSignal.timeout(3000) };
     if (body) opts.body = JSON.stringify(body);
     const r = await fetch(`${API_BASE}${path}`, opts);
     if (!r.ok) return null;
@@ -521,8 +523,7 @@ async function fetchMethods() {
   return await apiCall('GET', '/api/methods');
 }
 
-// Export to global
-window.apiAvailable = apiAvailable;
+// Export to global (apiAvailable synced in checkApi)
 window.fetchExercises = fetchExercises;
 window.fetchFlashcardItems = fetchFlashcardItems;
 window.fetchDailyExercise = fetchDailyExercise;
@@ -541,6 +542,9 @@ window.getTemplateCount = getTemplateCount;
 window.getGrammarCount = getGrammarCount;
 window.saveAssessment = saveAssessment;
 window.checkApi = checkApi;
+window.DECKS = DECKS;
+window.DECK_XUCI = DECK_XUCI;
+window.PLAN_WEEKS = PLAN_WEEKS;
 })();
 // flashcard.js — 闪卡训练模块
 // Depends on: config.js, utils.js, data.js, api.js
@@ -1045,8 +1049,8 @@ function closeSidebar() {
 
 function toggleGroup(name) {
   var body = document.getElementById('group-' + name);
-  var arrow = document.querySelector('#group-' + name).parentElement.querySelector('.arrow');
   if (!body) return;
+  var arrow = body.parentElement.querySelector('.arrow');
   var collapsed = body.classList.toggle('collapsed');
   if (arrow) {
     arrow.textContent = collapsed ? '▸' : '▾';
@@ -1104,14 +1108,14 @@ function renderSymbols() {
 
 
 
-let currentPage = 'overview', currentDeck = 'shici', deckIndex = 0, deckQueue = [], flipped = false;
-let cardTimer = null, cardSeconds = 20;
-let streak = 0, lastActive = '', templateCount = 0, grammarCount = 0;
-let timerSeconds = 25 * 60, timerRunning = false, timerInterval = null;
+var currentPage = 'overview', currentDeck = 'shici', deckIndex = 0, deckQueue = [], flipped = false;
+var cardTimer = null, cardSeconds = 20;
+var streak = 0, lastActive = '', templateCount = 0, grammarCount = 0;
+var timerSeconds = 25 * 60, timerRunning = false, timerInterval = null;
 
 // Daily task tracking
 const DAILY_TASKS = ['flashcard', 'reading', 'classical', 'language', 'writing'];
-let completedTasks = {};
+var completedTasks = {};
 async function loadCompletedTasks() {
   const today = new Date().toISOString().slice(0, 10);
   completedTasks = {};
@@ -1715,4 +1719,27 @@ window.renderDailyChecklist = renderDailyChecklist;
 window.markTaskDone = markTaskDone;
 window.updateHomeStats = updateHomeStats;
 window.checkStreak = checkStreak;
+// Export shared state for cross-file access (flashcard.js, exercises.js)
+// Use Object.defineProperty getter/setter to keep window in sync with IIFE-local vars
+var _exports = [
+  'currentPage', 'currentDeck', 'deckIndex', 'deckQueue', 'flipped',
+  'cardTimer', 'cardSeconds',
+  'streak', 'lastActive', 'templateCount', 'grammarCount',
+  'timerSeconds', 'timerRunning', 'timerInterval',
+  'completedTasks'
+];
+for (var i = 0; i < _exports.length; i++) {
+  (function(name) {
+    Object.defineProperty(window, name, {
+      get: function() {
+        // eval to access IIFE-local var by name
+        return eval(name);
+      },
+      set: function(v) {
+        eval(name + ' = v');
+      },
+      configurable: true, enumerable: true
+    });
+  })(_exports[i]);
+}
 })();

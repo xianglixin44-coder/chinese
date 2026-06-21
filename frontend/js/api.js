@@ -36,9 +36,11 @@ async function checkApi() {
   try {
     const r = await fetch(`${API_BASE}/api/health`, { signal: AbortSignal.timeout(2000) });
     apiAvailable = r.ok;
+    window.apiAvailable = apiAvailable;
     if (apiAvailable) console.log('✅ API connected:', API_BASE);
   } catch(e) {
     apiAvailable = false;
+    window.apiAvailable = false;
     console.log('📴 Offline mode (local DB)');
   }
 }
@@ -235,8 +237,7 @@ async function fetchMethods() {
   return await apiCall('GET', '/api/methods');
 }
 
-// Export to global
-window.apiAvailable = apiAvailable;
+// Export to global (apiAvailable synced in checkApi)
 window.fetchExercises = fetchExercises;
 window.fetchFlashcardItems = fetchFlashcardItems;
 window.fetchDailyExercise = fetchDailyExercise;
@@ -258,5 +259,4 @@ window.checkApi = checkApi;
 window.DECKS = DECKS;
 window.DECK_XUCI = DECK_XUCI;
 window.PLAN_WEEKS = PLAN_WEEKS;
-window.apiAvailable = apiAvailable;
 })();
