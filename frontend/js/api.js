@@ -366,3 +366,24 @@ function saveAssessment(item, week, score) {
   localRun("INSERT OR REPLACE INTO assessments(item,week,score,updated_at) VALUES(?,?,?,datetime('now','localtime'))", [item, week, score]);
   apiCall('POST','/api/assessment',{item,week,score});
 }
+
+// ====== 题库 API ======
+async function fetchFlashcardItems(category) {
+  var p = category ? '?category=' + encodeURIComponent(category) : '';
+  return await apiCall('GET', '/api/exercises/flashcard' + p);
+}
+async function fetchModernReading(type) {
+  var p = type ? '?passage_type=' + encodeURIComponent(type) : '';
+  return await apiCall('GET', '/api/exercises/modern' + p);
+}
+async function fetchClassicalReading(type) {
+  var p = type ? '?question_type=' + encodeURIComponent(type) : '';
+  return await apiCall('GET', '/api/exercises/classical' + p);
+}
+async function fetchWritingPrompts() {
+  return await apiCall('GET', '/api/exercises/writing');
+}
+async function fetchGrammarExercises(type) {
+  var p = type ? '?question_type=' + encodeURIComponent(type) : '';
+  return await apiCall('GET', '/api/exercises/grammar' + p);
+}

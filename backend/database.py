@@ -33,6 +33,61 @@ def init_db():
         CREATE TABLE IF NOT EXISTS card_srs (deck TEXT, card_idx INTEGER, interval_days INTEGER DEFAULT 0, repetitions INTEGER DEFAULT 0, next_review TEXT, mastered INTEGER DEFAULT 0, PRIMARY KEY(deck, card_idx));
 
         CREATE TABLE IF NOT EXISTS daily_tasks (date TEXT, task TEXT, PRIMARY KEY(date, task));
+
+        -- ====== 题库表 ======
+        CREATE TABLE IF NOT EXISTS flashcard_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            category TEXT NOT NULL,
+            front TEXT NOT NULL,
+            hl TEXT NOT NULL,
+            word TEXT NOT NULL,
+            meaning TEXT NOT NULL,
+            analogy TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now','localtime'))
+        );
+
+        CREATE TABLE IF NOT EXISTS modern_reading (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            passage_type TEXT NOT NULL,
+            title TEXT DEFAULT '',
+            passage TEXT NOT NULL,
+            question TEXT NOT NULL,
+            options_json TEXT NOT NULL,
+            answer_idx INTEGER NOT NULL,
+            explanation TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now','localtime'))
+        );
+
+        CREATE TABLE IF NOT EXISTS classical_reading (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            question_type TEXT NOT NULL,
+            passage TEXT DEFAULT '',
+            question TEXT NOT NULL,
+            options_json TEXT DEFAULT '[]',
+            answer TEXT NOT NULL,
+            explanation TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now','localtime'))
+        );
+
+        CREATE TABLE IF NOT EXISTS writing_prompts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            prompt TEXT NOT NULL,
+            template_hint TEXT DEFAULT '',
+            sample_answer TEXT DEFAULT '',
+            scoring_guide TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now','localtime'))
+        );
+
+        CREATE TABLE IF NOT EXISTS grammar_exercises (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            question_type TEXT NOT NULL,
+            sentence TEXT NOT NULL,
+            options_json TEXT DEFAULT '[]',
+            answer TEXT NOT NULL,
+            explanation TEXT DEFAULT '',
+            points TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now','localtime'))
+        );
     """)
     conn.commit()
     conn.close()
