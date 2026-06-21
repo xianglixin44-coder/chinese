@@ -200,10 +200,5 @@ const READING_PASSAGES = [
 
 
 
-const SRS_INTERVALS = [1, 2, 4, 8, 16, 32, 64, 128];
-
-
-const DAILY_CARD_LIMIT = 20;
-
-const DAILY_TASKS = ['flashcard', 'reading', 'classical', 'language', 'writing'];
+// SRS_INTERVALS / DAILY_CARD_LIMIT / DAILY_TASKS defined in config.js
 
