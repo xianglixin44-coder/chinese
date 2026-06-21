@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 from main import app
 
 client = TestClient(app)
+TOKEN = 'chinese-trainer-2026'
 
 
 class TestHealth:

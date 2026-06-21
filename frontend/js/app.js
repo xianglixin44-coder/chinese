@@ -1,3 +1,37 @@
+// ====== 全局事件委托 (新代码用 data-action, 旧 onclick 保留兼容) ======
+document.addEventListener('click', function(e) {
+  var el = e.target.closest('[data-action]');
+  if (!el) return;
+  var action = el.dataset.action;
+  // Navigation actions
+  if (action === 'navigate') navigate(el.dataset.page, el.dataset.keepNav === 'true');
+  else if (action === 'startTask') startTask(el.dataset.task);
+  else if (action === 'switchTab') switchTab(el.dataset.tabsId, el.dataset.tabId);
+  else if (action === 'toggleAnswer') toggleAnswer(el.dataset.target);
+  else if (action === 'rateCard') rateCard(el.dataset.rating);
+  else if (action === 'flipCard') flipCard();
+  else if (action === 'toggleTimer') toggleTimer();
+  else if (action === 'setTimer') setTimer(e, parseInt(el.dataset.mins));
+  else if (action === 'startTimer') startTimer();
+  else if (action === 'resetTimer') resetTimer();
+  else if (action === 'applyTemplate') applyTemplate();
+  else if (action === 'executeImport') executeImport();
+  else if (action === 'loadGrammarExample') loadGrammarExample(parseInt(el.dataset.idx));
+  else if (action === 'loadSyntaxExample') loadSyntaxExample(parseInt(el.dataset.idx));
+  else if (action === 'loadRhetoricExample') loadRhetoricExample(parseInt(el.dataset.idx));
+  else if (action === 'loadTranslationExample') loadTranslationExample(parseInt(el.dataset.idx));
+  else if (action === 'loadNovelExample') loadNovelExample(parseInt(el.dataset.idx));
+  else if (action === 'analyzeGrammar') analyzeGrammar();
+  else if (action === 'analyzeSyntax') analyzeSyntax();
+  else if (action === 'analyzeRhetoric') analyzeRhetoric();
+  else if (action === 'analyzeTranslation') analyzeTranslation();
+  else if (action === 'analyzeNovel') analyzeNovel();
+  else if (action === 'analyzeImplicature') analyzeImplicature();
+  else if (action === 'calPrevMonth') calPrevMonth();
+  else if (action === 'calNextMonth') calNextMonth();
+  else if (action === 'toggleGroup') toggleGroup(el.dataset.name);
+});
+
 function checkStreak() {
   const today = new Date().toDateString();
   if (lastActive !== today && lastActive !== '') {

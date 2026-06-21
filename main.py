@@ -2,9 +2,30 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+
+from starlette.middleware.base import BaseHTTPMiddleware
+from fastapi import Request, HTTPException
+import os
+
+AUTH_TOKEN = os.environ.get("TRAINER_TOKEN", "chinese-trainer-2026")
+
+class AuthMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        # Skip auth for safe endpoints
+        if request.method == "GET" or request.url.path == "/api/health":
+            return await call_next(request)
+        # Check token for write operations
+        token = request.headers.get("Authorization", "").replace("Bearer ", "")
+        if not token:
+            token = request.query_params.get("token", "")
+        if token != AUTH_TOKEN:
+            return JSONResponse({"ok": False, "error": "unauthorized"}, status_code=401)
+        return await call_next(request)
+
+from fastapi.responses import JSONResponse
 
 from backend.database import init_db
 from backend.routers import register_routes
@@ -24,6 +45,8 @@ app = FastAPI(title="语文提高训练 API", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 register_routes(app)
+
+app.add_middleware(AuthMiddleware)
 
 
 @app.get("/api/health")

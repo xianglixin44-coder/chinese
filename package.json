@@ -1,0 +1,14 @@
+{
+  "name": "chinese-trainer",
+  "version": "2.0.0",
+  "private": true,
+  "description": "\u8bed\u6587\u63d0\u9ad8\u8bad\u7ec3 \u00b7 \u524d\u540e\u7aef\u5206\u79bb\u5e94\u7528",
+  "scripts": {
+    "build": "esbuild frontend/js/api.js frontend/js/app.js --bundle --minify --outdir=frontend/dist --format=iife",
+    "dev": "python main.py",
+    "test": "python -m pytest test_api.py -v"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}

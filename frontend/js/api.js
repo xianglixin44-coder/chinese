@@ -1,8 +1,11 @@
 const API_BASE = 'http://localhost:3200';
+const AUTH_TOKEN = 'chinese-trainer-2026';
 let apiAvailable = false;
 
 let dbLocal = null;
 (async function initLocalDB() {
+  // Schema source of truth: ../../schema.sql
+  // Offline-only tables (server has full schema)
   try {
     const SQL = await initSqlJs({ locateFile: f => f });
     dbLocal = new SQL.Database();
