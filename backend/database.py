@@ -34,6 +34,15 @@ def init_db():
 
         CREATE TABLE IF NOT EXISTS daily_tasks (date TEXT, task TEXT, PRIMARY KEY(date, task));
 
+        CREATE TABLE IF NOT EXISTS daily_assignments (
+            date TEXT NOT NULL,
+            module TEXT NOT NULL,
+            exercise_id INTEGER NOT NULL,
+            completed INTEGER DEFAULT 0,
+            score INTEGER,
+            PRIMARY KEY(date, module)
+        );
+
         -- ====== 统一题库表（module + type 区分题型，extra_json 存类型特有字段）======
         CREATE TABLE IF NOT EXISTS exercises (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -54,10 +63,27 @@ def init_db():
     conn.commit()
     # 从旧 5 表迁移数据到统一 exercises 表（仅首次执行）
     _migrate_old_tables(conn)
+    # 为 exercises 表补充新增字段（兼容旧版本 DB）
+    _migrate_exercises_columns(conn)
     # 首次启动时填充种子闪卡数据
     from .seed_data import seed_flashcard_items
     seed_flashcard_items(conn)
     conn.close()
+
+
+def _migrate_exercises_columns(conn):
+    """为 exercises 表补充后续新增字段（幂等，已存在则跳过）。"""
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(exercises)").fetchall()}
+    additions = [
+        ("last_practiced_at", "TEXT DEFAULT ''"),
+        ("practice_count", "INTEGER DEFAULT 0"),
+        ("source", "TEXT DEFAULT 'seed'"),
+        ("status", "TEXT DEFAULT 'active'"),
+    ]
+    for name, typedef in additions:
+        if name not in cols:
+            conn.execute(f"ALTER TABLE exercises ADD COLUMN {name} {typedef}")
+    conn.commit()
 
 
 def _migrate_old_tables(conn):

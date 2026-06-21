@@ -53,6 +53,10 @@ function navigate(page, keepNav, anchor) {
       if (el) el.scrollIntoView({behavior:'smooth',block:'start'});
     }, 150);
   }
+  // 训练页加载每日选题
+  if (['reading','classical','language','writing'].includes(page) && !keepNav) {
+    loadDailyExercise(page);
+  }
   // Update page date/time display
   var dtNow = new Date();
   var dtStr = dtNow.getFullYear() + '年' + (dtNow.getMonth()+1) + '月' + dtNow.getDate() + '日 ' +
@@ -154,6 +158,119 @@ function renderSymbols() {
   const html = SYMBOLS.map(s => `<div class="sym-card"><div class="sym">${s.sym}</div><div class="sym-name">${s.name}</div><div class="sym-desc">${s.desc}</div></div>`).join('');
   var g = document.getElementById('symGrid'); if (g) g.innerHTML = html;
   var m = document.getElementById('methodSymGrid'); if (m) m.innerHTML = html;
+}
+
+// ====== 每日选题加载与渲染 ======
+async function loadDailyExercise(page) {
+  var moduleMap = { reading: 'modern_reading', classical: 'classical_reading', language: 'grammar', writing: 'writing' };
+  var module = moduleMap[page];
+  if (!module) return;
+
+  var containerId = 'daily-' + page;
+  var container = document.getElementById(containerId);
+  if (!container) return;
+
+  if (!apiAvailable) { container.innerHTML = ''; return; }
+
+  try {
+    var data = await fetchDailyExercise(module);
+    if (data && data.exercise) {
+      renderDailyExercise(container, data.exercise, data.is_new);
+    } else {
+      container.innerHTML = '<div class="card" style="text-align:center;color:var(--text-light);padding:24px;">📭 该题型暂无可用题目，请通过导入功能添加。</div>';
+    }
+  } catch(e) {
+    container.innerHTML = ''; // 静默回退到硬编码内容
+  }
+}
+
+function renderDailyExercise(container, ex, isNew) {
+  var badge = isNew ? '<span style="font-size:10px;background:var(--accent2);color:#fff;padding:2px 8px;border-radius:10px;margin-left:6px;">今日新题</span>' : '';
+  var html = '<div class="card" style="border-left:3px solid var(--accent2);"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><h3 style="margin:0;">📋 今日练习' + badge + '</h3></div>';
+
+  if (ex.module === 'modern_reading') {
+    html += '<div class="ex-passage" style="line-height:2;font-size:14px;margin-bottom:12px;">' + htmlesc(ex.content) + '</div>';
+    if (ex.question) {
+      html += '<p><strong>' + htmlesc(ex.question) + '</strong></p>';
+      if (ex.options_json) {
+        try {
+          var opts = JSON.parse(ex.options_json);
+          opts.forEach(function(o, i) {
+            html += '<label class="ex-option"><input type="radio" name="dailyQ" value="' + i + '" onchange="checkDailyAnswer(\'' + ex.module + '\',' + i + ',\'' + ex.answer + '\')"> ' + htmlesc(o) + '</label>';
+          });
+        } catch(e) {}
+      }
+      html += '<div class="ex-answer" id="dailyQ-result" style="display:none;margin-top:8px;"></div>';
+    }
+    if (ex.explanation) {
+      html += '<div id="dailyQ-explanation" style="display:none;margin-top:8px;background:#faf8f5;padding:10px;border-radius:6px;font-size:13px;">' + htmlesc(ex.explanation).replace(/\n/g,'<br>') + '</div>';
+    }
+  } else if (ex.module === 'classical_reading') {
+    html += '<div class="ex-passage" style="font-size:16px;margin-bottom:8px;">' + htmlesc(ex.content) + '</div>';
+    if (ex.question) html += '<p><strong>' + htmlesc(ex.question) + '</strong></p>';
+    if (ex.options_json && ex.options_json !== '[]') {
+      try {
+        JSON.parse(ex.options_json).forEach(function(o, i) {
+          html += '<label class="ex-option"><input type="radio" name="dailyQ" value="' + i + '" onchange="checkDailyAnswer(\'' + ex.module + '\',' + i + ',\'' + ex.answer + '\')"> ' + htmlesc(o) + '</label>';
+        });
+      } catch(e) {}
+    } else {
+      html += '<input class="gram-input" id="dailyInput" placeholder="输入你的答案…"><button class="btn-primary" onclick="checkDailyText(\'' + ex.module + '\')">提交</button>';
+    }
+    html += '<div class="ex-answer" id="dailyQ-result" style="display:none;margin-top:8px;"></div>';
+  } else if (ex.module === 'grammar') {
+    html += '<p style="font-size:15px;margin-bottom:8px;"><strong>句子：</strong>' + htmlesc(ex.content) + '</p>';
+    if (ex.question) html += '<p>' + htmlesc(ex.question) + '</p>';
+    html += '<input class="gram-input" id="dailyInput" placeholder="输入你的分析或答案…"><button class="btn-primary" onclick="checkDailyText(\'' + ex.module + '\')">提交</button>';
+    html += '<div class="ex-answer" id="dailyQ-result" style="display:none;margin-top:8px;"></div>';
+    if (ex.explanation) {
+      html += '<div id="dailyQ-explanation" style="display:none;margin-top:8px;background:#faf8f5;padding:10px;border-radius:6px;font-size:13px;">' + htmlesc(ex.explanation).replace(/\n/g,'<br>') + '</div>';
+    }
+  } else if (ex.module === 'writing') {
+    html += '<p style="font-size:15px;margin-bottom:8px;"><strong>🎯 今日话题：</strong>' + htmlesc(ex.content) + '</p>';
+    try {
+      var extra = JSON.parse(ex.extra_json || '{}');
+      if (extra.template_hint) html += '<p style="font-size:12px;color:var(--accent2);">💡 建议模板：' + htmlesc(extra.template_hint) + '</p>';
+    } catch(e) {}
+    html += '<textarea id="dailyInput" style="width:100%;height:120px;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:13px;resize:vertical;" placeholder="在此写作…"></textarea>';
+    html += '<button class="btn-primary mt-8" onclick="checkDailyText(\'' + ex.module + '\')">提交</button>';
+  }
+
+  html += '</div>';
+  container.innerHTML = html;
+  container.style.display = 'block';
+}
+
+function checkDailyAnswer(module, chosen, correctStr) {
+  var resultEl = document.getElementById('dailyQ-result');
+  var explanationEl = document.getElementById('dailyQ-explanation');
+  if (!resultEl) return;
+  resultEl.style.display = 'block';
+  if (explanationEl) explanationEl.style.display = 'block';
+  var correct = parseInt(correctStr) === chosen;
+  if (correct) {
+    resultEl.innerHTML = '<p style="color:#27ae60;font-weight:600">✅ 正确！</p>';
+    completeDailyExercise(module, 3);
+    markTaskDone(module === 'modern_reading' ? 'reading' : module === 'classical_reading' ? 'classical' : 'language');
+  } else {
+    resultEl.innerHTML = '<p style="color:#c0392b;font-weight:600">❌ 错误。正确答案已在上方解析中。</p>';
+    completeDailyExercise(module, 0);
+  }
+}
+
+function checkDailyText(module) {
+  var input = document.getElementById('dailyInput');
+  var resultEl = document.getElementById('dailyQ-result');
+  var explanationEl = document.getElementById('dailyQ-explanation');
+  if (!input || !resultEl) return;
+  resultEl.style.display = 'block';
+  if (explanationEl) explanationEl.style.display = 'block';
+  if (input.value.trim()) {
+    resultEl.innerHTML = '<p style="color:var(--accent2);font-weight:600">✅ 已提交。对照上方解析检查你的答案。</p>';
+    completeDailyExercise(module, 2);
+    if (module === 'grammar') markTaskDone('language');
+    if (module === 'writing') markTaskDone('writing');
+  }
 }
 
 const SRS_INTERVALS = [1, 2, 4, 8, 16, 32, 64, 128];

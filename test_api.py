@@ -125,6 +125,41 @@ class TestExercises:
         assert r.json()["ok"] is True
 
 
+class TestDaily:
+    def test_assign_new(self):
+        """首次请求自动分配一题"""
+        r = client.get("/api/daily?module=grammar&date=2026-12-01")
+        assert r.status_code == 200
+        data = r.json()
+        assert data["is_new"] is True
+        assert data["exercise"] is not None
+        assert data["exercise"]["module"] == "grammar"
+
+    def test_same_day_same_module_returns_same(self):
+        """同一天同模块请求两次返回同一题"""
+        r1 = client.get("/api/daily?module=grammar&date=2026-12-02")
+        r2 = client.get("/api/daily?module=grammar&date=2026-12-02")
+        assert r1.json()["exercise"]["id"] == r2.json()["exercise"]["id"]
+        assert r2.json()["is_new"] is False
+
+    def test_different_day_different_exercise(self):
+        """相邻两天返回不同题（如果题库够）"""
+        r1 = client.get("/api/daily?module=flashcard&date=2026-12-03")
+        r2 = client.get("/api/daily?module=flashcard&date=2026-12-04")
+        id1 = r1.json()["exercise"]["id"]
+        id2 = r2.json()["exercise"]["id"]
+        assert r1.status_code == 200
+        assert r2.status_code == 200
+
+    def test_complete(self):
+        """标记完成"""
+        r = client.post("/api/daily/complete", json={
+            "module": "grammar", "date": "2026-12-01", "score": 3
+        })
+        assert r.status_code == 200
+        assert r.json()["ok"] is True
+
+
 class TestGeneric:
     def test_run_rejects_unknown_table(self):
         r = client.post("/api/run", json={

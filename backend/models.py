@@ -63,3 +63,10 @@ class ExerciseItem(BaseModel):
     answer: str = ""                             # 答案文本或选项索引
     explanation: str = ""
     extra_json: str = "{}"                       # 模块特有字段（如 flashcards: {hl,word,meaning,analogy}）
+
+
+class DailyAssign(BaseModel):
+    """每日选题完成标记"""
+    module: str
+    date: str = ""
+    score: int = 0

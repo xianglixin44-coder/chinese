@@ -353,3 +353,13 @@ async function fetchModernReading(type)      { return await fetchExercises('mode
 async function fetchClassicalReading(type)   { return await fetchExercises('classical_reading', type || ''); }
 async function fetchWritingPrompts()         { return await fetchExercises('writing', ''); }
 async function fetchGrammarExercises(type)   { return await fetchExercises('grammar', type || ''); }
+
+// ====== 每日选题 API ======
+async function fetchDailyExercise(module) {
+  var today = new Date().toISOString().slice(0, 10);
+  return await apiCall('GET', '/api/daily?module=' + encodeURIComponent(module) + '&date=' + today);
+}
+async function completeDailyExercise(module, score) {
+  var today = new Date().toISOString().slice(0, 10);
+  return await apiCall('POST', '/api/daily/complete', { module: module, date: today, score: score || 0 });
+}
