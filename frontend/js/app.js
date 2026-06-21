@@ -151,9 +151,9 @@ function renderReadingTabs() {
 }
 
 function renderSymbols() {
-  const g = document.getElementById('symGrid');
-  if (!g) return;
-  g.innerHTML = SYMBOLS.map(s => `<div class="sym-card"><div class="sym">${s.sym}</div><div class="sym-name">${s.name}</div><div class="sym-desc">${s.desc}</div></div>`).join('');
+  const html = SYMBOLS.map(s => `<div class="sym-card"><div class="sym">${s.sym}</div><div class="sym-name">${s.name}</div><div class="sym-desc">${s.desc}</div></div>`).join('');
+  var g = document.getElementById('symGrid'); if (g) g.innerHTML = html;
+  var m = document.getElementById('methodSymGrid'); if (m) m.innerHTML = html;
 }
 
 const SRS_INTERVALS = [1, 2, 4, 8, 16, 32, 64, 128];
