@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>语文提高训练 2.0</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="sql-wasm.js"></script>
+</head>
+<body>
+
+<header class="app-header">
+  <h1>📖 语文提高训练</h1>
+  <span class="badge" id="apiBadge">🔗 检测中</span>
+  <span class="badge" id="streakBadge">🔥 0天</span>
+</header>
+
+<nav class="sidebar" id="sidebar">
+  <div class="nav-item active" data-page="overview" onclick="navigate('overview')">🎯 训练模块</div>
+  <div class="nav-group-title">考试模块</div>
+  <div class="nav-item" data-page="reading" onclick="navigate('reading')">📖 现代文阅读 <span class="score">35分</span></div>
+  <div class="nav-item" data-page="classical" onclick="navigate('classical')">🏛️ 古诗文阅读 <span class="score">35分</span></div>
+  <div class="nav-item" data-page="language" onclick="navigate('language')">✍️ 语言文字运用 <span class="score">20分</span></div>
+  <div class="nav-item" data-page="writing" onclick="navigate('writing')">📝 写作表达 <span class="score">60分</span></div>
+  <div class="nav-group-title">工具</div>
+  <div class="nav-item" data-page="calendar" onclick="navigate('calendar')">📆 训练日历</div>
+</nav>
+
+<div class="main"><!-- ====== OVERVIEW ====== -->
+<div class="page active" id="page-overview">
+
+<div class="celebration" id="celebration">
+  <div class="celeb-icon">🎉</div><div class="celeb-title">今日训练全部完成！</div>
+  <div class="celeb-sub">你已经完成了今天的所有训练任务！</div>
+  <div class="celeb-stats">
+    <div class="celeb-stat"><div class="stat-num" id="celebCards">0</div><div class="stat-label">闪卡复习</div></div>
+    <div class="celeb-stat"><div class="stat-num" id="celebDay">1</div><div class="stat-label">连续天数</div></div>
+  </div>
+  <div class="celeb-meta" id="celebMeta"></div>
+  <p style="font-size:13px;color:var(--text-light);margin-top:8px">明天继续加油！💪</p>
+</div>
+
+<div class="page-header"><h2>📋 今日训练</h2><p class="sub">每天 25–30 分钟，完成以下 5 项训练任务</p></div>
+
+<div id="taskProgress">
+  <div id="progressLabel">0/5 项完成</div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+</div>
+
+<div class="daily-checklist" id="dailyChecklist">
+  <div class="daily-task" data-task="flashcard" onclick="startTask('flashcard')">
+    <div class="task-check">1</div><div class="task-info"><div class="task-title">🃏 闪卡每日复习</div><div class="task-desc">费曼闪卡 · 间隔重复 · 5分钟</div></div><span class="task-badge bg-blue">5分钟</span>
+  </div>
+  <div class="daily-task" data-task="reading" onclick="startTask('reading')">
+    <div class="task-check">2</div><div class="task-info"><div class="task-title">📖 现代文阅读训练</div><div class="task-desc">主动标记阅读法 + 阅读理解选择 · 10分钟</div></div><span class="task-badge bg-blue">10分钟</span>
+  </div>
+  <div class="daily-task" data-task="classical" onclick="startTask('classical')">
+    <div class="task-check">3</div><div class="task-info"><div class="task-title">🏛️ 古诗文阅读训练</div><div class="task-desc">文言句式 + 双语对齐翻译 · 10分钟</div></div><span class="task-badge bg-red">10分钟</span>
+  </div>
+  <div class="daily-task" data-task="language" onclick="startTask('language')">
+    <div class="task-check">4</div><div class="task-info"><div class="task-title">✍️ 语言文字运用</div><div class="task-desc">病句诊断 + 修辞效果分析 · 5分钟</div></div><span class="task-badge bg-gold">5分钟</span>
+  </div>
+  <div class="daily-task" data-task="writing" onclick="startTask('writing')">
+    <div class="task-check">5</div><div class="task-info"><div class="task-title">📝 写作表达训练</div><div class="task-desc">「他们说/我说」模板练习 · 5分钟</div></div><span class="task-badge bg-green">5分钟</span>
+  </div>
+</div>
+
+<div class="card mt-8"><h3>🧭 150 分结构地图</h3>
+<div class="score-map">
+  <div class="score-node root" onclick="navigate('reading',true)"><div class="node-title">现代文阅读</div><div class="node-score">35分</div></div>
+  <span class="score-connector">━</span>
+  <div class="score-node" onclick="navigate('classical',true)"><div class="node-title">古诗文阅读</div><div class="node-score">35分</div></div>
+  <span class="score-connector">━</span>
+  <div class="score-node" onclick="navigate('language',true)"><div class="node-title">语言文字运用</div><div class="node-score">20分</div></div>
+  <span class="score-connector">━</span>
+  <div class="score-node" onclick="navigate('writing',true)"><div class="node-title">写作表达</div><div class="node-score">60分</div></div>
+</div></div>
+
+<div class="card"><h3>📊 今日进度</h3>
+<div class="flex" style="justify-content:space-between">
+  <span>✨ 闪卡复习: <strong id="ovCards">0</strong></span>
+  <span>🔍 语法拆解: <strong id="ovGrammar">0</strong></span>
+</div></div>
+
+</div><!-- /overview -->
+
+<!-- ====== READING ====== -->
+<div class="page" id="page-reading">
+<div class="page-header">
+  <div class="page-nav">
+    <span class="back-btn" onclick="navigate('overview',true)">← 训练模块</span>
+    <h2>📖 现代文阅读 <span class="score-badge" style="background:#d5e8f4;color:#2980b9">35分</span></h2>
+    <span class="back-btn" onclick="navigate('classical',true)">古诗文阅读 →</span>
+  </div>
+  <p class="sub">信息类文本 + 文学类文本 · 核心方法：主动标记阅读法</p>
+  <div class="page-datetime" id="dt-reading"></div>
+</div>
+<div class="card"><h3>📋 主动标记阅读法</h3>
+<div class="sym-grid" id="symGrid"></div></div>
+<div class="card"><h3>📐 批注三层法</h3>
+<div style="background:#faf8f5;padding:14px;border-radius:8px;font-size:13px;line-height:2.2">
+<span class="badge-sm bg-blue">1️⃣ 概括</span> 这篇文章在说什么？<br>
+<span class="badge-sm bg-red">2️⃣ 结构</span> 作者是怎么说的？<br>
+<span class="badge-sm bg-gold">3️⃣ 批判</span> 我同意/不同意什么？</div></div>
+<div class="card"><h3>🖨️ 三遍阅读流程</h3>
+<div style="display:grid;gap:6px">
+<div style="background:#faf8f5;padding:10px;border-radius:6px;border-left:3px solid var(--accent2)"><strong>① 通读 5min</strong> — 用 / 分层，用 [ ] 圈核心词</div>
+<div style="background:#faf8f5;padding:10px;border-radius:6px;border-left:3px solid var(--accent)"><strong>② 细读 15min</strong> — 用 ★ 标主旨，用 ~~~ 画论据</div>
+<div style="background:#faf8f5;padding:10px;border-radius:6px;border-left:3px solid var(--gold)"><strong>③ 整合 5min</strong> — 用 → 画逻辑链，写 3 句批注</div>
+</div></div>
+  <div class="card mt-8">
+    <h3>📋 阅读理解 · 选择题训练（高考标准）</h3>
+    <div class="tabs" id="readingTabs">
+      <button class="tab-btn active" data-tab="rc1" onclick="switchTab('readingTabs','rc1')">信息类</button>
+      <button class="tab-btn" data-tab="rc2" onclick="switchTab('readingTabs','rc2')">文学类</button>
+      <button class="tab-btn" data-tab="rc3" onclick="switchTab('readingTabs','rc3')">论述类</button>
+    </div>
+    <div id="readingTabs-content"></div>
+  </div>
+</div><!-- /reading -->
+
+<!-- ====== CLASSICAL ====== -->
+<div class="page" id="page-classical">
+<div class="page-header">
+  <div class="page-nav">
+    <span class="back-btn" onclick="navigate('reading',true)">← 现代文阅读</span>
+    <h2>🏛️ 古诗文阅读 <span class="score-badge" style="background:#e8f0e8;color:#27ae60">35分</span></h2>
+    <span class="back-btn" onclick="navigate('language',true)">语言文字运用 →</span>
+  </div>
+  <p class="sub">文言文 + 诗歌鉴赏 · 核心方法：费曼闪卡 + 句式拆解</p>
+  <div class="page-datetime" id="dt-classical"></div>
+</div>
+<div class="card"><h3>🃏 费曼闪卡</h3>
+<div class="deck-selector" id="deckSelector">
+  <button class="deck-btn active" data-deck="shici">文言实词 (58)</button>
+  <button class="deck-btn" data-deck="xuci">文言虚词 (54)</button>
+  <button class="deck-btn" data-deck="wenxue">文学常识 (20)</button>
+</div>
+<div class="fc-stats" id="fcStats"></div>
+<div class="fc-timer" id="fcTimer"></div>
+<div class="flashcard-wrap" id="fcWrap" onclick="flipCard()">
+<div class="flashcard" id="flashcard">
+<div class="fc-face fc-front"><div class="fc-label">点击翻转</div><div class="fc-main" id="fcFront"></div></div>
+<div class="fc-face fc-back">
+<div class="fc-group"><div class="fc-lbl">词语</div><div class="fc-txt" id="fcWord" style="color:var(--accent)"></div></div>
+<div class="fc-group"><div class="fc-lbl">释义</div><div class="fc-txt" id="fcMeaning"></div></div>
+<div class="fc-group"><div class="fc-lbl">类比</div><div class="fc-txt" id="fcAnalogy"></div></div>
+</div></div></div>
+<div class="fc-controls">
+  <button class="btn-again" onclick="rateCard('again')">🔁 忘记</button>
+  <button class="btn-hard" onclick="rateCard('hard')">🤔 困难</button>
+  <button class="btn-easy" onclick="rateCard('easy')">✅ 简单</button>
+</div></div>
+<div class="card"><h3>🧩 文言句式拆解</h3>
+<input class="gram-input" id="syntaxInput" placeholder="输入文言句子…">
+<button class="btn-primary" onclick="analyzeSyntax()">🔍 拆解</button>
+<div id="syntaxResult" class="mt-12"></div></div>
+</div><!-- /classical -->
+
+<!-- ====== LANGUAGE ====== -->
+<div class="page" id="page-language">
+<div class="page-header">
+  <div class="page-nav">
+    <span class="back-btn" onclick="navigate('classical',true)">← 古诗文阅读</span>
+    <h2>✍️ 语言文字运用 <span class="score-badge" style="background:#fde8e8;color:#c0392b">20分</span></h2>
+    <span class="back-btn" onclick="navigate('writing',true)">写作表达 →</span>
+  </div>
+  <p class="sub">病句辨析 + 连贯衔接 · 核心方法：语法成分分解</p>
+  <div class="page-datetime" id="dt-language"></div>
+</div>
+<div class="card"><h3>🩺 病句诊断</h3>
+<input class="gram-input" id="grammarInput" placeholder="输入疑似病句…">
+<button class="btn-primary" onclick="analyzeGrammar()">🔍 分析</button>
+<div id="grammarResult" class="mt-12"></div></div>
+<div class="card"><h3>🎨 修辞效果分析</h3>
+<input class="gram-input" id="rhetoricInput" placeholder="输入含修辞的句子…">
+<button class="btn-primary" onclick="analyzeRhetoric()">🔍 拆解</button>
+<div id="rhetoricResult" class="mt-12"></div></div>
+</div><!-- /language -->
+
+<!-- ====== WRITING ====== -->
+<div class="page" id="page-writing">
+<div class="page-header">
+  <div class="page-nav">
+    <span class="back-btn" onclick="navigate('language',true)">← 语言文字运用</span>
+    <h2>📝 写作表达 <span class="score-badge" style="background:#fef5e0;color:#d4a017">60分</span></h2>
+  </div>
+  <p class="sub">思辨性任务驱动作文 · 核心方法：「他们说/我说」逻辑模板</p>
+  <div class="page-datetime" id="dt-writing"></div>
+</div>
+<div class="card"><h3>🅰 引入对立观点（"他们说"）</h3>
+<div class="tabs" id="tabsA"><button class="tab-btn active" data-tab="A1" onclick="switchTab('tabsA','A1')">A1 先立后破</button><button class="tab-btn" data-tab="A2" onclick="switchTab('tabsA','A2')">A2 委婉反驳</button><button class="tab-btn" data-tab="A3" onclick="switchTab('tabsA','A3')">A3 升维讨论</button><button class="tab-btn" data-tab="A4" onclick="switchTab('tabsA','A4')">A4 限定突破</button></div>
+<div id="tabsA-content"></div></div>
+<div class="card"><h3>🅱 推进己方论证（"我说"）</h3>
+<div class="tabs" id="tabsB"><button class="tab-btn active" data-tab="B1" onclick="switchTab('tabsB','B1')">B1 因果分析</button><button class="tab-btn" data-tab="B2" onclick="switchTab('tabsB','B2')">B2 层次递进</button><button class="tab-btn" data-tab="B3" onclick="switchTab('tabsB','B3')">B3 类比论证</button><button class="tab-btn" data-tab="B4" onclick="switchTab('tabsB','B4')">B4 揭示前提</button></div>
+<div id="tabsB-content"></div></div>
+<div class="card"><h3>🅲 价值升华（"所以呢"）</h3>
+<div class="tabs" id="tabsC"><button class="tab-btn active" data-tab="C1" onclick="switchTab('tabsC','C1')">C1 警示收束</button><button class="tab-btn" data-tab="C2" onclick="switchTab('tabsC','C2')">C2 辩证收束</button><button class="tab-btn" data-tab="C3" onclick="switchTab('tabsC','C3')">C3 开放式结尾</button><button class="tab-btn" data-tab="C4" onclick="switchTab('tabsC','C4')">C4 宏大升华</button></div>
+<div id="tabsC-content"></div></div>
+<div class="card"><h3>✍ 段落组装</h3>
+<div class="tmpl-sel">
+  <select id="selA"><option value="A1">A1 先立后破</option><option value="A2">A2 委婉反驳</option><option value="A3">A3 升维讨论</option><option value="A4">A4 限定突破</option></select>
+  <select id="selB"><option value="B1">B1 因果分析</option><option value="B2">B2 层次递进</option><option value="B3">B3 类比论证</option><option value="B4">B4 揭示前提</option></select>
+  <select id="selC"><option value="C1">C1 警示收束</option><option value="C2">C2 辩证收束</option><option value="C3">C3 开放式结尾</option><option value="C4">C4 宏大升华</option></select>
+  <button class="btn-primary" onclick="applyTemplate()">生成</button>
+</div>
+<textarea class="tmpl-textarea" id="templateInput" placeholder="在此填入你的话题和观点…">话题：手机该不该进校园
+我的观点：应当限制而非禁止</textarea>
+<div class="tmpl-preview" id="templatePreview">点击「生成」按钮预览</div></div>
+</div><!-- /writing -->
+
+<!-- ====== CALENDAR ====== -->
+<div class="page" id="page-calendar">
+<div class="page-header"><h2>📆 训练日历</h2></div>
+<div id="calContent"></div></div>
+
+</div><!-- /main -->
+
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+<script src="js/data.js"></script>
+<script src="js/flashcard.js"></script>
+</body>
+</html>
