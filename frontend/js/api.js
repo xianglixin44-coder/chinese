@@ -363,3 +363,7 @@ async function completeDailyExercise(module, score) {
   var today = new Date().toISOString().slice(0, 10);
   return await apiCall('POST', '/api/daily/complete', { module: module, date: today, score: score || 0 });
 }
+
+async function fetchRecords(days) {
+  return await apiCall('GET', '/api/records?days=' + (days || 30));
+}

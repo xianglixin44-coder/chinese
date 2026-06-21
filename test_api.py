@@ -126,9 +126,23 @@ class TestExercises:
 
 
 class TestDaily:
+    # Use far-future dates to avoid collisions with real data
+    D1 = "2099-01-10"
+    D2 = "2099-01-11"
+    D3 = "2099-01-12"
+    D4 = "2099-01-13"
+
+    def setup_method(self):
+        """清理可能残留的测试数据"""
+        from backend.database import get_db
+        conn = get_db()
+        conn.execute("DELETE FROM daily_assignments WHERE date >= '2099-01-01'")
+        conn.commit()
+        conn.close()
+
     def test_assign_new(self):
         """首次请求自动分配一题"""
-        r = client.get("/api/daily?module=grammar&date=2026-12-01")
+        r = client.get(f"/api/daily?module=grammar&date={self.D1}")
         assert r.status_code == 200
         data = r.json()
         assert data["is_new"] is True
@@ -137,27 +151,37 @@ class TestDaily:
 
     def test_same_day_same_module_returns_same(self):
         """同一天同模块请求两次返回同一题"""
-        r1 = client.get("/api/daily?module=grammar&date=2026-12-02")
-        r2 = client.get("/api/daily?module=grammar&date=2026-12-02")
+        r1 = client.get(f"/api/daily?module=grammar&date={self.D2}")
+        r2 = client.get(f"/api/daily?module=grammar&date={self.D2}")
         assert r1.json()["exercise"]["id"] == r2.json()["exercise"]["id"]
         assert r2.json()["is_new"] is False
 
     def test_different_day_different_exercise(self):
         """相邻两天返回不同题（如果题库够）"""
-        r1 = client.get("/api/daily?module=flashcard&date=2026-12-03")
-        r2 = client.get("/api/daily?module=flashcard&date=2026-12-04")
-        id1 = r1.json()["exercise"]["id"]
-        id2 = r2.json()["exercise"]["id"]
+        r1 = client.get(f"/api/daily?module=flashcard&date={self.D3}")
+        r2 = client.get(f"/api/daily?module=flashcard&date={self.D4}")
         assert r1.status_code == 200
         assert r2.status_code == 200
 
     def test_complete(self):
         """标记完成"""
         r = client.post("/api/daily/complete", json={
-            "module": "grammar", "date": "2026-12-01", "score": 3
+            "module": "grammar", "date": self.D1, "score": 3
         })
         assert r.status_code == 200
         assert r.json()["ok"] is True
+
+
+class TestRecords:
+    def test_get_records(self):
+        r = client.get("/api/records?days=7")
+        assert r.status_code == 200
+        data = r.json()
+        assert "daily" in data
+        assert "flashcards" in data
+        assert "grammar" in data
+        assert "templates" in data
+        assert "week_stats" in data
 
 
 class TestGeneric:

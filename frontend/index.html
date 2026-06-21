@@ -53,6 +53,7 @@
     <div class="nav-group-title" onclick="toggleGroup('tool')">🔧 工具 <span class="arrow">▸</span></div>
     <div class="nav-group-body collapsed" id="group-tool">
       <div class="nav-item sub" data-page="calendar" onclick="navigate('calendar')">📆 训练日历</div>
+      <div class="nav-item sub" data-page="records" onclick="navigate('records')">📊 训练记录</div>
       <div class="nav-item sub" data-page="import" onclick="navigate('import')">📥 导入数据</div>
     </div>
   </div>
@@ -835,6 +836,15 @@
     <h3 id="calDayTitle"></h3>
     <div id="calDayContent"></div>
   </div>
+</div>
+
+<!-- ======================== RECORDS ======================== -->
+<div class="page" id="page-records">
+  <div class="page-header">
+    <h2>📊 训练记录</h2>
+    <p class="sub">最近训练记录 · 对错率 · 薄弱点</p>
+  </div>
+  <div id="recordsContent"></div>
 </div>
 
 <!-- ======================== IMPORT ======================== -->

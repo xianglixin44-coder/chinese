@@ -46,6 +46,7 @@ function navigate(page, keepNav, anchor) {
   currentPage = page;
   document.getElementById('sidebar').classList.remove('open');
   if (page === 'calendar') { renderCalendar(); }
+  if (page === 'records') { renderRecords(); }
   // 锚点跳转（如闪卡区域）
   if (anchor) {
     setTimeout(function() {
@@ -731,6 +732,114 @@ function toggleAnswer(id) { const el = document.getElementById(id); if (el) el.s
 function checkClassicalQ4(radio) { const ans = document.getElementById('ex-classical-4'); if (ans) ans.style.display = 'block'; document.querySelectorAll('input[name="q4"]').forEach(r => { const label = r.closest('.ex-option'); if (label) { label.classList.remove('correct', 'wrong'); if (r.checked && r.value === 'B') label.classList.add('correct'); else if (r.checked) label.classList.add('wrong'); } }); }
 function doCheck(name, correct) { document.getElementById(`ex-${name}`).style.display = 'block'; document.querySelectorAll(`input[name="${name}"]`).forEach(r => { const l = r.closest('.ex-option'); if (l) { l.classList.remove('correct', 'wrong'); if (r.checked && r.value === correct) l.classList.add('correct'); else if (r.checked) l.classList.add('wrong'); } }); }
 function checkBingju1(r) { doCheck('bingju1', 'B'); } function checkBingju2(r) { doCheck('bingju2', 'A'); } function checkBingju3(r) { doCheck('bingju3', 'C'); } function checkBingju4(r) { doCheck('bingju4', 'B'); } function checkBingju5(r) { doCheck('bingju5', 'B'); }
+
+async function renderRecords() {
+  var el = document.getElementById('recordsContent');
+  if (!el) return;
+
+  var MOD_ICON = { modern_reading: '📖', classical_reading: '🏛️', grammar: '✍️', writing: '📝' };
+  var MOD_LABEL = { modern_reading: '现代文', classical_reading: '古诗文', grammar: '语言运用', writing: '写作' };
+
+  if (apiAvailable) {
+    try {
+      var data = await fetchRecords(30);
+      var html = '';
+
+      // 本周统计
+      if (data.week_stats) {
+        html += '<div class="card"><h3>📊 本周概览</h3><div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:8px;">';
+        var ws = data.week_stats;
+        if (ws.daily && ws.daily.length) {
+          ws.daily.forEach(function(d) {
+            var icon = MOD_ICON[d.module] || '📋';
+            html += '<div style="text-align:center"><div style="font-size:24px;">' + icon + '</div><div style="font-size:12px;color:var(--text-light);">' + (MOD_LABEL[d.module]||d.module) + '</div><div style="font-size:18px;font-weight:700;">' + d.completed + '/' + d.total + '</div></div>';
+          });
+        }
+        html += '<div style="text-align:center"><div style="font-size:24px;">🃏</div><div style="font-size:12px;color:var(--text-light);">闪卡复习</div><div style="font-size:18px;font-weight:700;">' + (ws.cards_reviewed||0) + '张</div></div>';
+        html += '</div></div>';
+      }
+
+      // 时间线
+      html += '<div class="card"><h3>📋 最近记录</h3><div style="display:grid;gap:6px;margin-top:8px;">';
+      var allItems = [];
+
+      (data.daily || []).forEach(function(d) {
+        allItems.push({
+          date: (d.date || '').slice(0,10),
+          icon: MOD_ICON[d.module] || '📋',
+          label: (MOD_LABEL[d.module]||d.module) + ' · ' + (d.content||'').substring(0,25),
+          result: d.completed ? (d.score >= 3 ? '✅' : '⚠️') : '⬜',
+          detail: d.answer || ''
+        });
+      });
+
+      (data.flashcards || []).forEach(function(f) {
+        allItems.push({
+          date: (f.reviewed_at || '').slice(0,10),
+          icon: '🃏', label: '闪卡 · ' + (f.card_word||'') + ' (' + (f.rating||'') + ')',
+          result: f.rating === 'easy' ? '✅' : f.rating === 'hard' ? '⚠️' : '🔄',
+          detail: f.deck || ''
+        });
+      });
+
+      (data.grammar || []).forEach(function(g) {
+        allItems.push({
+          date: (g.created_at || '').slice(0,10),
+          icon: '✍️', label: '语法 · ' + (g.sentence||'').substring(0,30),
+          result: '📝', detail: g.module || ''
+        });
+      });
+
+      (data.templates || []).forEach(function(t) {
+        allItems.push({
+          date: (t.created_at || '').slice(0,10),
+          icon: '📝', label: '模板 · ' + (t.topic||'').substring(0,25),
+          result: '📝', detail: (t.combo_a||'') + '+' + (t.combo_b||'') + '+' + (t.combo_c||'')
+        });
+      });
+
+      allItems.sort(function(a,b) { return b.date.localeCompare(a.date); });
+      allItems.slice(0, 50).forEach(function(item) {
+        html += '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #eee;font-size:13px;"><span style="font-size:11px;color:var(--text-light);min-width:45px;">' + item.date.slice(5) + '</span><span style="font-size:16px;">' + item.icon + '</span><span style="flex:1;">' + htmlesc(item.label) + '</span><span style="font-size:16px;">' + item.result + '</span></div>';
+      });
+
+      if (!allItems.length) {
+        html += '<div style="text-align:center;color:var(--text-light);padding:24px;">暂无训练记录。开始每日训练吧！</div>';
+      }
+      html += '</div></div>';
+
+      el.innerHTML = html;
+    } catch(e) {
+      el.innerHTML = '<div class="card" style="text-align:center;color:var(--text-light);padding:24px;">无法加载记录，请检查网络。</div>';
+    }
+  } else {
+    // 离线模式 — 从本地 DB 读取
+    var localHtml = '<div class="card"><h3>📋 本地记录</h3><div style="display:grid;gap:6px;margin-top:8px;">';
+    var fcRows = localQuery("SELECT reviewed_at, card_word, rating FROM flashcard_log ORDER BY reviewed_at DESC LIMIT 30");
+    var grRows = localQuery("SELECT created_at, sentence, module FROM grammar_log ORDER BY created_at DESC LIMIT 20");
+    var tpRows = localQuery("SELECT created_at, topic FROM template_log ORDER BY created_at DESC LIMIT 10");
+    var allLocal = [];
+
+    fcRows.forEach(function(r) {
+      allLocal.push({ date: (r[0]||'').slice(0,10), icon: '🃏', label: '闪卡·'+r[1], result: r[2]==='easy'?'✅':'🔄' });
+    });
+    grRows.forEach(function(r) {
+      allLocal.push({ date: (r[0]||'').slice(0,10), icon: '✍️', label: '语法·'+(r[1]||'').substring(0,25), result: '📝' });
+    });
+    tpRows.forEach(function(r) {
+      allLocal.push({ date: (r[0]||'').slice(0,10), icon: '📝', label: '模板·'+(r[1]||'').substring(0,20), result: '📝' });
+    });
+
+    allLocal.sort(function(a,b) { return b.date.localeCompare(a.date); });
+    allLocal.slice(0,40).forEach(function(item) {
+      localHtml += '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #eee;font-size:13px;"><span style="font-size:11px;color:var(--text-light);min-width:45px;">' + item.date.slice(5) + '</span><span style="font-size:16px;">' + item.icon + '</span><span style="flex:1;">' + htmlesc(item.label) + '</span><span style="font-size:16px;">' + item.result + '</span></div>';
+    });
+
+    if (!allLocal.length) localHtml += '<div style="text-align:center;color:var(--text-light);padding:24px;">暂无本地记录。</div>';
+    localHtml += '</div></div>';
+    el.innerHTML = localHtml;
+  }
+}
 
 let calYear, calMonth;
 
