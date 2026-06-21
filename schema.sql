@@ -105,3 +105,17 @@ CREATE TABLE IF NOT EXISTS exercises (
     meta_json TEXT DEFAULT '{}',
     created_at TEXT DEFAULT (datetime('now','localtime'))
 );
+
+CREATE TABLE IF NOT EXISTS wrong_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    exercise_id INTEGER,
+    module TEXT DEFAULT '',
+    question_type TEXT DEFAULT '',
+    question TEXT DEFAULT '',
+    user_answer TEXT DEFAULT '',
+    correct_answer TEXT DEFAULT '',
+    explanation TEXT DEFAULT '',
+    wrong_count INTEGER DEFAULT 1,
+    wrong_at TEXT DEFAULT (datetime('now','localtime')),
+    reviewed INTEGER DEFAULT 0
+);

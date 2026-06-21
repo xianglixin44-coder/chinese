@@ -86,6 +86,7 @@ function navigate(page, keepNav, anchor) {
   if (page === 'calendar') { renderCalendar(); }
   if (page === 'records') { renderRecords(); }
   if (page === 'method') { renderMethodPage(); }
+  if (page === 'wrong') { renderWrongPage(); }
   // 锚点跳转（如闪卡区域）
   if (anchor) {
     setTimeout(function() {
@@ -271,7 +272,7 @@ document.addEventListener('click', e => {
 
 function toggleAnswer(id) { const el = document.getElementById(id); if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none'; }
 function checkClassicalQ4(radio) { const ans = document.getElementById('ex-classical-4'); if (ans) ans.style.display = 'block'; document.querySelectorAll('input[name="q4"]').forEach(r => { const label = r.closest('.ex-option'); if (label) { label.classList.remove('correct', 'wrong'); if (r.checked && r.value === 'B') label.classList.add('correct'); else if (r.checked) label.classList.add('wrong'); } }); }
-function doCheck(name, correct) { document.getElementById(`ex-${name}`).style.display = 'block'; document.querySelectorAll(`input[name="${name}"]`).forEach(r => { const l = r.closest('.ex-option'); if (l) { l.classList.remove('correct', 'wrong'); if (r.checked && r.value === correct) l.classList.add('correct'); else if (r.checked) l.classList.add('wrong'); } }); }
+function doCheck(name, correct) { document.getElementById(`ex-${name}`).style.display = 'block'; var wrong=false; document.querySelectorAll(`input[name="${name}"]`).forEach(r => { const l = r.closest('.ex-option'); if (l) { l.classList.remove('correct', 'wrong'); if (r.checked && r.value === correct) l.classList.add('correct'); else if (r.checked) { l.classList.add('wrong'); wrong=true; } } }); if (wrong) recordWrongAnswer(name, document.querySelector(`input[name="${name}"]:checked`)?.parentElement?.textContent?.trim()||'未作答', correct); }
 function checkBingju1(r) { doCheck('bingju1', 'B'); } function checkBingju2(r) { doCheck('bingju2', 'A'); } function checkBingju3(r) { doCheck('bingju3', 'C'); } function checkBingju4(r) { doCheck('bingju4', 'B'); } function checkBingju5(r) { doCheck('bingju5', 'B'); }
 
 async function renderMethodPage() {
@@ -735,6 +736,67 @@ window.renderDailyChecklist = renderDailyChecklist;
 window.markTaskDone = markTaskDone;
 window.updateHomeStats = updateHomeStats;
 window.checkStreak = checkStreak;
+window.renderWrongPage = renderWrongPage;
+window.recordWrongAnswer = recordWrongAnswer;
+
+// ====== 错题本 ======
+function recordWrongAnswer(exerciseName, userAnswer, correctAnswer) {
+  var module = '';
+  var questionEl = document.getElementById(`ex-${exerciseName}`);
+  var question = questionEl?.closest('.exercise-item')?.querySelector('strong')?.textContent || exerciseName;
+  if (exerciseName.startsWith('reading')) module = 'modern_reading';
+  else if (exerciseName.startsWith('classical')) module = 'classical_reading';
+  else if (exerciseName.startsWith('bingju') || exerciseName.startsWith('language')) module = 'grammar';
+  else if (exerciseName.startsWith('writing')) module = 'writing';
+  apiCall('POST', '/api/wrong', {
+    exercise_id: 0, module: module, question_type: '', question: question,
+    user_answer: userAnswer, correct_answer: correctAnswer, explanation: ''
+  });
+  localRun("INSERT INTO wrong_items (exercise_id, module, question, user_answer, correct_answer) VALUES (?,?,?,?,?)",
+    [0, module, question, userAnswer, correctAnswer]);
+}
+
+async function renderWrongPage() {
+  var el = document.getElementById('wrongContent');
+  if (!el) return;
+  var items = [];
+  if (apiAvailable) {
+    try {
+      var data = await apiCall('GET', '/api/wrong');
+      if (data && data.items) items = data.items;
+    } catch(e) {}
+  }
+  if (!items.length) {
+    var local = localQuery("SELECT * FROM wrong_items ORDER BY wrong_at DESC", []);
+    items = local.map(function(r) { return {id:r[0], question:r[4], user_answer:r[5], correct_answer:r[6], wrong_count:r[7]||1, reviewed:r[9]||0}; });
+  }
+  if (!items.length) {
+    el.innerHTML = '<div class="card" style="text-align:center;padding:40px;"><p style="font-size:18px;">🎉 暂无错题</p><p style="color:var(--text-light);">继续练习，答错的题目会自动收录到这里。</p></div>';
+    return;
+  }
+  var html = '<div class="card"><h3>📋 错题列表 (' + items.length + '题)</h3></div>';
+  items.forEach(function(item, i) {
+    html += '<div class="card" id="wrong-' + item.id + '" style="margin-top:8px;">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:start;">';
+    html += '<div style="flex:1;"><p style="font-size:13px;color:var(--text-light);margin-bottom:4px;">#' + (i+1) + ' · 错' + (item.wrong_count||1) + '次</p>';
+    html += '<p style="font-size:14px;margin-bottom:6px;"><strong>' + htmlesc(item.question) + '</strong></p>';
+    html += '<p style="font-size:12px;margin-bottom:2px;"><span style="color:#e74c3c;">❌ 你的答案：' + htmlesc(item.user_answer||'') + '</span></p>';
+    html += '<p style="font-size:12px;color:#27ae60;">✅ 正确答案：' + htmlesc(item.correct_answer||'') + '</p>';
+    html += '</div>';
+    html += '<button class="btn-small" onclick="removeWrong(' + item.id + ')" style="background:#27ae60;color:#fff;white-space:nowrap;">✅ 已掌握</button>';
+    html += '</div></div>';
+  });
+  el.innerHTML = html;
+}
+
+function removeWrong(id) {
+  apiCall('DELETE', '/api/wrong/' + id);
+  localRun("DELETE FROM wrong_items WHERE id=?", [id]);
+  var card = document.getElementById('wrong-' + id);
+  if (card) { card.style.opacity = '0.3'; card.querySelector('button').textContent = '已移除'; card.querySelector('button').disabled = true; }
+  setTimeout(function() { renderWrongPage(); }, 1000);
+}
+window.removeWrong = removeWrong;
 // Export shared state for cross-file access (flashcard.js, exercises.js)
 // Use Object.defineProperty getter/setter to keep window in sync with IIFE-local vars
 var _exports = [

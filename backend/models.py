@@ -70,3 +70,13 @@ class DailyAssign(BaseModel):
     module: str
     date: str = ""
     score: int = 0
+
+class WrongItem(BaseModel):
+    """错题记录"""
+    exercise_id: int = 0
+    module: str = ""
+    question_type: str = ""
+    question: str = ""
+    user_answer: str = ""
+    correct_answer: str = ""
+    explanation: str = ""

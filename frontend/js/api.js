@@ -19,6 +19,7 @@ let dbLocal = null;
     dbLocal.run("CREATE TABLE IF NOT EXISTS assessments (item TEXT, week INTEGER, score INTEGER DEFAULT 0, updated_at TEXT DEFAULT (datetime('now','localtime')), PRIMARY KEY(item, week))");
     dbLocal.run("CREATE TABLE IF NOT EXISTS training_sessions (id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, module TEXT, duration_min INTEGER, created_at TEXT DEFAULT (datetime('now','localtime')))");
     dbLocal.run("CREATE TABLE IF NOT EXISTS daily_tasks (date TEXT, task TEXT, PRIMARY KEY(date, task))");
+    dbLocal.run("CREATE TABLE IF NOT EXISTS wrong_items (id INTEGER PRIMARY KEY AUTOINCREMENT, exercise_id INTEGER, module TEXT, question TEXT, user_answer TEXT, correct_answer TEXT, wrong_count INTEGER DEFAULT 1, wrong_at TEXT DEFAULT (datetime('now','localtime')), reviewed INTEGER DEFAULT 0)");
     console.log('📦 Local SQLite ready');
   } catch(e) { console.warn('Local DB:', e.message); }
 })();

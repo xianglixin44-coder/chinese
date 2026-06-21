@@ -51,6 +51,7 @@
     <div class="nav-group-body collapsed" id="group-tool">
       <div class="nav-item sub" data-page="calendar" onclick="navigate('calendar')">📆 训练日历</div>
       <div class="nav-item sub" data-page="records" onclick="navigate('records')">📊 训练记录</div>
+      <div class="nav-item sub" data-page="wrong" onclick="navigate('wrong')">📝 错题本</div>
       <div class="nav-item sub" data-page="import" onclick="navigate('import')">📥 导入数据</div>
     </div>
   </div>
@@ -825,6 +826,16 @@
     <button class="timer-btn start" id="timerStartBtn" onclick="startTimer()">▶ 开始</button>
     <button class="timer-btn reset" id="timerResetBtn" onclick="resetTimer()" style="display:none">↺ 重置</button>
   </div>
+</div>
+
+<!-- ======================== WRONG ======================== -->
+<div class="page" id="page-wrong">
+  <div class="page-header">
+    <h2>📝 错题本</h2>
+    <p class="sub">记录所有答错的题目，定期复习直到掌握。答对后可从错题本移除。</p>
+    <div class="page-datetime" id="dt-wrong"></div>
+  </div>
+  <div id="wrongContent" style="min-height:200px;"></div>
 </div>
 
 </div><!-- /main -->
