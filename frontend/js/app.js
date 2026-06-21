@@ -296,6 +296,11 @@ async function renderMethodPage() {
       {id:2,sort_order:2,icon:'🃏',title:'费曼闪卡法',source:'间隔重复+费曼学习法',description:'1→2→4→8→16→32→64→128天',target_page:'古诗文阅读页',extra_json:'{"tips":["每日新卡上限20张","答对升级答错重置","间隔≥32天=已掌握"]}'},
       {id:3,sort_order:3,icon:'🧩',title:'语法成分解构图',source:'结构主义语法',description:'三步法:提主干→配逻辑→画结构',target_page:'语言文字运用页',extra_json:'{}'},
       {id:4,sort_order:4,icon:'🗣️',title:'他们说/我说模板',source:'《They Say / I Say》',description:'A引入对立+B推进己方+C升华收束',target_page:'写作表达页',extra_json:'{}'},
+      {id:5,sort_order:5,icon:'🕵️\u200d♂️',title:'小说叙事密码拆解',source:'热奈特叙事学',description:'三维度:叙事视角+时空结构+核心物象',target_page:'现代文阅读页',extra_json:'{"steps":["判视角","析时空","解物象"]}'},
+      {id:6,sort_order:6,icon:'🎭',title:'修辞效果三步拆解法',source:'高考阅卷标准',description:'明手法(1分)→析具体(2分)→阐效果(2分)',target_page:'语言文字运用页',extra_json:'{"formula":"手法(1分)+具体分析(2分)+效果情感(2分)=5分"}'},
+      {id:7,sort_order:7,icon:'🗣️',title:'言外之意解码法',source:'格莱斯会话含义理论',description:'字面意义+被违反的语用准则+真实意图',target_page:'语言文字运用页',extra_json:'{"formula":"字面意义+违反准则+真实意图","rules":["量准则","质准则","关系准则","方式准则"]}'},
+      {id:8,sort_order:8,icon:'🔗',title:'连贯衔接速查',source:'语篇语言学',description:'6类逻辑连词速查表',target_page:'语言文字运用页',extra_json:'{}'},
+      {id:9,sort_order:9,icon:'🎯',title:'文言文双语对齐翻译法',source:'对比语言学',description:'字字落实+句法还原+规范译文',target_page:'古诗文阅读页',extra_json:'{"steps":["字字落实","句法还原","规范译文"]}'},
     ];
   }
 
