@@ -106,6 +106,24 @@ CREATE TABLE IF NOT EXISTS exercises (
     created_at TEXT DEFAULT (datetime('now','localtime'))
 );
 
+CREATE TABLE IF NOT EXISTS training_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    module TEXT NOT NULL,
+    exercise_id INTEGER DEFAULT 0,
+    question TEXT DEFAULT '',
+    user_answer TEXT DEFAULT '',
+    correct_answer TEXT DEFAULT '',
+    is_correct INTEGER DEFAULT 0,
+    score INTEGER DEFAULT 0,
+    correction_note TEXT DEFAULT '',
+    reviewed INTEGER DEFAULT 0,
+    attempt_count INTEGER DEFAULT 1,
+    created_at TEXT DEFAULT (datetime('now','localtime'))
+);
+CREATE INDEX IF NOT EXISTS idx_tlog_module ON training_log(module);
+CREATE INDEX IF NOT EXISTS idx_tlog_correct ON training_log(is_correct);
+CREATE INDEX IF NOT EXISTS idx_tlog_date ON training_log(created_at);
+
 CREATE TABLE IF NOT EXISTS wrong_items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     exercise_id INTEGER,

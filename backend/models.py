@@ -80,3 +80,15 @@ class WrongItem(BaseModel):
     user_answer: str = ""
     correct_answer: str = ""
     explanation: str = ""
+
+class TrainingLogEntry(BaseModel):
+    """统一训练记录"""
+    module: str = ""
+    exercise_id: int = 0
+    question: str = ""
+    user_answer: str = ""
+    correct_answer: str = ""
+    is_correct: int = 0
+    score: int = 0
+    correction_note: str = ""
+    reviewed: int = 0

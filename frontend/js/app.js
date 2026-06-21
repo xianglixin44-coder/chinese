@@ -87,6 +87,7 @@ function navigate(page, keepNav, anchor) {
   if (page === 'records') { renderRecords(); }
   if (page === 'method') { renderMethodPage(); }
   if (page === 'wrong') { renderWrongPage(); }
+  if (page === 'history') { renderTrainingHistory(); }
   // 锚点跳转（如闪卡区域）
   if (anchor) {
     setTimeout(function() {
@@ -272,7 +273,7 @@ document.addEventListener('click', e => {
 
 function toggleAnswer(id) { const el = document.getElementById(id); if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none'; }
 function checkClassicalQ4(radio) { const ans = document.getElementById('ex-classical-4'); if (ans) ans.style.display = 'block'; document.querySelectorAll('input[name="q4"]').forEach(r => { const label = r.closest('.ex-option'); if (label) { label.classList.remove('correct', 'wrong'); if (r.checked && r.value === 'B') label.classList.add('correct'); else if (r.checked) label.classList.add('wrong'); } }); }
-function doCheck(name, correct) { document.getElementById(`ex-${name}`).style.display = 'block'; var wrong=false; document.querySelectorAll(`input[name="${name}"]`).forEach(r => { const l = r.closest('.ex-option'); if (l) { l.classList.remove('correct', 'wrong'); if (r.checked && r.value === correct) l.classList.add('correct'); else if (r.checked) { l.classList.add('wrong'); wrong=true; } } }); if (wrong) recordWrongAnswer(name, document.querySelector(`input[name="${name}"]:checked`)?.parentElement?.textContent?.trim()||'未作答', correct); }
+function doCheck(name, correct) { document.getElementById(`ex-${name}`).style.display = 'block'; var wrong=false; var userAns=''; document.querySelectorAll(`input[name="${name}"]`).forEach(r => { const l = r.closest('.ex-option'); if (l) { l.classList.remove('correct', 'wrong'); if (r.checked && r.value === correct) { l.classList.add('correct'); userAns=r.value; } else if (r.checked) { l.classList.add('wrong'); wrong=true; userAns=r.value; } } }); if (!userAns) userAns='未作答'; var questionEl=document.getElementById(`ex-${name}`); var question=(questionEl?.closest('.exercise-item')?.querySelector('strong')?.textContent)||name; var module=''; if (name.startsWith('reading')) module='modern_reading'; else if (name.startsWith('classical')) module='classical_reading'; else if (name.startsWith('bingju')) module='grammar'; else if (name.startsWith('language')) module='grammar'; else module='grammar'; recordTrainingLog(module, question, userAns, correct, wrong?0:1); if (wrong) { apiCall('POST', '/api/wrong', {exercise_id:0,module:module,question_type:'',question:question,user_answer:userAns,correct_answer:correct,explanation:''}); localRun("INSERT INTO wrong_items (exercise_id,module,question,user_answer,correct_answer) VALUES (?,?,?,?,?)",[0,module,question,userAns,correct]); } }
 function checkBingju1(r) { doCheck('bingju1', 'B'); } function checkBingju2(r) { doCheck('bingju2', 'A'); } function checkBingju3(r) { doCheck('bingju3', 'C'); } function checkBingju4(r) { doCheck('bingju4', 'B'); } function checkBingju5(r) { doCheck('bingju5', 'B'); }
 
 async function renderMethodPage() {
@@ -738,6 +739,8 @@ window.updateHomeStats = updateHomeStats;
 window.checkStreak = checkStreak;
 window.renderWrongPage = renderWrongPage;
 window.recordWrongAnswer = recordWrongAnswer;
+window.renderTrainingHistory = renderTrainingHistory;
+window.recordTrainingLog = recordTrainingLog;
 
 // ====== 错题本 ======
 function recordWrongAnswer(exerciseName, userAnswer, correctAnswer) {
@@ -754,7 +757,91 @@ function recordWrongAnswer(exerciseName, userAnswer, correctAnswer) {
   });
   localRun("INSERT INTO wrong_items (exercise_id, module, question, user_answer, correct_answer) VALUES (?,?,?,?,?)",
     [0, module, question, userAnswer, correctAnswer]);
+  // Also record to unified training_log
+  recordTrainingLog(module, question, userAnswer, correctAnswer, 0);
 }
+
+// ====== 统一训练记录 ======
+function recordTrainingLog(module, question, userAnswer, correctAnswer, isCorrect) {
+  apiCall('POST', '/api/training-log', {
+    module: module, exercise_id: 0, question: question,
+    user_answer: userAnswer, correct_answer: correctAnswer,
+    is_correct: isCorrect, score: 0
+  });
+  localRun("INSERT INTO training_log (module, question, user_answer, correct_answer, is_correct) VALUES (?,?,?,?,?)",
+    [module, question, userAnswer, correctAnswer, isCorrect]);
+}
+
+async function renderTrainingHistory() {
+  var el = document.getElementById('trainingHistoryContent');
+  if (!el) return;
+  var filter = document.getElementById('tlogFilter')?.value || '';
+  var items = [];
+  if (apiAvailable) {
+    try {
+      var qs = filter ? '?module=' + encodeURIComponent(filter) + '&limit=200' : '?limit=200';
+      var data = await apiCall('GET', '/api/training-log' + qs);
+      if (data && data.items) items = data.items;
+    } catch(e) {}
+  }
+  if (!items.length) {
+    var rows = localQuery("SELECT * FROM training_log ORDER BY created_at DESC LIMIT 200", []);
+    items = rows.map(function(r) { return {id:r[0],module:r[1],question:r[3],user_answer:r[4],correct_answer:r[5],is_correct:r[6],correction_note:r[8],reviewed:r[9],created_at:r[11]}; });
+  }
+  if (!items.length) {
+    el.innerHTML = '<div class="card" style="text-align:center;padding:40px;"><p style="font-size:18px;">📊 暂无训练记录</p><p style="color:var(--text-light);">完成练习后记录自动显示在此。</p></div>';
+    return;
+  }
+  var correct = items.filter(function(i) { return i.is_correct; }).length;
+  var wrong = items.length - correct;
+  var html = '<div class="card" style="margin-bottom:10px;"><div style="display:flex;gap:20px;font-size:13px;">';
+  html += '<span>📊 总计 <strong>' + items.length + '</strong></span>';
+  html += '<span style="color:#27ae60;">✅ ' + correct + '</span>';
+  html += '<span style="color:#e74c3c;">❌ ' + wrong + '</span>';
+  html += '<span>📝 待复习 <strong style="color:#e67e22;">' + items.filter(function(i){return !i.is_correct && !i.reviewed;}).length + '</strong></span>';
+  html += '<select id="tlogFilter" onchange="renderTrainingHistory()" style="margin-left:auto;font-size:12px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;background:var(--card-bg);">';
+  html += '<option value="">全部模块</option>';
+  var MODS = {modern_reading:'现代文阅读',classical_reading:'古诗文阅读',grammar:'语言文字运用',writing:'写作表达',flashcard:'闪卡'};
+  Object.keys(MODS).forEach(function(k) {
+    html += '<option value="' + k + '"' + (filter===k?' selected':'') + '>' + MODS[k] + '</option>';
+  });
+  html += '</select></div></div>';
+  items.forEach(function(item, i) {
+    var cls = item.is_correct ? 'border-left:3px solid #27ae60;' : 'border-left:3px solid #e74c3c;';
+    html += '<div class="card" style="margin-top:6px;' + cls + 'padding:10px 14px;">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:start;">';
+    html += '<div style="flex:1;">';
+    html += '<p style="font-size:11px;color:var(--text-light);margin-bottom:3px;">' + (item.created_at||'').slice(0,16) + ' · ' + (MODS[item.module]||item.module) + '</p>';
+    html += '<p style="font-size:13px;margin-bottom:4px;"><strong>' + htmlesc(item.question) + '</strong></p>';
+    html += '<p style="font-size:12px;margin-bottom:1px;">你的答案：<span style="color:' + (item.is_correct?'#27ae60':'#e74c3c') + ';">' + htmlesc(item.user_answer||'(空)') + '</span>';
+    if (!item.is_correct) html += ' → 正确答案：<span style="color:#27ae60;">' + htmlesc(item.correct_answer||'') + '</span>';
+    html += '</p>';
+    if (item.correction_note) html += '<p style="font-size:12px;color:var(--accent2);margin-top:4px;">📝 纠错笔记：' + htmlesc(item.correction_note) + '</p>';
+    html += '</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">';
+    html += '<button class="btn-small" onclick="editCorrectionNote(' + item.id + ')" style="font-size:11px;padding:2px 8px;">✏️ 纠错</button>';
+    if (!item.reviewed) html += '<button class="btn-small" onclick="markReviewed(' + item.id + ')" style="font-size:11px;padding:2px 8px;background:#e67e22;color:#fff;">👁 已复习</button>';
+    html += '</div></div></div>';
+  });
+  el.innerHTML = html;
+}
+
+function editCorrectionNote(id) {
+  var note = prompt('请输入纠错笔记：');
+  if (note === null) return;
+  apiCall('PUT', '/api/training-log/' + id + '/note', {note: note});
+  localRun("UPDATE training_log SET correction_note=? WHERE id=?", [note, id]);
+  renderTrainingHistory();
+}
+
+function markReviewed(id) {
+  apiCall('PUT', '/api/training-log/' + id + '/review');
+  localRun("UPDATE training_log SET reviewed=1 WHERE id=?", [id]);
+  renderTrainingHistory();
+}
+window.editCorrectionNote = editCorrectionNote;
+window.markReviewed = markReviewed;
+window.recordTrainingLog = recordTrainingLog;
 
 async function renderWrongPage() {
   var el = document.getElementById('wrongContent');

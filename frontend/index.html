@@ -51,6 +51,7 @@
     <div class="nav-group-body collapsed" id="group-tool">
       <div class="nav-item sub" data-page="calendar" onclick="navigate('calendar')">📆 训练日历</div>
       <div class="nav-item sub" data-page="records" onclick="navigate('records')">📊 训练记录</div>
+      <div class="nav-item sub" data-page="history" onclick="navigate('history')">📋 答题记录</div>
       <div class="nav-item sub" data-page="wrong" onclick="navigate('wrong')">📝 错题本</div>
       <div class="nav-item sub" data-page="import" onclick="navigate('import')">📥 导入数据</div>
     </div>
@@ -836,6 +837,16 @@
     <div class="page-datetime" id="dt-wrong"></div>
   </div>
   <div id="wrongContent" style="min-height:200px;"></div>
+</div>
+
+<!-- ======================== HISTORY ======================== -->
+<div class="page" id="page-history">
+  <div class="page-header">
+    <h2>📋 答题记录</h2>
+    <p class="sub">所有训练记录：题目、解答、纠错笔记。可按模块筛选。</p>
+    <div class="page-datetime" id="dt-history"></div>
+  </div>
+  <div id="trainingHistoryContent" style="min-height:200px;"></div>
 </div>
 
 </div><!-- /main -->
