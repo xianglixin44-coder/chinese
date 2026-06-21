@@ -1,7 +1,17 @@
-__pycache__/
-*.pyc
-.venv/
+# 输出目录（生成的练习材料）
+outputs/
+
+# 系统文件
 .DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Anki 相关（自行导入，不同步卡组文件快照）
+*.anki2
+*.apkg
 trainer.db
 trainer.db-shm
 trainer.db-wal
+__pycache__/
+*.pyc
