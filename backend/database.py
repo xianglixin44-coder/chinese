@@ -43,6 +43,20 @@ def init_db():
             PRIMARY KEY(date, module)
         );
 
+        CREATE TABLE IF NOT EXISTS methods (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            sort_order INTEGER DEFAULT 0,
+            icon TEXT DEFAULT '',
+            title TEXT NOT NULL,
+            source TEXT DEFAULT '',
+            description TEXT DEFAULT '',
+            target_module TEXT DEFAULT '',
+            target_page TEXT DEFAULT '',
+            extra_json TEXT DEFAULT '{}',
+            status TEXT DEFAULT 'active',
+            created_at TEXT DEFAULT (datetime('now','localtime'))
+        );
+
         -- ====== 统一题库表（module + type 区分题型，extra_json 存类型特有字段）======
         CREATE TABLE IF NOT EXISTS exercises (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -66,8 +80,9 @@ def init_db():
     # 为 exercises 表补充新增字段（兼容旧版本 DB）
     _migrate_exercises_columns(conn)
     # 首次启动时填充种子闪卡数据
-    from .seed_data import seed_flashcard_items
+    from .seed_data import seed_flashcard_items, seed_methods
     seed_flashcard_items(conn)
+    seed_methods(conn)
     conn.close()
 
 
@@ -79,6 +94,7 @@ def _migrate_exercises_columns(conn):
         ("practice_count", "INTEGER DEFAULT 0"),
         ("source", "TEXT DEFAULT 'seed'"),
         ("status", "TEXT DEFAULT 'active'"),
+        ("method_id", "INTEGER DEFAULT 0"),
     ]
     for name, typedef in additions:
         if name not in cols:

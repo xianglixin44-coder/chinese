@@ -367,3 +367,7 @@ async function completeDailyExercise(module, score) {
 async function fetchRecords(days) {
   return await apiCall('GET', '/api/records?days=' + (days || 30));
 }
+
+async function fetchMethods() {
+  return await apiCall('GET', '/api/methods');
+}

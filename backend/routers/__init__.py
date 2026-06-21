@@ -7,9 +7,11 @@ from .generic import router as generic_router
 from .exercises import router as exercises_router
 from .daily import router as daily_router
 from .records import router as records_router
+from .methods import router as methods_router
 
 
 def register_routes(app: FastAPI):
+    app.include_router(methods_router)
     app.include_router(cards_router)
     app.include_router(tasks_router)
     app.include_router(grammar_router)

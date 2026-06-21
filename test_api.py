@@ -172,6 +172,30 @@ class TestDaily:
         assert r.json()["ok"] is True
 
 
+class TestMethods:
+    def setup_method(self):
+        from backend.database import get_db
+        conn = get_db()
+        conn.execute("DELETE FROM methods WHERE sort_order >= 10")
+        conn.commit()
+        conn.close()
+
+    def test_list_methods(self):
+        r = client.get("/api/methods")
+        assert r.status_code == 200
+        data = r.json()
+        assert len(data["items"]) == 9
+        assert data["items"][0]["title"] == "主动标记阅读法"
+
+    def test_add_method(self):
+        r = client.post("/api/methods", json={
+            "sort_order": 10, "icon": "🆕", "title": "测试方法",
+            "source": "测试来源", "description": "测试描述"
+        })
+        assert r.status_code == 200
+        assert r.json()["ok"] is True
+
+
 class TestRecords:
     def test_get_records(self):
         r = client.get("/api/records?days=7")

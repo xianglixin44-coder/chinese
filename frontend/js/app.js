@@ -47,6 +47,7 @@ function navigate(page, keepNav, anchor) {
   document.getElementById('sidebar').classList.remove('open');
   if (page === 'calendar') { renderCalendar(); }
   if (page === 'records') { renderRecords(); }
+  if (page === 'method') { renderMethodPage(); }
   // 锚点跳转（如闪卡区域）
   if (anchor) {
     setTimeout(function() {
@@ -158,7 +159,6 @@ function renderReadingTabs() {
 function renderSymbols() {
   const html = SYMBOLS.map(s => `<div class="sym-card"><div class="sym">${s.sym}</div><div class="sym-name">${s.name}</div><div class="sym-desc">${s.desc}</div></div>`).join('');
   var g = document.getElementById('symGrid'); if (g) g.innerHTML = html;
-  var m = document.getElementById('methodSymGrid'); if (m) m.innerHTML = html;
 }
 
 // ====== 每日选题加载与渲染 ======
@@ -732,6 +732,112 @@ function toggleAnswer(id) { const el = document.getElementById(id); if (el) el.s
 function checkClassicalQ4(radio) { const ans = document.getElementById('ex-classical-4'); if (ans) ans.style.display = 'block'; document.querySelectorAll('input[name="q4"]').forEach(r => { const label = r.closest('.ex-option'); if (label) { label.classList.remove('correct', 'wrong'); if (r.checked && r.value === 'B') label.classList.add('correct'); else if (r.checked) label.classList.add('wrong'); } }); }
 function doCheck(name, correct) { document.getElementById(`ex-${name}`).style.display = 'block'; document.querySelectorAll(`input[name="${name}"]`).forEach(r => { const l = r.closest('.ex-option'); if (l) { l.classList.remove('correct', 'wrong'); if (r.checked && r.value === correct) l.classList.add('correct'); else if (r.checked) l.classList.add('wrong'); } }); }
 function checkBingju1(r) { doCheck('bingju1', 'B'); } function checkBingju2(r) { doCheck('bingju2', 'A'); } function checkBingju3(r) { doCheck('bingju3', 'C'); } function checkBingju4(r) { doCheck('bingju4', 'B'); } function checkBingju5(r) { doCheck('bingju5', 'B'); }
+
+async function renderMethodPage() {
+  // 渲染侧边栏方法项
+  var sidebarEl = document.getElementById('methodSidebar');
+  // 渲染方法页内容
+  var contentEl = document.getElementById('methodContent');
+  if (!contentEl) return;
+
+  var items = [];
+  // 优先从 API 加载
+  if (apiAvailable) {
+    try {
+      var data = await fetchMethods();
+      if (data && data.items) items = data.items;
+    } catch(e) {}
+  }
+  // 离线回退：硬编码（与 seed 一致）
+  if (!items.length) {
+    items = [
+      {id:1,sort_order:1,icon:'🏷️',title:'主动标记阅读法',source:'《如何阅读一本书》分析阅读法',description:'8种符号+批注三层法+三遍阅读流程',target_page:'现代文阅读页',extra_json:'{"steps":["通读5min","细读15min","整合5min"]}'},
+      {id:2,sort_order:2,icon:'🃏',title:'费曼闪卡法',source:'间隔重复+费曼学习法',description:'1→2→4→8→16→32→64→128天',target_page:'古诗文阅读页',extra_json:'{"tips":["每日新卡上限20张","答对升级答错重置","间隔≥32天=已掌握"]}'},
+      {id:3,sort_order:3,icon:'🧩',title:'语法成分解构图',source:'结构主义语法',description:'三步法:提主干→配逻辑→画结构',target_page:'语言文字运用页',extra_json:'{}'},
+      {id:4,sort_order:4,icon:'🗣️',title:'他们说/我说模板',source:'《They Say / I Say》',description:'A引入对立+B推进己方+C升华收束',target_page:'写作表达页',extra_json:'{}'},
+    ];
+  }
+
+  // 渲染侧边栏
+  if (sidebarEl) {
+    var sideHtml = '';
+    items.forEach(function(m) {
+      sideHtml += '<div class="nav-item sub" onclick="navigate(\'method\',false);setTimeout(function(){var el=document.getElementById(\'m-\'+' + m.id + ');if(el)el.scrollIntoView({behavior:\'smooth\'});},150)">' + m.icon + ' ' + htmlesc(m.title) + '</div>';
+    });
+    sidebarEl.innerHTML = sideHtml;
+  }
+
+  // 渲染方法卡片
+  var numbers = ['一','二','三','四','五','六','七','八','九','十','十一','十二'];
+  var html = '';
+  items.forEach(function(m, i) {
+    var num = numbers[i] || (i+1);
+    html += '<div class="card" id="m-' + m.id + '">';
+    html += '<h3>' + m.icon + ' ' + num + '、' + htmlesc(m.title) + '</h3>';
+    html += '<p style="margin-bottom:10px;">来源：' + htmlesc(m.source||'') + ' · 适用：' + htmlesc(m.target_page||'') + '</p>';
+    if (m.description) html += '<p style="font-size:13px;color:var(--text-light);margin-bottom:8px;">' + htmlesc(m.description) + '</p>';
+
+    // 解析 extra_json 渲染结构化内容
+    var extra = {};
+    try { extra = JSON.parse(m.extra_json || '{}'); } catch(e) {}
+
+    if (extra.steps && extra.steps.length) {
+      html += '<div style="display:grid;gap:6px;font-size:13px;line-height:1.8;">';
+      var colors = ['var(--accent2)','var(--accent)','var(--gold)','var(--green)','var(--accent2)'];
+      extra.steps.forEach(function(s, si) {
+        html += '<div style="background:#faf8f5;padding:10px;border-radius:6px;border-left:3px solid ' + (colors[si]||colors[0]) + ';"><strong>' + (si+1) + '️⃣ ' + htmlesc(s) + '</strong></div>';
+      });
+      html += '</div>';
+    }
+
+    if (extra.table && extra.table.length) {
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;line-height:1.8;">';
+      extra.table.forEach(function(r) {
+        html += '<div style="background:#faf8f5;padding:8px;border-radius:6px;"><strong>' + htmlesc(r[0]) + '：</strong>' + htmlesc(r[1]) + '</div>';
+      });
+      html += '</div>';
+    }
+
+    if (extra.tips && extra.tips.length) {
+      html += '<div style="display:grid;gap:4px;font-size:13px;">';
+      extra.tips.forEach(function(t) {
+        html += '<div style="background:#faf8f5;padding:8px;border-radius:6px;">💡 ' + htmlesc(t) + '</div>';
+      });
+      html += '</div>';
+    }
+
+    if (extra.formula) {
+      html += '<div style="font-size:13px;line-height:2;padding:10px;background:#faf8f5;border-radius:6px;margin-bottom:8px;"><strong>公式：</strong>' + htmlesc(extra.formula) + '</div>';
+    }
+
+    if (extra.principles && extra.principles.length) {
+      html += '<div style="font-size:13px;margin-top:4px;"><strong>准则：</strong>' + extra.principles.map(function(p){return htmlesc(p);}).join(' | ') + '</div>';
+    }
+
+    if (m.target_page) {
+      html += '<p style="margin-top:8px;font-size:12px;color:var(--text-light);">📖 练习入口：' + htmlesc(m.target_page) + '</p>';
+    }
+    html += '</div>';
+  });
+
+  // 方法映射表
+  html += '<div class="card" style="margin-top:14px;"><h3>📊 方法 × 题型 映射</h3>';
+  html += '<div style="overflow-x:auto;font-size:12px;line-height:2;"><table style="width:100%;border-collapse:collapse;">';
+  html += '<tr style="border-bottom:1px solid var(--border);"><th style="text-align:left;padding:4px 8px;">方法</th><th style="padding:4px 8px;">现代文</th><th style="padding:4px 8px;">古诗文</th><th style="padding:4px 8px;">语言</th><th style="padding:4px 8px;">写作</th></tr>';
+  var MODS = ['modern_reading','classical_reading','grammar','writing'];
+  var MOD_NAMES = ['📖 现代文','🏛️ 古诗文','✍️ 语言','📝 写作'];
+  items.forEach(function(m) {
+    html += '<tr style="border-bottom:1px solid #f0eeea;">';
+    html += '<td style="padding:4px 8px;">' + m.icon + ' ' + htmlesc(m.title) + '</td>';
+    MODS.forEach(function(mod) {
+      html += '<td style="text-align:center;padding:4px 8px;">' + (m.target_module === mod ? '✅' : '') + '</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</table></div></div>';
+
+  contentEl.innerHTML = html;
+}
 
 async function renderRecords() {
   var el = document.getElementById('recordsContent');
