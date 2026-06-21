@@ -46,7 +46,7 @@ async function checkApi() {
 async function apiCall(method, path, body) {
   if (!apiAvailable) return null;
   try {
-    const opts = { method, headers: { 'Content-Type': 'application/json' }, signal: AbortSignal.timeout(3000) };
+    const opts = { method, headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + AUTH_TOKEN }, signal: AbortSignal.timeout(3000) };
     if (body) opts.body = JSON.stringify(body);
     const r = await fetch(`${API_BASE}${path}`, opts);
     if (!r.ok) return null;
