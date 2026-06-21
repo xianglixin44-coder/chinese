@@ -28,13 +28,23 @@
     </div>
   </div>
 
+  <!-- 方法分组 — 默认折叠 -->
+  <div class="nav-group">
+    <div class="nav-group-title" onclick="toggleGroup('method')">🧠 方法 <span class="arrow">▸</span></div>
+    <div class="nav-group-body collapsed" id="group-method">
+      <div class="nav-item sub" data-page="reading" onclick="navigate('reading', false); setTimeout(function(){document.getElementById('symGrid')&&document.getElementById('symGrid').scrollIntoView({behavior:'smooth',block:'start'});},200)">🏷️ 主动标记阅读法</div>
+      <div class="nav-item sub" data-page="classical" onclick="navigate('classical', true, 'flashcard')">🃏 费曼闪卡法</div>
+      <div class="nav-item sub" data-page="language" onclick="navigate('language', false)">🧩 语法成分解构图</div>
+      <div class="nav-item sub" data-page="writing" onclick="navigate('writing', false)">🗣️ 他们说/我说模板</div>
+    </div>
+  </div>
+
   <!-- 资源分组 — 默认折叠 -->
   <div class="nav-group">
     <div class="nav-group-title" onclick="toggleGroup('resource')">📚 资源 <span class="arrow">▸</span></div>
     <div class="nav-group-body collapsed" id="group-resource">
       <div class="nav-item sub" data-page="books" onclick="navigate('books')">📖 推荐书单</div>
       <div class="nav-item sub" data-page="plan" onclick="navigate('plan')">📅 训练计划</div>
-      <div class="nav-item sub" data-page="methodology" onclick="navigate('methodology')">🧠 水平四方法论</div>
     </div>
   </div>
 
