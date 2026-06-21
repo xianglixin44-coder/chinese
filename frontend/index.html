@@ -776,10 +776,18 @@
     <input type="file" id="importFile" accept=".csv" style="display:none" onchange="handleImportFile(event)">
     <div class="flex" style="margin-top:8px;gap:8px">
       <select id="importDeck" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;min-width:140px">
-        <option value="shici">导入到：文言实词</option>
-        <option value="xuci">导入到：文言虚词</option>
-        <option value="wenxue">导入到：文学常识</option>
-        <option value="exercises">导入到：训练习题</option>
+        <optgroup label="闪卡牌组">
+          <option value="shici">文言实词</option>
+          <option value="xuci">文言虚词</option>
+          <option value="wenxue">文学常识</option>
+        </optgroup>
+        <optgroup label="练习题库">
+          <option value="modern_reading">现代文阅读</option>
+          <option value="classical_reading">古诗文阅读</option>
+          <option value="grammar">语法练习</option>
+          <option value="writing">写作题目</option>
+          <option value="exercises">通用习题</option>
+        </optgroup>
       </select>
     </div>
     <div class="import-preview" id="importPreview" style="display:none"></div>

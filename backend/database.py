@@ -90,4 +90,7 @@ def init_db():
         );
     """)
     conn.commit()
+    # 首次启动时填充种子闪卡数据
+    from .seed_data import seed_flashcard_items
+    seed_flashcard_items(conn)
     conn.close()

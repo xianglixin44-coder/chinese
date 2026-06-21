@@ -306,38 +306,8 @@ const NOVEL_EXAMPLES = [
   {title:"道具：核心物象的结构与象征作用",analysis:"📌 【道具/物象·高考答题模板】\n\n【第一步：析物理（1分）】\n「对折的纸」是贯穿全文的核心线索与道具（物象）。\n\n【第二步：析结构（2分）】\n1. 线索作用：小说以「纸」的出现开篇，中途写「纸」在风中的挣扎，串联起承转合。\n2. 制造冲突：这张未打开的纸成为了情节的暴风眼。\n\n【第三步：析象征（2分）】\n1. 象征意义：纸上的字虽未点明，但其在风中「像受伤的鸟」一样挣扎，象征着主人公破碎的内心世界。\n2. 深化主题：道具的反复出现，将抽象的情感具象化。"}
 ];
 
-function dbRun(sql, params) { localRun(sql, params); dispatchToApi(sql, params); }
-function dispatchToApi(sql, params) {
-  if (!apiAvailable) return;
-       if (sql.includes('flashcard_log')) apiCall('POST','/api/flashcard/log',{deck:params[0],card_word:params[1],rating:params[2]});
-  else if (sql.includes('template_log'))   apiCall('POST','/api/template/log',{combo_a:params[0],combo_b:params[1],combo_c:params[2],topic:params[3]});
-  else if (sql.includes('grammar_log'))     apiCall('POST','/api/grammar/log',{sentence:params[0],example_idx:params[1]??-1,module:params[2]||''});
-  else if (sql.includes('training_sessions')) apiCall('POST','/api/training/session',{date:params[0],module:params[1],duration_min:params[2]});
-  // card_srs sync handled directly in rateCard() — skip dispatchToApi to avoid param mismatch
-  else if (sql.includes('assessments'))     apiCall('POST','/api/assessment',{item:params[0],week:params[1],score:params[2]});
-  else if (sql.includes('imported_exercises')) apiCall('POST','/api/import/exercises',{rows:params});
-  else if (sql.includes('streak'))          apiCall('POST','/api/streak',{count:params[0],last_active:params[1]});
-  else { apiCall('POST', '/api/run', {sql, params}); }
-}
-
-async function dbQuery(sql, params) {
-  let apiRows = null;
-  try {
-         if (sql.includes('SELECT count, last_active FROM streak')) { const r = await apiCall('GET','/api/streak'); if (r) apiRows = [[r.count, r.last_active]]; }
-    else if (sql.includes('SELECT COUNT(*) FROM template_log'))    { const r = await apiCall('GET','/api/stats/template'); if (r) apiRows = [[r.count]]; }
-    else if (sql.includes('SELECT COUNT(*) FROM grammar_log'))     { const r = await apiCall('GET','/api/stats/grammar'); if (r) apiRows = [[r.count]]; }
-    else if (sql.includes('SELECT DISTINCT date FROM training_sessions')) {
-      const r = await apiCall('GET',`/api/calendar?start=${params[0]}&end=${params[1]}`);
-      if (r && r.dates) apiRows = r.dates.map(d => [d]);
-    }
-    else if (sql.includes('SELECT module, duration_min FROM training_sessions WHERE date')) {
-      const r = await apiCall('GET',`/api/calendar/day?date=${params[0]}`);
-      if (r && r.sessions) apiRows = r.sessions.map(s => [s.module, s.duration_min]);
-    }
-  } catch(e) {}
-  if (apiRows && apiRows.length) return apiRows;
-  return localQuery(sql, params);
-}
+// dbRun — local-only write helper. Explicit apiCall() calls in each business function handle server sync.
+function dbRun(sql, params) { localRun(sql, params); }
 
 async function getStreak() {
   const r = await apiCall('GET','/api/streak');

@@ -97,6 +97,7 @@ function checkReadingAnswer(qid, chosen, correct) {
   resultEl.style.display = 'block';
   if (chosen === correct) {
     resultEl.innerHTML = '<p style="color:#27ae60;font-weight:600">✅ 正确！+3分</p>';
+    apiCall('POST', '/api/grammar/log', {sentence: qid, example_idx: -1, module: 'reading'});
     dbRun("INSERT INTO grammar_log (sentence, example_idx, module) VALUES (?, -1, 'reading')", [qid]);
     checkStreak(); markTaskDone('reading');
   } else {
@@ -140,8 +141,24 @@ function renderSymbols() {
 const SRS_INTERVALS = [1, 2, 4, 8, 16, 32, 64, 128];
 const MASTERY_INTERVAL = 32;
 
-function initDeck(name) {
+async function initDeck(name) {
   currentDeck = name; deckIndex = 0;
+  // 优先从服务端题库加载，API 不可用时回退到硬编码数据
+  if (apiAvailable) {
+    try {
+      const r = await fetchFlashcardItems(name);
+      if (r && r.items && r.items.length > 0) {
+        const existing = DECKS[name] || [];
+        const existingFronts = new Set(existing.map(c => c.front));
+        const apiCards = r.items.map(item => ({
+          front: item.front, hl: item.hl || '', word: item.word || '',
+          meaning: item.meaning || '', analogy: item.analogy || ''
+        }));
+        const newCards = apiCards.filter(c => !existingFronts.has(c.front));
+        if (newCards.length > 0) DECKS[name] = [...existing, ...newCards];
+      }
+    } catch(e) { /* API 不可用，回退硬编码 */ }
+  }
   const totalCards = DECKS[name].length;
   const today = new Date().toISOString().slice(0, 10);
   const srsRows = dbGet("SELECT card_idx, interval_days, repetitions, next_review, mastered FROM card_srs WHERE deck = ?", [name]);
@@ -402,13 +419,36 @@ function applyTemplate() {
 function htmlesc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 function sanitizeHTML(str) {
   if (!str) return '';
-  return String(str)
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
-    .replace(/\bon\w+\s*=\s*["'][^"']*["']/gi, '')
-    .replace(/\bon\w+\s*=\s*[^\s>]*/gi, '')
-    .replace(/javascript\s*:/gi, '')
-    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
+  var s = String(str);
+  // Pass 1: strip dangerous tags and event handlers
+  s = s.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+       .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+       .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+       .replace(/<embed\b[^>]*>/gi, '')
+       .replace(/<applet\b[^<]*(?:(?!<\/applet>)<[^<]*)*<\/applet>/gi, '')
+       .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+       .replace(/\bon\w+\s*=\s*["'][^"']*["']/gi, '')
+       .replace(/\bon\w+\s*=\s*[^\s>]*/gi, '')
+       .replace(/\bon\w+\b(?=\s*[^=]|$)/gi, '')  // bare on* attrs like <img onerror>
+       .replace(/javascript\s*:/gi, '')
+       .replace(/vbscript\s*:/gi, '')
+       .replace(/data\s*:\s*text\/html/gi, '');
+  // Pass 2: decode HTML entities and re-check for smuggled tags
+  var decoded;
+  try {
+    var txt = document.createElement('textarea');
+    txt.innerHTML = s; decoded = txt.value;
+  } catch(e) { decoded = s; }
+  if (decoded !== s) {
+    // Re-run stripped-tag regex on decoded text to catch entity-encoded attacks
+    decoded = decoded.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+                     .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+                     .replace(/\bon\w+\s*=\s*["'][^"']*["']/gi, '')
+                     .replace(/\bon\w+\s*=\s*[^\s>]*/gi, '')
+                     .replace(/javascript\s*:/gi, '');
+    return decoded;
+  }
+  return s;
 }
 
 function loadGrammarExample(idx) {
@@ -689,14 +729,57 @@ function showImportStatus(msg, type) {
 async function executeImport() {
   if (!importData.length) return;
   const deck = document.getElementById('importDeck').value; let count = 0;
-  if (deck === 'exercises') {
+  // 闪卡牌组 — 追加到 DECKS
+  if (deck === 'shici' || deck === 'xuci' || deck === 'wenxue') {
+    const newCards = importData.map(row => ({ front: row[0] || '', hl: row[1] || '', word: row[2] || '', meaning: row[3] || '', analogy: row[4] || '' }));
+    DECKS[deck].push(...newCards); count = newCards.length;
+  // 现代文阅读题库 — CSV 列: passage_type, title, passage, question, options_json, answer_idx, explanation
+  } else if (deck === 'modern_reading') {
+    for (const row of importData) {
+      if (row.length < 6) continue;
+      const r = await apiCall('POST', '/api/exercises/modern', {
+        passage_type: row[0]||'', title: row[1]||'', passage: row[2]||'',
+        question: row[3]||'', options_json: row[4]||'[]',
+        answer_idx: parseInt(row[5])||0, explanation: row[6]||''
+      });
+      if (r && r.ok) count++;
+    }
+  // 古诗文阅读题库 — CSV 列: question_type, passage, question, options_json, answer, explanation
+  } else if (deck === 'classical_reading') {
+    for (const row of importData) {
+      if (row.length < 5) continue;
+      const r = await apiCall('POST', '/api/exercises/classical', {
+        question_type: row[0]||'', passage: row[1]||'', question: row[2]||'',
+        options_json: row[3]||'[]', answer: row[4]||'', explanation: row[5]||''
+      });
+      if (r && r.ok) count++;
+    }
+  // 语法练习题库 — CSV 列: question_type, sentence, options_json, answer, explanation, points
+  } else if (deck === 'grammar') {
+    for (const row of importData) {
+      if (row.length < 4) continue;
+      const r = await apiCall('POST', '/api/exercises/grammar', {
+        question_type: row[0]||'', sentence: row[1]||'', options_json: row[2]||'[]',
+        answer: row[3]||'', explanation: row[4]||'', points: row[5]||''
+      });
+      if (r && r.ok) count++;
+    }
+  // 写作题库 — CSV 列: prompt, template_hint, sample_answer, scoring_guide
+  } else if (deck === 'writing') {
+    for (const row of importData) {
+      if (row.length < 1) continue;
+      const r = await apiCall('POST', '/api/exercises/writing', {
+        prompt: row[0]||'', template_hint: row[1]||'',
+        sample_answer: row[2]||'', scoring_guide: row[3]||''
+      });
+      if (r && r.ok) count++;
+    }
+  // 通用习题导入（兼容旧格式）
+  } else if (deck === 'exercises') {
     const rows = importData.filter(r => r && r.length >= 6).map(r => [r[0]||'', r[1]||'', r[2]||'', r[3]||'', r[4]||'', r[5]||'']);
     const result = await apiCall('POST', '/api/import/exercises', { rows });
     if (result && result.ok) count = result.count || rows.length;
     else { showImportStatus('❌ 导入失败，请检查网络或数据格式', 'error'); return; }
-  } else {
-    const newCards = importData.map(row => ({ front: row[0] || '', hl: row[1] || '', word: row[2] || '', meaning: row[3] || '', analogy: row[4] || '' }));
-    DECKS[deck].push(...newCards); count = newCards.length;
   }
   showImportStatus(`✅ 成功导入 ${count} 条数据到 ${deck}`, 'success');
   document.getElementById('importBtn').style.display = 'none';
