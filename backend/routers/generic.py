@@ -14,9 +14,9 @@ async def run_safe(body: dict):
 
     allowed = False
     if upper.startswith("INSERT") or upper.startswith("UPDATE"):
-        if "daily_tasks" in upper:
+        if "DAILY_TASKS" in upper:
             allowed = True
-        elif "card_srs" in upper and "INSERT OR IGNORE" in upper:
+        elif "CARD_SRS" in upper:
             allowed = True
 
     if not allowed:
