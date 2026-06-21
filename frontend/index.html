@@ -16,19 +16,39 @@
 </header>
 
 <nav class="sidebar" id="sidebar">
-  <div class="nav-item active" data-page="overview" onclick="navigate('overview')">🎯 训练模块</div>
-  <div class="nav-group-title">考试模块</div>
-  <div class="nav-item" data-page="reading" onclick="navigate('reading', true)">📖 现代文阅读 <span class="score">35分</span></div>
-  <div class="nav-item" data-page="classical" onclick="navigate('classical', true)">🏛️ 古诗文阅读 <span class="score">35分</span></div>
-  <div class="nav-item" data-page="language" onclick="navigate('language', true)">✍️ 语言文字运用 <span class="score">20分</span></div>
-  <div class="nav-item" data-page="writing" onclick="navigate('writing')">📝 写作表达 <span class="score">60分</span></div>
-  <div class="nav-group-title">资源</div>
-  <div class="nav-item" data-page="books" onclick="navigate('books')">📚 推荐书单</div>
-  <div class="nav-item" data-page="plan" onclick="navigate('plan')">📅 训练计划</div>
-  <div class="nav-item" data-page="methodology" onclick="navigate('methodology')">🧠 水平四方法论</div>
-  <div class="nav-group-title">工具</div>
-  <div class="nav-item" data-page="calendar" onclick="navigate('calendar')">📆 训练日历</div>
-  <div class="nav-item" data-page="import" onclick="navigate('import')">📥 导入数据</div>
+  <!-- 训练分组 — 默认展开 -->
+  <div class="nav-group">
+    <div class="nav-group-title" onclick="toggleGroup('train')">📋 训练 <span class="arrow">▾</span></div>
+    <div class="nav-group-body" id="group-train">
+      <div class="nav-item sub" data-page="classical" data-anchor="flashcard" onclick="navigate('classical', true, 'flashcard')">🃏 闪卡</div>
+      <div class="nav-item sub" data-page="reading" onclick="navigate('reading', false)">📖 现代文阅读</div>
+      <div class="nav-item sub" data-page="classical" onclick="navigate('classical', false)">🏛️ 古诗文阅读</div>
+      <div class="nav-item sub" data-page="language" onclick="navigate('language', false)">✍️ 语言文字运用</div>
+      <div class="nav-item sub" data-page="writing" onclick="navigate('writing', false)">📝 写作表达</div>
+    </div>
+  </div>
+
+  <!-- 资源分组 — 默认折叠 -->
+  <div class="nav-group">
+    <div class="nav-group-title" onclick="toggleGroup('resource')">📚 资源 <span class="arrow">▸</span></div>
+    <div class="nav-group-body collapsed" id="group-resource">
+      <div class="nav-item sub" data-page="books" onclick="navigate('books')">📖 推荐书单</div>
+      <div class="nav-item sub" data-page="plan" onclick="navigate('plan')">📅 训练计划</div>
+      <div class="nav-item sub" data-page="methodology" onclick="navigate('methodology')">🧠 水平四方法论</div>
+    </div>
+  </div>
+
+  <!-- 工具分组 — 默认折叠 -->
+  <div class="nav-group">
+    <div class="nav-group-title" onclick="toggleGroup('tool')">🔧 工具 <span class="arrow">▸</span></div>
+    <div class="nav-group-body collapsed" id="group-tool">
+      <div class="nav-item sub" data-page="calendar" onclick="navigate('calendar')">📆 训练日历</div>
+      <div class="nav-item sub" data-page="import" onclick="navigate('import')">📥 导入数据</div>
+    </div>
+  </div>
+
+  <!-- 底部：每日进度概览 -->
+  <div class="nav-item active" data-page="overview" onclick="navigate('overview')" style="margin-top:8px;border-top:1px solid var(--border);padding-top:12px;">🎯 今日训练</div>
 </nav>
 
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -258,7 +278,7 @@
     <div class="page-datetime" id="dt-classical"></div>
   </div>
 
-  <div class="card">
+  <div class="card" id="flashcard">
     <h3>🃏 费曼闪卡（间隔重复记忆）</h3>
     <p style="margin-bottom:10px;">每日 5 分钟，攻克文言实词 / 虚词 / 文学知识。</p>
     <div class="deck-selector" id="deckSelector">

@@ -20,21 +20,39 @@ function closeSidebar() {
   if (ov) ov.classList.remove('show');
 }
 
-function navigate(page, keepNav) {
+function toggleGroup(name) {
+  var body = document.getElementById('group-' + name);
+  var arrow = document.querySelector('#group-' + name).parentElement.querySelector('.arrow');
+  if (!body) return;
+  var collapsed = body.classList.toggle('collapsed');
+  if (arrow) {
+    arrow.textContent = collapsed ? '▸' : '▾';
+    arrow.classList.toggle('open', !collapsed);
+  }
+}
+
+function navigate(page, keepNav, anchor) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   if (!keepNav) document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   const pg = document.getElementById(`page-${page}`);
   if (pg) pg.classList.add('active');
   if (!keepNav) {
-    const nav = document.querySelector(`.nav-item[data-page="${page}"]`);
+    var nav = document.querySelector(`.nav-item[data-page="${page}"]`);
     if (nav) nav.classList.add('active');
   } else {
-    const overviewNav = document.querySelector('.nav-item[data-page="overview"]');
+    var overviewNav = document.querySelector('.nav-item[data-page="overview"]');
     if (overviewNav) overviewNav.classList.add('active');
   }
   currentPage = page;
   document.getElementById('sidebar').classList.remove('open');
   if (page === 'calendar') { renderCalendar(); }
+  // 锚点跳转（如闪卡区域）
+  if (anchor) {
+    setTimeout(function() {
+      var el = document.getElementById(anchor);
+      if (el) el.scrollIntoView({behavior:'smooth',block:'start'});
+    }, 150);
+  }
   // Update page date/time display
   var dtNow = new Date();
   var dtStr = dtNow.getFullYear() + '年' + (dtNow.getMonth()+1) + '月' + dtNow.getDate() + '日 ' +
