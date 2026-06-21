@@ -17,3 +17,11 @@ App.MASTERY_INTERVAL = 32;
 App.DAILY_CARD_LIMIT = 20;
 App.DAILY_TASKS = ['flashcard', 'reading', 'classical', 'language', 'writing'];
 App.API_BASE = 'http://localhost:3200';
+
+// Global aliases for split files that reference bare names
+var SRS_INTERVALS = App.SRS_INTERVALS;
+var MASTERY_INTERVAL = App.MASTERY_INTERVAL;
+var DAILY_CARD_LIMIT = App.DAILY_CARD_LIMIT;
+var DAILY_TASKS = App.DAILY_TASKS;
+var API_BASE = App.API_BASE;
+var SYMBOLS = App.SYMBOLS;

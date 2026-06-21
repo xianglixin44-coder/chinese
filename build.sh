@@ -3,6 +3,6 @@
 set -e
 cd "$(dirname "$0")/frontend/js"
 
-cat config.js utils.js api.js app.js > bundle.js
+cat config.js utils.js data.js api.js flashcard.js exercises.js app.js > bundle.js
 
 echo "✅ bundle.js built ($(wc -c < bundle.js) bytes)"
