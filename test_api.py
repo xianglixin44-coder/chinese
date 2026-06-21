@@ -94,26 +94,35 @@ class TestAssessment:
 
 class TestExercises:
     def test_list_flashcards(self):
-        r = client.get("/api/exercises/flashcard?category=shici&limit=5")
+        r = client.get("/api/exercises?module=flashcard&type=shici&limit=5")
         assert r.status_code == 200
         assert "items" in r.json()
 
     def test_list_modern(self):
-        r = client.get("/api/exercises/modern")
+        r = client.get("/api/exercises?module=modern_reading")
         assert r.status_code == 200
         assert "items" in r.json()
 
     def test_list_classical(self):
-        r = client.get("/api/exercises/classical")
+        r = client.get("/api/exercises?module=classical_reading")
         assert r.status_code == 200
 
     def test_list_writing(self):
-        r = client.get("/api/exercises/writing")
+        r = client.get("/api/exercises?module=writing")
         assert r.status_code == 200
 
     def test_list_grammar(self):
-        r = client.get("/api/exercises/grammar")
+        r = client.get("/api/exercises?module=grammar")
         assert r.status_code == 200
+
+    def test_add_exercise(self):
+        r = client.post("/api/exercises", json={
+            "module": "grammar", "type": "bingju",
+            "content": "通过这次学习，使我认识到自己的不足。",
+            "answer": "缺主语", "explanation": "介词导致主语被淹没"
+        })
+        assert r.status_code == 200
+        assert r.json()["ok"] is True
 
 
 class TestGeneric:
