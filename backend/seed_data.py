@@ -75,15 +75,23 @@ WENXUE_SEED = [
 
 
 def seed_flashcard_items(conn):
-    """仅在 flashcard_items 表为空时插入种子数据。"""
-    existing = conn.execute("SELECT COUNT(*) FROM flashcard_items").fetchone()
+    """仅在 exercises 表中无闪卡数据时插入种子数据。"""
+    import json
+
+    existing = conn.execute(
+        "SELECT COUNT(*) FROM exercises WHERE module = 'flashcard'"
+    ).fetchone()
     if existing and existing[0] > 0:
-        return  # 已有数据，跳过
+        return  # 已有闪卡数据，跳过
 
     for deck_name, seed_list in [("shici", SHICI_SEED), ("xuci", XUCI_SEED), ("wenxue", WENXUE_SEED)]:
         for front, hl, word, meaning, analogy in seed_list:
+            extra = json.dumps({
+                "hl": hl, "word": word,
+                "meaning": meaning, "analogy": analogy or ""
+            }, ensure_ascii=False)
             conn.execute(
-                "INSERT INTO flashcard_items (category, front, hl, word, meaning, analogy) VALUES (?,?,?,?,?,?)",
-                [deck_name, front, hl, word, meaning, analogy],
+                "INSERT INTO exercises (module, type, content, extra_json) VALUES (?,?,?,?)",
+                ["flashcard", deck_name, front, extra],
             )
     conn.commit()

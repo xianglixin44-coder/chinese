@@ -337,23 +337,19 @@ function saveAssessment(item, week, score) {
   apiCall('POST','/api/assessment',{item,week,score});
 }
 
-// ====== 题库 API ======
-async function fetchFlashcardItems(category) {
-  var p = category ? '?category=' + encodeURIComponent(category) : '';
-  return await apiCall('GET', '/api/exercises/flashcard' + p);
+// ====== 统一题库 API ======
+async function fetchExercises(module, type) {
+  var params = new URLSearchParams();
+  if (module) params.set('module', module);
+  if (type) params.set('type', type);
+  params.set('limit', '200');
+  var qs = params.toString();
+  return await apiCall('GET', '/api/exercises' + (qs ? '?' + qs : ''));
 }
-async function fetchModernReading(type) {
-  var p = type ? '?passage_type=' + encodeURIComponent(type) : '';
-  return await apiCall('GET', '/api/exercises/modern' + p);
-}
-async function fetchClassicalReading(type) {
-  var p = type ? '?question_type=' + encodeURIComponent(type) : '';
-  return await apiCall('GET', '/api/exercises/classical' + p);
-}
-async function fetchWritingPrompts() {
-  return await apiCall('GET', '/api/exercises/writing');
-}
-async function fetchGrammarExercises(type) {
-  var p = type ? '?question_type=' + encodeURIComponent(type) : '';
-  return await apiCall('GET', '/api/exercises/grammar' + p);
-}
+
+// 兼容旧调用名（内部转调 fetchExercises）
+async function fetchFlashcardItems(category) { return await fetchExercises('flashcard', category || ''); }
+async function fetchModernReading(type)      { return await fetchExercises('modern_reading', type || ''); }
+async function fetchClassicalReading(type)   { return await fetchExercises('classical_reading', type || ''); }
+async function fetchWritingPrompts()         { return await fetchExercises('writing', ''); }
+async function fetchGrammarExercises(type)   { return await fetchExercises('grammar', type || ''); }

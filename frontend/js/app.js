@@ -150,10 +150,14 @@ async function initDeck(name) {
       if (r && r.items && r.items.length > 0) {
         const existing = DECKS[name] || [];
         const existingFronts = new Set(existing.map(c => c.front));
-        const apiCards = r.items.map(item => ({
-          front: item.front, hl: item.hl || '', word: item.word || '',
-          meaning: item.meaning || '', analogy: item.analogy || ''
-        }));
+        const apiCards = r.items.map(item => {
+          var extra = {};
+          try { extra = JSON.parse(item.extra_json || '{}'); } catch(e) {}
+          return {
+            front: item.content, hl: extra.hl || '', word: extra.word || '',
+            meaning: extra.meaning || '', analogy: extra.analogy || ''
+          };
+        });
         const newCards = apiCards.filter(c => !existingFronts.has(c.front));
         if (newCards.length > 0) DECKS[name] = [...existing, ...newCards];
       }
@@ -737,10 +741,11 @@ async function executeImport() {
   } else if (deck === 'modern_reading') {
     for (const row of importData) {
       if (row.length < 6) continue;
-      const r = await apiCall('POST', '/api/exercises/modern', {
-        passage_type: row[0]||'', title: row[1]||'', passage: row[2]||'',
-        question: row[3]||'', options_json: row[4]||'[]',
-        answer_idx: parseInt(row[5])||0, explanation: row[6]||''
+      const r = await apiCall('POST', '/api/exercises', {
+        module: 'modern_reading', type: row[0]||'', title: row[1]||'',
+        content: row[2]||'', question: row[3]||'', options_json: row[4]||'[]',
+        answer: row[5]||'', explanation: row[6]||'',
+        extra_json: JSON.stringify({answer_idx: parseInt(row[5])||0})
       });
       if (r && r.ok) count++;
     }
@@ -748,9 +753,10 @@ async function executeImport() {
   } else if (deck === 'classical_reading') {
     for (const row of importData) {
       if (row.length < 5) continue;
-      const r = await apiCall('POST', '/api/exercises/classical', {
-        question_type: row[0]||'', passage: row[1]||'', question: row[2]||'',
-        options_json: row[3]||'[]', answer: row[4]||'', explanation: row[5]||''
+      const r = await apiCall('POST', '/api/exercises', {
+        module: 'classical_reading', type: row[0]||'', content: row[1]||'',
+        question: row[2]||'', options_json: row[3]||'[]',
+        answer: row[4]||'', explanation: row[5]||''
       });
       if (r && r.ok) count++;
     }
@@ -758,9 +764,10 @@ async function executeImport() {
   } else if (deck === 'grammar') {
     for (const row of importData) {
       if (row.length < 4) continue;
-      const r = await apiCall('POST', '/api/exercises/grammar', {
-        question_type: row[0]||'', sentence: row[1]||'', options_json: row[2]||'[]',
-        answer: row[3]||'', explanation: row[4]||'', points: row[5]||''
+      const r = await apiCall('POST', '/api/exercises', {
+        module: 'grammar', type: row[0]||'', content: row[1]||'',
+        options_json: row[2]||'[]', answer: row[3]||'',
+        explanation: row[4]||'', extra_json: JSON.stringify({points: row[5]||''})
       });
       if (r && r.ok) count++;
     }
@@ -768,9 +775,9 @@ async function executeImport() {
   } else if (deck === 'writing') {
     for (const row of importData) {
       if (row.length < 1) continue;
-      const r = await apiCall('POST', '/api/exercises/writing', {
-        prompt: row[0]||'', template_hint: row[1]||'',
-        sample_answer: row[2]||'', scoring_guide: row[3]||''
+      const r = await apiCall('POST', '/api/exercises', {
+        module: 'writing', content: row[0]||'',
+        extra_json: JSON.stringify({template_hint: row[1]||'', sample_answer: row[2]||'', scoring_guide: row[3]||''})
       });
       if (r && r.ok) count++;
     }
