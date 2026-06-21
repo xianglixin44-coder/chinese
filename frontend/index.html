@@ -2,114 +2,119 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>语文提高训练 2.0</title>
-<link rel="stylesheet" href="css/style.css">
-<script src="sql-wasm.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>语文提高训练</title>
+<script src="/sql-wasm.js"></script>
+<link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 
 <header class="app-header">
+  <button class="hamburger" onclick="toggleSidebar()">☰</button>
   <h1>📖 语文提高训练</h1>
-  <span class="badge" id="apiBadge">🔗 检测中</span>
-  <span class="badge" id="streakBadge">🔥 0天</span>
+  <span class="badge" id="apiBadge" style="font-size:10px;background:rgba(255,255,255,0.1)">🔗 检测中</span><span class="badge" id="streakBadge">🔥 0天</span>
 </header>
 
 <nav class="sidebar" id="sidebar">
   <div class="nav-item active" data-page="overview" onclick="navigate('overview')">🎯 训练模块</div>
   <div class="nav-group-title">考试模块</div>
-  <div class="nav-item" data-page="reading" onclick="navigate('reading')">📖 现代文阅读 <span class="score">35分</span></div>
-  <div class="nav-item" data-page="classical" onclick="navigate('classical')">🏛️ 古诗文阅读 <span class="score">35分</span></div>
-  <div class="nav-item" data-page="language" onclick="navigate('language')">✍️ 语言文字运用 <span class="score">20分</span></div>
+  <div class="nav-item" data-page="reading" onclick="navigate('reading', true)">📖 现代文阅读 <span class="score">35分</span></div>
+  <div class="nav-item" data-page="classical" onclick="navigate('classical', true)">🏛️ 古诗文阅读 <span class="score">35分</span></div>
+  <div class="nav-item" data-page="language" onclick="navigate('language', true)">✍️ 语言文字运用 <span class="score">20分</span></div>
   <div class="nav-item" data-page="writing" onclick="navigate('writing')">📝 写作表达 <span class="score">60分</span></div>
+  <div class="nav-group-title">资源</div>
+  <div class="nav-item" data-page="books" onclick="navigate('books')">📚 推荐书单</div>
+  <div class="nav-item" data-page="plan" onclick="navigate('plan')">📅 训练计划</div>
+  <div class="nav-item" data-page="methodology" onclick="navigate('methodology')">🧠 水平四方法论</div>
   <div class="nav-group-title">工具</div>
   <div class="nav-item" data-page="calendar" onclick="navigate('calendar')">📆 训练日历</div>
+  <div class="nav-item" data-page="import" onclick="navigate('import')">📥 导入数据</div>
 </nav>
 
-<div class="main"><!-- ====== OVERVIEW ====== -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<div class="main" id="mainContent">
+
+<!-- ======================== OVERVIEW ======================== -->
 <div class="page active" id="page-overview">
 
-<div class="celebration" id="celebration">
-  <div class="celeb-icon">🎉</div><div class="celeb-title">今日训练全部完成！</div>
-  <div class="celeb-sub">你已经完成了今天的所有训练任务！</div>
-  <div class="celeb-stats">
-    <div class="celeb-stat"><div class="stat-num" id="celebCards">0</div><div class="stat-label">闪卡复习</div></div>
-    <div class="celeb-stat"><div class="stat-num" id="celebDay">1</div><div class="stat-label">连续天数</div></div>
+  <!-- Celebration (hidden by default) -->
+  <div class="celebration" id="celebration">
+    <div class="celeb-icon">🎉</div>
+    <div class="celeb-title">今日训练全部完成！</div>
+    <div class="celeb-sub">你已经完成了今天的所有训练任务，太棒了！</div>
+    <div class="celeb-stats">
+      <div class="celeb-stat"><div class="stat-num" id="celebCards">0</div><div class="stat-label">闪卡复习</div></div>
+      <div class="celeb-stat"><div class="stat-num" id="celebTemplates">0</div><div class="stat-label">模板练习</div></div>
+      <div class="celeb-stat"><div class="stat-num" id="celebGrammar">0</div><div class="stat-label">语法拆解</div></div>
+      <div class="celeb-stat"><div class="stat-num" id="celebDay">1</div><div class="stat-label">连续天数</div></div>
+    </div>
+    <div class="celeb-meta" id="celebMeta"></div>
+    <p style="font-size:13px;color:var(--text-light);margin-top:8px">明天继续加油！💪</p>
   </div>
-  <div class="celeb-meta" id="celebMeta"></div>
-  <p style="font-size:13px;color:var(--text-light);margin-top:8px">明天继续加油！💪</p>
-</div>
 
-<div class="page-header"><h2>📋 今日训练</h2><p class="sub">每天 25–30 分钟，完成以下 5 项训练任务</p></div>
-
-<div id="taskProgress">
-  <div id="progressLabel">0/5 项完成</div>
-  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
-</div>
-
-<div class="daily-checklist" id="dailyChecklist">
-  <div class="daily-task" data-task="flashcard" onclick="startTask('flashcard')">
-    <div class="task-check">1</div><div class="task-info"><div class="task-title">🃏 闪卡每日复习</div><div class="task-desc">费曼闪卡 · 间隔重复 · 5分钟</div></div><span class="task-badge bg-blue">5分钟</span>
+  <!-- Daily Tasks -->
+  <div class="page-header">
+    <h2>📋 今日训练</h2>
+    <p class="sub">每天 25–30 分钟，完成以下 5 项训练任务。</p>
   </div>
-  <div class="daily-task" data-task="reading" onclick="startTask('reading')">
-    <div class="task-check">2</div><div class="task-info"><div class="task-title">📖 现代文阅读训练</div><div class="task-desc">主动标记阅读法 + 阅读理解选择 · 10分钟</div></div><span class="task-badge bg-blue">10分钟</span>
-  </div>
-  <div class="daily-task" data-task="classical" onclick="startTask('classical')">
-    <div class="task-check">3</div><div class="task-info"><div class="task-title">🏛️ 古诗文阅读训练</div><div class="task-desc">文言句式 + 双语对齐翻译 · 10分钟</div></div><span class="task-badge bg-red">10分钟</span>
-  </div>
-  <div class="daily-task" data-task="language" onclick="startTask('language')">
-    <div class="task-check">4</div><div class="task-info"><div class="task-title">✍️ 语言文字运用</div><div class="task-desc">病句诊断 + 修辞效果分析 · 5分钟</div></div><span class="task-badge bg-gold">5分钟</span>
-  </div>
-  <div class="daily-task" data-task="writing" onclick="startTask('writing')">
-    <div class="task-check">5</div><div class="task-info"><div class="task-title">📝 写作表达训练</div><div class="task-desc">「他们说/我说」模板练习 · 5分钟</div></div><span class="task-badge bg-green">5分钟</span>
-  </div>
-</div>
 
-<div class="card mt-8"><h3>🧭 150 分结构地图</h3>
-<div class="score-map">
-  <div class="score-node root" onclick="navigate('reading',true)"><div class="node-title">现代文阅读</div><div class="node-score">35分</div></div>
-  <span class="score-connector">━</span>
-  <div class="score-node" onclick="navigate('classical',true)"><div class="node-title">古诗文阅读</div><div class="node-score">35分</div></div>
-  <span class="score-connector">━</span>
-  <div class="score-node" onclick="navigate('language',true)"><div class="node-title">语言文字运用</div><div class="node-score">20分</div></div>
-  <span class="score-connector">━</span>
-  <div class="score-node" onclick="navigate('writing',true)"><div class="node-title">写作表达</div><div class="node-score">60分</div></div>
-</div></div>
-
-<div class="card"><h3>📊 今日进度</h3>
-<div class="flex" style="justify-content:space-between">
-  <span>✨ 闪卡复习: <strong id="ovCards">0</strong></span>
-  <span>🔍 语法拆解: <strong id="ovGrammar">0</strong></span>
-</div></div>
-
-</div><!-- /overview -->
-
-<!-- ====== READING ====== -->
-<div class="page" id="page-reading">
-<div class="page-header">
-  <div class="page-nav">
-    <span class="back-btn" onclick="navigate('overview',true)">← 训练模块</span>
-    <h2>📖 现代文阅读 <span class="score-badge" style="background:#d5e8f4;color:#2980b9">35分</span></h2>
-    <span class="back-btn" onclick="navigate('classical',true)">古诗文阅读 →</span>
+  <div class="task-progress" id="taskProgress">
+    <div class="progress-text" id="progressLabel">已完成 0 / 5 项</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
   </div>
-  <p class="sub">信息类文本 + 文学类文本 · 核心方法：主动标记阅读法</p>
-  <div class="page-datetime" id="dt-reading"></div>
-</div>
-<div class="card"><h3>📋 主动标记阅读法</h3>
-<div class="sym-grid" id="symGrid"></div></div>
-<div class="card"><h3>📐 批注三层法</h3>
-<div style="background:#faf8f5;padding:14px;border-radius:8px;font-size:13px;line-height:2.2">
-<span class="badge-sm bg-blue">1️⃣ 概括</span> 这篇文章在说什么？<br>
-<span class="badge-sm bg-red">2️⃣ 结构</span> 作者是怎么说的？<br>
-<span class="badge-sm bg-gold">3️⃣ 批判</span> 我同意/不同意什么？</div></div>
-<div class="card"><h3>🖨️ 三遍阅读流程</h3>
-<div style="display:grid;gap:6px">
-<div style="background:#faf8f5;padding:10px;border-radius:6px;border-left:3px solid var(--accent2)"><strong>① 通读 5min</strong> — 用 / 分层，用 [ ] 圈核心词</div>
-<div style="background:#faf8f5;padding:10px;border-radius:6px;border-left:3px solid var(--accent)"><strong>② 细读 15min</strong> — 用 ★ 标主旨，用 ~~~ 画论据</div>
-<div style="background:#faf8f5;padding:10px;border-radius:6px;border-left:3px solid var(--gold)"><strong>③ 整合 5min</strong> — 用 → 画逻辑链，写 3 句批注</div>
-</div></div>
+
+  <div class="daily-checklist" id="dailyChecklist">
+    <div class="daily-task" data-task="flashcard" onclick="startTask('flashcard')">
+      <div class="task-check">1</div>
+      <div class="task-info">
+        <div class="task-title">🃏 闪卡每日复习</div>
+        <div class="task-desc">费曼闪卡 · 间隔重复 · 5分钟</div>
+      </div>
+      <span class="task-badge bg-blue">5分钟</span>
+    </div>
+
+    <div class="daily-task" data-task="reading" onclick="startTask('reading')">
+      <div class="task-check">2</div>
+      <div class="task-info">
+        <div class="task-title">📖 现代文阅读训练</div>
+        <div class="task-desc">主动标记阅读法 + 小说叙事拆解 · 10分钟</div>
+      </div>
+      <span class="task-badge bg-blue">10分钟</span>
+    </div>
+
+    <div class="daily-task" data-task="classical" onclick="startTask('classical')">
+      <div class="task-check">3</div>
+      <div class="task-info">
+        <div class="task-title">🏛️ 古诗文阅读训练</div>
+        <div class="task-desc">文言句式 + 双语对齐翻译 · 10分钟</div>
+      </div>
+      <span class="task-badge bg-red">10分钟</span>
+    </div>
+
+    <div class="daily-task" data-task="language" onclick="startTask('language')">
+      <div class="task-check">4</div>
+      <div class="task-info">
+        <div class="task-title">✍️ 语言文字运用</div>
+        <div class="task-desc">病句诊断 + 修辞效果分析 · 5分钟</div>
+      </div>
+      <span class="task-badge bg-gold">5分钟</span>
+    </div>
+
+    <div class="daily-task" data-task="writing" onclick="startTask('writing')">
+      <div class="task-check">5</div>
+      <div class="task-info">
+        <div class="task-title">📝 写作表达训练</div>
+        <div class="task-desc">「他们说/我说」模板段落练习 · 5分钟</div>
+      </div>
+      <span class="task-badge bg-green">5分钟</span>
+    </div>
+
+  </div>
+
   <div class="card mt-8">
     <h3>📋 阅读理解 · 选择题训练（高考标准）</h3>
+    <p class="text-light mb-8">阅读以下文本，完成选择题。每题 3 分，答案点击即显示。</p>
     <div class="tabs" id="readingTabs">
       <button class="tab-btn active" data-tab="rc1" onclick="switchTab('readingTabs','rc1')">信息类</button>
       <button class="tab-btn" data-tab="rc2" onclick="switchTab('readingTabs','rc2')">文学类</button>
@@ -117,108 +122,691 @@
     </div>
     <div id="readingTabs-content"></div>
   </div>
-</div><!-- /reading -->
 
-<!-- ====== CLASSICAL ====== -->
+  <div class="card mt-8">
+    <h3>🧭 150 分结构地图</h3>
+    <div class="score-map">
+      <div class="score-node root" onclick="navigate('reading', true)">
+        <div class="node-title">现代文阅读</div><div class="node-score">35分</div>
+      </div>
+      <span class="score-connector">━</span>
+      <div class="score-node" onclick="navigate('classical', true)">
+        <div class="node-title">古诗文阅读</div><div class="node-score">35分</div>
+      </div>
+      <span class="score-connector">━</span>
+      <div class="score-node" onclick="navigate('language', true)">
+        <div class="node-title">语言文字运用</div><div class="node-score">20分</div>
+      </div>
+      <span class="score-connector">━</span>
+      <div class="score-node" onclick="navigate('writing', true)" style="border-color:var(--accent);">
+        <div class="node-title" style="font-size:14px;">写作表达</div><div class="node-score" style="font-size:13px;font-weight:700;color:var(--accent);">60分</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>📊 今日进度</h3>
+    <div class="flex" style="justify-content:space-between;">
+      <span>✨ 闪卡复习: <strong id="ovCards">0</strong></span>
+      <span>✍ 模板练习: <strong id="ovTemplates">0</strong></span>
+      <span>🔍 语法拆解: <strong id="ovGrammar">0</strong></span>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== READING (35) ======================== -->
+<div class="page" id="page-reading">
+  <div class="page-header">
+    <div class="page-nav">
+      <span class="back-btn" onclick="navigate('overview', true)">← 训练模块</span>
+      <h2>📖 现代文阅读 <span class="score-badge" style="background:#d5e8f4;color:#2980b9;">35分</span></h2>
+      <span class="back-btn" onclick="navigate('classical', true)">古诗文阅读 →</span>
+    </div>
+    <p class="sub">信息类文本 + 文学类文本 · 核心方法：主动标记阅读法</p>
+    <div class="page-datetime" id="dt-reading"></div>
+  </div>
+
+  <div class="card">
+    <h3>📋 主动标记阅读法 · 标准符号系统</h3>
+    <p style="margin-bottom:10px;">来源：《如何阅读一本书》分析阅读法 改编。手不离笔，见到即标。</p>
+    <div class="sym-grid" id="symGrid"></div>
+  </div>
+
+  <div class="card">
+    <h3>📐 批注三层法</h3>
+    <div style="background:#faf8f5;padding:14px;border-radius:8px;font-size:13px;line-height:2.2;">
+      <span class="badge-sm bg-blue">1️⃣ 概括</span> 这篇文章在说什么？（1句话）<br>
+      <span class="text-light" style="margin-left:24px;">例：本文讨论了互联网时代阅读碎片化的利弊。</span><br>
+      <span class="badge-sm bg-red">2️⃣ 结构</span> 作者是怎么说的？（逻辑框架）<br>
+      <span class="text-light" style="margin-left:24px;">例：先提出现象→再分析原因→最后呼吁回归深度阅读。</span><br>
+      <span class="badge-sm bg-gold">3️⃣ 批判</span> 我同意/不同意什么？为什么？<br>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🖨️ 三遍阅读流程</h3>
+    <div style="display:grid;gap:6px;">
+      <div style="background:#faf8f5;padding:10px;border-radius:6px;border-left:3px solid var(--accent2);">
+        <strong>① 通读 5min</strong> — <span class="text-light">用 / 分层，用 [ ] 圈核心词</span>
+      </div>
+      <div style="background:#faf8f5;padding:10px;border-radius:6px;border-left:3px solid var(--accent);">
+        <strong>② 细读 15min</strong> — <span class="text-light">用 ★ 标主旨，用 ~~~ 画论据，用 ? 标费解处</span>
+      </div>
+      <div style="background:#faf8f5;padding:10px;border-radius:6px;border-left:3px solid var(--gold);">
+        <strong>③ 整合 5min</strong> — <span class="text-light">用 → 画逻辑链，文末写 3 句批注</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mt-8">
+    <h3>🕵️‍♂️ 小说叙事密码拆解（叙事学应用）</h3>
+    <p style="margin-bottom:10px;">对应高考小说阅读三大命题核心 · 核心方法：热奈特叙事学（视角 + 结构 + 道具）。</p>
+    <div class="flex" style="margin-bottom:8px;">
+      <span class="badge-sm bg-blue" style="cursor:pointer;" onclick="loadNovelExample(0)">视角：第一人称限制视角的妙用</span>
+      <span class="badge-sm bg-red" style="cursor:pointer;" onclick="loadNovelExample(1)">时空：双线穿插与插叙的张力</span>
+      <span class="badge-sm bg-gold" style="cursor:pointer;" onclick="loadNovelExample(2)">道具：核心物象的结构与象征</span>
+    </div>
+    <input class="gram-input" id="novelInput" placeholder="输入小说片段或题目，点击拆解…">
+    <button class="btn-primary" onclick="analyzeNovel()">🔍 拆解叙事特征</button>
+    <div id="novelResult" class="mt-12"></div>
+  </div>
+
+  <div class="card mt-8">
+    <h3>📝 阅读标记练习</h3>
+    <p class="text-light mb-8">阅读以下短文片段，按"主动标记阅读法"完成标注，再点击查看参考答案。</p>
+    
+    <div class="exercise-item">
+      <div class="ex-passage">
+        <strong>【练习1 · 信息类文本】</strong>
+        <p>人工智能正在重塑教育。一方面，个性化学习系统可以根据学生的认知水平定制内容，让每个学生都能以适合自己的节奏前进；另一方面，过度依赖算法推荐可能导致"信息茧房"，使 student 只能接触自己舒适区内的知识，失去探索未知领域的机会。因此，技术赋能教育的关键不在于技术本身有多先进，而在于我们如何设计"人机协作"的教育生态。</p>
+      </div>
+      <button class="btn-small" onclick="toggleAnswer('ex-reading-1')">查看标注指导</button>
+      <div class="ex-answer" id="ex-reading-1" style="display:none">
+        <p><span class="badge-sm bg-blue">[ ]</span> 核心词：人工智能、个性化学习、信息茧房、人机协作</p>
+        <p><span class="badge-sm bg-red">/</span> 层次：现象描述 / 转折（然而） / 结论</p>
+        <p><span class="badge-sm bg-gold">★</span> 主旨句：技术赋能教育的关键不在于技术本身有多先进，而在于我们如何设计"人机协作"的教育生态。</p>
+        <p><span class="badge-sm bg-blue">?</span> 疑问点：作者是否暗示当前教育技术过于追求"先进"而忽略了"生态"？</p>
+      </div>
+    </div>
+
+    <div class="exercise-item mt-12">
+      <div class="ex-passage">
+        <strong>【练习2 · 文学类文本】</strong>
+        <p>他站在巷口，手里攥着一张对折的纸。风从巷子里灌出来，把纸角吹得一掀一掀的，像一只受伤的鸟在扑棱翅膀。他没有打开它——他已经看了太多遍。那些字像是用针尖划在纸面上的，每一个都扎眼睛。他只是在等，等巷子尽头那扇门打开，或者永远不开。</p>
+      </div>
+      <button class="btn-small" onclick="toggleAnswer('ex-reading-2')">查看标注指导</button>
+      <div class="ex-answer" id="ex-reading-2" style="display:none">
+        <p><span class="badge-sm bg-blue">[ ]</span> 核心意象：巷口、对折的纸、风、门——全段用物象写等待与焦虑</p>
+        <p><span class="badge-sm bg-red">/</span> 层次：静态描写 / 动态（风掀纸角）/ 心理（他没有打开）/ 收束（等门开或不开）</p>
+        <p><span class="badge-sm bg-gold">★</span> 主旨暗示：最后句——"等巷子尽头那扇门打开，或者永远不开"完成了一种悬而未决的焦虑</p>
+        <p><span class="badge-sm bg-red">?</span> 反常处：为什么"每一个都扎眼睛"？以痛觉写视觉，强化情感冲击</p>
+        <p><span class="badge-sm bg-green">▲</span> 品味句："像一只受伤的鸟在扑棱翅膀"，比喻纸角掀动——赋物以生命</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== CLASSICAL (35) ======================== -->
 <div class="page" id="page-classical">
-<div class="page-header">
-  <div class="page-nav">
-    <span class="back-btn" onclick="navigate('reading',true)">← 现代文阅读</span>
-    <h2>🏛️ 古诗文阅读 <span class="score-badge" style="background:#e8f0e8;color:#27ae60">35分</span></h2>
-    <span class="back-btn" onclick="navigate('language',true)">语言文字运用 →</span>
+  <div class="page-header">
+    <div class="page-nav">
+      <span class="back-btn" onclick="navigate('reading', true)">← 现代文阅读</span>
+      <h2>🏛️ 古诗文阅读 <span class="score-badge" style="background:#e8f0e8;color:#27ae60;">35分</span></h2>
+      <span class="back-btn" onclick="navigate('language', true)">语言文字运用 →</span>
+    </div>
+    <p class="sub">文言文阅读 + 诗歌鉴赏 + 名篇默写 · 核心方法：费曼闪卡 + 句式拆解</p>
+    <div class="page-datetime" id="dt-classical"></div>
   </div>
-  <p class="sub">文言文 + 诗歌鉴赏 · 核心方法：费曼闪卡 + 句式拆解</p>
-  <div class="page-datetime" id="dt-classical"></div>
-</div>
-<div class="card"><h3>🃏 费曼闪卡</h3>
-<div class="deck-selector" id="deckSelector">
-  <button class="deck-btn active" data-deck="shici">文言实词 (58)</button>
-  <button class="deck-btn" data-deck="xuci">文言虚词 (54)</button>
-  <button class="deck-btn" data-deck="wenxue">文学常识 (20)</button>
-</div>
-<div class="fc-stats" id="fcStats"></div>
-<div class="fc-timer" id="fcTimer"></div>
-<div class="flashcard-wrap" id="fcWrap" onclick="flipCard()">
-<div class="flashcard" id="flashcard">
-<div class="fc-face fc-front"><div class="fc-label">点击翻转</div><div class="fc-main" id="fcFront"></div></div>
-<div class="fc-face fc-back">
-<div class="fc-group"><div class="fc-lbl">词语</div><div class="fc-txt" id="fcWord" style="color:var(--accent)"></div></div>
-<div class="fc-group"><div class="fc-lbl">释义</div><div class="fc-txt" id="fcMeaning"></div></div>
-<div class="fc-group"><div class="fc-lbl">类比</div><div class="fc-txt" id="fcAnalogy"></div></div>
-</div></div></div>
-<div class="fc-controls">
-  <button class="btn-again" onclick="rateCard('again')">🔁 忘记</button>
-  <button class="btn-hard" onclick="rateCard('hard')">🤔 困难</button>
-  <button class="btn-easy" onclick="rateCard('easy')">✅ 简单</button>
-</div></div>
-<div class="card"><h3>🧩 文言句式拆解</h3>
-<input class="gram-input" id="syntaxInput" placeholder="输入文言句子…">
-<button class="btn-primary" onclick="analyzeSyntax()">🔍 拆解</button>
-<div id="syntaxResult" class="mt-12"></div></div>
-</div><!-- /classical -->
 
-<!-- ====== LANGUAGE ====== -->
+  <div class="card">
+    <h3>🃏 费曼闪卡（间隔重复记忆）</h3>
+    <p style="margin-bottom:10px;">每日 5 分钟，攻克文言实词 / 虚词 / 文学知识。</p>
+    <div class="deck-selector" id="deckSelector">
+      <button class="deck-btn active" data-deck="shici">文言实词 (58)</button>
+      <button class="deck-btn" data-deck="xuci">文言虚词 (54)</button>
+      <button class="deck-btn" data-deck="wenxue">文学常识 (20)</button>
+    </div>
+    <div class="fc-stats" id="fcStats">卡片 1 / N · 待复习: N</div>
+    <div class="fc-timer" id="fcTimer">⏱ 20s</div>
+    <div class="flashcard-wrap" id="fcWrap" onclick="flipCard()">
+      <div class="flashcard" id="flashcard">
+        <div class="fc-face fc-front">
+          <div class="fc-label">点击翻转 · 回忆释义</div>
+          <div class="fc-main" id="fcFront"></div>
+          <div class="fc-hint">点击卡片查看答案</div>
+        </div>
+        <div class="fc-face fc-back">
+          <div class="fc-group">
+            <div class="fc-lbl">加粗字 / 虚词</div>
+            <div class="fc-txt" id="fcWord" style="color:var(--accent);"></div>
+          </div>
+          <div class="fc-group">
+            <div class="fc-lbl">句中释义</div>
+            <div class="fc-txt" id="fcMeaning"></div>
+          </div>
+          <div class="fc-group">
+            <div class="fc-lbl">费曼类比（现代对照）</div>
+            <div class="fc-analogy" id="fcAnalogy"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="fc-controls">
+      <button class="btn-again" onclick="rateCard('again')">😵 再来</button>
+      <button class="btn-hard" onclick="rateCard('hard')">🤔 模糊</button>
+      <button class="btn-easy" onclick="rateCard('easy')">😊 记得</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🧩 文言特殊句式拆解</h3>
+    <p style="margin-bottom:8px;">像数学题一样拆解宾语前置、介宾后置、定语后置。</p>
+    <div class="flex" style="margin-bottom:8px;">
+      <span class="badge-sm bg-blue" style="cursor:pointer;" onclick="loadSyntaxExample(0)">宾语前置: 大王来何操</span>
+      <span class="badge-sm bg-red" style="cursor:pointer;" onclick="loadSyntaxExample(1)">介宾后置: 战于长勺</span>
+      <span class="badge-sm bg-gold" style="cursor:pointer;" onclick="loadSyntaxExample(2)">定语后置: 马之千里者</span>
+    </div>
+    <input class="gram-input" id="syntaxInput" placeholder="输入文言句子…">
+    <button class="btn-primary" onclick="analyzeSyntax()">🔍 拆解</button>
+    <div id="syntaxResult" class="mt-12"></div>
+  </div>
+
+  <div class="card mt-8">
+    <h3>🎯 文言文双语对齐与采分点剖析（对比语言学应用）</h3>
+    <p style="margin-bottom:10px;">对应高考文言文翻译主观题（10分） · 核心方法：直译对齐法（字字落实 + 句法还原）。</p>
+    <div class="flex" style="margin-bottom:8px;">
+      <span class="badge-sm bg-blue" style="cursor:pointer;" onclick="loadTranslationExample(0)">例一：词类活用（面、刺）</span>
+      <span class="badge-sm bg-red" style="cursor:pointer;" onclick="loadTranslationExample(1)">例二：特殊句式与被动（为所吞）</span>
+      <span class="badge-sm bg-gold" style="cursor:pointer;" onclick="loadTranslationExample(2)">例三：双音节词古今异义（卑鄙）</span>
+    </div>
+    <input class="gram-input" id="translationInput" placeholder="输入文言句子，点击生成对齐分析…">
+    <button class="btn-primary" onclick="analyzeTranslation()">🔍 双语对齐拆解</button>
+    <div id="translationResult" class="mt-12"></div>
+  </div>
+
+  <div class="card mt-8">
+    <h3>📝 文言文翻译练习</h3>
+    <p class="text-light mb-8">翻译下列句子，注意加粗字词和特殊句式。</p>
+    
+    <div class="exercise-item">
+      <p><strong>1.</strong> 群臣吏民能<span class="fw-bold-highlight" style="border-bottom:2px solid var(--gold);color:var(--gold);">面</span>刺寡人之过者，受上赏。</p>
+      <button class="btn-small" onclick="toggleAnswer('ex-classical-1')">查看答案</button>
+      <div class="ex-answer" id="ex-classical-1" style="display:none">
+        <p><strong>翻译：</strong>群臣、官吏和百姓，能够<strong>当面</strong>指责我的过失的，给予上等奖赏。</p>
+        <p><strong>考点：</strong>「面」— 名词作状语，当面（而非脸面）。</p>
+      </div>
+    </div>
+
+    <div class="exercise-item mt-8">
+      <p><strong>2.</strong> 大王来<span class="fw-bold-highlight" style="border-bottom:2px solid var(--gold);color:var(--gold);">何</span>操？</p>
+      <button class="btn-small" onclick="toggleAnswer('ex-classical-2')">查看答案</button>
+      <div class="ex-answer" id="ex-classical-2" style="display:none">
+        <p><strong>翻译：</strong>大王来时带了<strong>什么</strong>？</p>
+        <p><strong>考点：</strong>疑问代词「何」作宾语前置 = <strong>宾语前置句</strong>（正常语序：大王来操何？）</p>
+      </div>
+    </div>
+
+    <div class="exercise-item mt-8">
+      <p><strong>3.</strong> 故余<span class="fw-bold-highlight" style="border-bottom:2px solid var(--gold);color:var(--gold);">虽</span>愚，<span class="fw-bold-highlight" style="border-bottom:2px solid var(--gold);color:var(--gold);">卒</span>获有所闻。</p>
+      <button class="btn-small" onclick="toggleAnswer('ex-classical-3')">查看答案</button>
+      <div class="ex-answer" id="ex-classical-3" style="display:none">
+        <p><strong>翻译：</strong>所以我<strong>即使</strong>愚笨，<strong>最终</strong>还是有所收获。</p>
+        <p><strong>考点：</strong>「虽」— 即使（表让步，≠虽然）；「卒」— 最终（≠死亡/兵卒）。</p>
+      </div>
+    </div>
+
+    <div class="exercise-item mt-8">
+      <p><strong>4.</strong> 下列句子中，属于<span class="fw-bold-highlight" style="border-bottom:2px solid var(--gold);color:var(--gold);">介宾后置</span>的一句是：</p>
+      <div style="display:grid;gap:4px;margin:8px 0;">
+        <label class="ex-option"><input type="radio" name="q4" value="A" onchange="checkClassicalQ4(this)"> A. 大王来何操？</label>
+        <label class="ex-option"><input type="radio" name="q4" value="B" onchange="checkClassicalQ4(this)"> B. 战于长勺。</label>
+        <label class="ex-option"><input type="radio" name="q4" value="C" onchange="checkClassicalQ4(this)"> C. 马之千里者。</label>
+        <label class="ex-option"><input type="radio" name="q4" value="D" onchange="checkClassicalQ4(this)"> D. 二虫尽为所吞。</label>
+      </div>
+      <div class="ex-answer" id="ex-classical-4" style="display:none">
+        <p><strong>✅ 正确答案：B（战于长勺 = 在长勺作战）</strong></p>
+        <p>A = 宾语前置 | C = 定语后置 | D = 被动句</p>
+      </div>
+    </div>
+  </div></div>
+
+<!-- ======================== LANGUAGE (20) ======================== -->
 <div class="page" id="page-language">
-<div class="page-header">
-  <div class="page-nav">
-    <span class="back-btn" onclick="navigate('classical',true)">← 古诗文阅读</span>
-    <h2>✍️ 语言文字运用 <span class="score-badge" style="background:#fde8e8;color:#c0392b">20分</span></h2>
-    <span class="back-btn" onclick="navigate('writing',true)">写作表达 →</span>
+  <div class="page-header">
+    <div class="page-nav">
+      <span class="back-btn" onclick="navigate('classical', true)">← 古诗文阅读</span>
+      <h2>✍️ 语言文字运用 <span class="score-badge" style="background:#fde8e8;color:#c0392b;">20分</span></h2>
+      <span class="back-btn" onclick="navigate('writing', true)">写作表达 →</span>
+    </div>
+    <p class="sub">病句辨析 + 连贯衔接 + 语段压缩 · 核心方法：语法成分解构图</p>
   </div>
-  <p class="sub">病句辨析 + 连贯衔接 · 核心方法：语法成分分解</p>
-  <div class="page-datetime" id="dt-language"></div>
-</div>
-<div class="card"><h3>🩺 病句诊断</h3>
-<input class="gram-input" id="grammarInput" placeholder="输入疑似病句…">
-<button class="btn-primary" onclick="analyzeGrammar()">🔍 分析</button>
-<div id="grammarResult" class="mt-12"></div></div>
-<div class="card"><h3>🎨 修辞效果分析</h3>
-<input class="gram-input" id="rhetoricInput" placeholder="输入含修辞的句子…">
-<button class="btn-primary" onclick="analyzeRhetoric()">🔍 拆解</button>
-<div id="rhetoricResult" class="mt-12"></div></div>
-</div><!-- /language -->
 
-<!-- ====== WRITING ====== -->
+  <div class="card">
+    <h3>🧩 三步拆解法</h3>
+    <div class="grid3">
+      <div style="background:#faf8f5;padding:12px;border-radius:8px;text-align:center;">
+        <div style="font-size:22px;font-weight:700;color:var(--accent2);">1</div>
+        <strong>提主干</strong><br><span class="text-light">剥离修饰，提取S+V+O</span>
+      </div>
+      <div style="background:#faf8f5;padding:12px;border-radius:8px;text-align:center;">
+        <div style="font-size:22px;font-weight:700;color:var(--accent);">2</div>
+        <strong>配逻辑</strong><br><span class="text-light">检查搭配/残缺/杂糅</span>
+      </div>
+      <div style="background:#faf8f5;padding:12px;border-radius:8px;text-align:center;">
+        <div style="font-size:22px;font-weight:700;color:var(--gold);">3</div>
+        <strong>画结构</strong><br><span class="text-light">还原完整修饰关系</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>✍ 病句诊断练习</h3>
+    <div class="flex" style="margin-bottom:8px;">
+      <span class="badge-sm bg-red" style="cursor:pointer;" onclick="loadGrammarExample(0)">缺主语: 通过…使…</span>
+      <span class="badge-sm bg-blue" style="cursor:pointer;" onclick="loadGrammarExample(1)">搭配不当</span>
+      <span class="badge-sm bg-gold" style="cursor:pointer;" onclick="loadGrammarExample(2)">句式杂糅</span>
+    </div>
+    <input class="gram-input" id="grammarInput" placeholder="输入疑似病句，点击分析…">
+    <button class="btn-primary" onclick="analyzeGrammar()">🔍 诊断</button>
+    <div id="grammarResult" class="mt-12"></div>
+  </div>
+
+  <div class="card">
+    <h3>🔗 连贯衔接 · 逻辑连词速查</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;">
+      <div class="badge-sm bg-blue">转折</div><div>然而、但是、不过、可是</div>
+      <div class="badge-sm bg-red">因果</div><div>因此、所以、究其原因</div>
+      <div class="badge-sm bg-gold">递进</div><div>不仅……更、甚至、何况</div>
+      <div class="badge-sm bg-green">并列</div><div>同时、一方面、此外</div>
+      <div class="badge-sm bg-blue">举例</div><div>例如、譬如、以……为例</div>
+      <div class="badge-sm bg-red">总结</div><div>总之、综上所述、归根结底</div>
+    </div>
+  </div>
+
+  <div class="card mt-8">
+    <h3>📝 病句专项练习</h3>
+    <p class="text-light mb-8">判断下列句子是否有语病，若有，指出问题类型。</p>
+    
+    <div class="exercise-item">
+      <p><strong>1.</strong> 通过这次社会实践，使同学们对基层工作有了更深刻的理解。</p>
+      <div style="display:grid;gap:4px;margin:8px 0;">
+        <label class="ex-option"><input type="radio" name="bingju1" value="A" onchange="checkBingju1(this)"> A. 没有语病</label>
+        <label class="ex-option"><input type="radio" name="bingju1" value="B" onchange="checkBingju1(this)"> B. 成分残缺（缺主语）</label>
+        <label class="ex-option"><input type="radio" name="bingju1" value="C" onchange="checkBingju1(this)"> C. 搭配不当</label>
+        <label class="ex-option"><input type="radio" name="bingju1" value="D" onchange="checkBingju1(this)"> D. 句式杂糅</label>
+      </div>
+      <div class="ex-answer" id="ex-bingju1" style="display:none">
+        <p>✅ <strong>正确答案：B（成分残缺·缺主语）</strong></p>
+        <p>介词"通过"淹没了主语。修改：去掉"通过"→"这次社会实践，使同学们……"；或去掉"使"→"通过这次社会实践，同学们对基层工作有了更深刻的理解。"</p>
+      </div>
+    </div>
+
+    <div class="exercise-item mt-8">
+      <p><strong>2.</strong> 我们必须不断提高和培养自己的创新能力。</p>
+      <div style="display:grid;gap:4px;margin:8px 0;">
+        <label class="ex-option"><input type="radio" name="bingju2" value="A" onchange="checkBingju2(this)"> A. 没有语病</label>
+        <label class="ex-option"><input type="radio" name="bingju2" value="B" onchange="checkBingju2(this)"> B. 成分残缺</label>
+        <label class="ex-option"><input type="radio" name="bingju2" value="C" onchange="checkBingju2(this)"> C. 搭配不当</label>
+        <label class="ex-option"><input type="radio" name="bingju2" value="D" onchange="checkBingju2(this)"> D. 语序不当</label>
+      </div>
+      <div class="ex-answer" id="ex-bingju2" style="display:none">
+        <p>✅ <strong>正确答案：A（没有语病）</strong></p>
+        <p>⚠️ 易误判为搭配不当。检验：「提高……能力」✓；「培养……能力」✓ 两者均成立。若改为"提高和培养水平"，则"培养水平"不成立。</p>
+      </div>
+    </div>
+
+    <div class="exercise-item mt-8">
+      <p><strong>3.</strong> 这种做法，广为人民群众所欢迎。</p>
+      <div style="display:grid;gap:4px;margin:8px 0;">
+        <label class="ex-option"><input type="radio" name="bingju3" value="A" onchange="checkBingju3(this)"> A. 没有语病</label>
+        <label class="ex-option"><input type="radio" name="bingju3" value="B" onchange="checkBingju3(this)"> B. 成分残缺</label>
+        <label class="ex-option"><input type="radio" name="bingju3" value="C" onchange="checkBingju3(this)"> C. 句式杂糅</label>
+        <label class="ex-option"><input type="radio" name="bingju3" value="D" onchange="checkBingju3(this)"> D. 搭配不当</label>
+      </div>
+      <div class="ex-answer" id="ex-bingju3" style="display:none">
+        <p>✅ <strong>正确答案：C（句式杂糅）</strong></p>
+        <p>白话"广为" + 文言被动"为……所……" 混用。<br>修改："这种做法，受到人民群众的广泛欢迎。"</p>
+      </div>
+    </div>
+
+    <div class="exercise-item mt-8">
+      <p><strong>4.</strong> 他的写作水平有了明显的提高和改善。</p>
+      <div style="display:grid;gap:4px;margin:8px 0;">
+        <label class="ex-option"><input type="radio" name="bingju4" value="A" onchange="checkBingju4(this)"> A. 没有语病</label>
+        <label class="ex-option"><input type="radio" name="bingju4" value="B" onchange="checkBingju4(this)"> B. 搭配不当</label>
+        <label class="ex-option"><input type="radio" name="bingju4" value="C" onchange="checkBingju4(this)"> C. 成分残缺</label>
+        <label class="ex-option"><input type="radio" name="bingju4" value="D" onchange="checkBingju4(this)"> D. 句式杂糅</label>
+      </div>
+      <div class="ex-answer" id="ex-bingju4" style="display:none">
+        <p>✅ <strong>正确答案：B（搭配不当）</strong></p>
+        <p>「提高……水平」✓；「改善……水平」✗（应为"改善状况"）。"提高和改善"不能共用同一宾语"水平"。</p>
+      </div>
+    </div>
+
+    <div class="exercise-item mt-8">
+      <p><strong>5.</strong> 为了防止这类事故不再发生，学校加强了安全教育。</p>
+      <div style="display:grid;gap:4px;margin:8px 0;">
+        <label class="ex-option"><input type="radio" name="bingju5" value="A" onchange="checkBingju5(this)"> A. 没有语病</label>
+        <label class="ex-option"><input type="radio" name="bingju5" value="B" onchange="checkBingju5(this)"> B. 否定不当</label>
+        <label class="ex-option"><input type="radio" name="bingju5" value="C" onchange="checkBingju5(this)"> C. 成分残缺</label>
+        <label class="ex-option"><input type="radio" name="bingju5" value="D" onchange="checkBingju5(this)"> D. 语序不当</label>
+      </div>
+      <div class="ex-answer" id="ex-bingju5" style="display:none">
+        <p>✅ <strong>正确答案：B（否定不当）</strong></p>
+        <p>"防止"已含否定义，"不再"又否定，双重否定变肯定，逻辑反了。<br>修改：去掉"不"→"为了防止这类事故再次发生"；或改为"为了确保这类事故不再发生"。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mt-8">
+    <h3>🎨 修辞手法与表达效果分析</h3>
+    <p style="margin-bottom:10px;">对应高考主观题 · 核心方法：修辞效果三步拆解法（明手法 → 析具体 → 阐效果）。</p>
+    <div class="flex" style="margin-bottom:8px;">
+      <span class="badge-sm bg-blue" style="cursor:pointer;" onclick="loadRhetoricExample(0)">比喻/比拟：风中的纸角</span>
+      <span class="badge-sm bg-red" style="cursor:pointer;" onclick="loadRhetoricExample(1)">对偶/借代：指点江山</span>
+      <span class="badge-sm bg-gold" style="cursor:pointer;" onclick="loadRhetoricExample(2)">排比：志愿军的品质</span>
+    </div>
+    <input class="gram-input" id="rhetoricInput" placeholder="输入含有修辞的句子，点击分析…">
+    <button class="btn-primary" onclick="analyzeRhetoric()">🔍 拆解修辞效果</button>
+    <div id="rhetoricResult" class="mt-12"></div>
+  </div></div>
+
+<!-- ======================== WRITING (60) ======================== -->
 <div class="page" id="page-writing">
-<div class="page-header">
-  <div class="page-nav">
-    <span class="back-btn" onclick="navigate('language',true)">← 语言文字运用</span>
-    <h2>📝 写作表达 <span class="score-badge" style="background:#fef5e0;color:#d4a017">60分</span></h2>
+  <div class="page-header">
+    <div class="page-nav">
+      <span class="back-btn" onclick="navigate('language', true)">← 语言文字运用</span>
+      <h2>📝 写作表达 <span class="score-badge" style="background:#fef5e0;color:#d4a017;">60分</span></h2>
+    </div>
+    <p class="sub">思辨性任务驱动作文 · 核心方法：「他们说/我说」逻辑模板</p>
+    <div class="page-datetime" id="dt-writing"></div>
   </div>
-  <p class="sub">思辨性任务驱动作文 · 核心方法：「他们说/我说」逻辑模板</p>
-  <div class="page-datetime" id="dt-writing"></div>
-</div>
-<div class="card"><h3>🅰 引入对立观点（"他们说"）</h3>
-<div class="tabs" id="tabsA"><button class="tab-btn active" data-tab="A1" onclick="switchTab('tabsA','A1')">A1 先立后破</button><button class="tab-btn" data-tab="A2" onclick="switchTab('tabsA','A2')">A2 委婉反驳</button><button class="tab-btn" data-tab="A3" onclick="switchTab('tabsA','A3')">A3 升维讨论</button><button class="tab-btn" data-tab="A4" onclick="switchTab('tabsA','A4')">A4 限定突破</button></div>
-<div id="tabsA-content"></div></div>
-<div class="card"><h3>🅱 推进己方论证（"我说"）</h3>
-<div class="tabs" id="tabsB"><button class="tab-btn active" data-tab="B1" onclick="switchTab('tabsB','B1')">B1 因果分析</button><button class="tab-btn" data-tab="B2" onclick="switchTab('tabsB','B2')">B2 层次递进</button><button class="tab-btn" data-tab="B3" onclick="switchTab('tabsB','B3')">B3 类比论证</button><button class="tab-btn" data-tab="B4" onclick="switchTab('tabsB','B4')">B4 揭示前提</button></div>
-<div id="tabsB-content"></div></div>
-<div class="card"><h3>🅲 价值升华（"所以呢"）</h3>
-<div class="tabs" id="tabsC"><button class="tab-btn active" data-tab="C1" onclick="switchTab('tabsC','C1')">C1 警示收束</button><button class="tab-btn" data-tab="C2" onclick="switchTab('tabsC','C2')">C2 辩证收束</button><button class="tab-btn" data-tab="C3" onclick="switchTab('tabsC','C3')">C3 开放式结尾</button><button class="tab-btn" data-tab="C4" onclick="switchTab('tabsC','C4')">C4 宏大升华</button></div>
-<div id="tabsC-content"></div></div>
-<div class="card"><h3>✍ 段落组装</h3>
-<div class="tmpl-sel">
-  <select id="selA"><option value="A1">A1 先立后破</option><option value="A2">A2 委婉反驳</option><option value="A3">A3 升维讨论</option><option value="A4">A4 限定突破</option></select>
-  <select id="selB"><option value="B1">B1 因果分析</option><option value="B2">B2 层次递进</option><option value="B3">B3 类比论证</option><option value="B4">B4 揭示前提</option></select>
-  <select id="selC"><option value="C1">C1 警示收束</option><option value="C2">C2 辩证收束</option><option value="C3">C3 开放式结尾</option><option value="C4">C4 宏大升华</option></select>
-  <button class="btn-primary" onclick="applyTemplate()">生成</button>
-</div>
-<textarea class="tmpl-textarea" id="templateInput" placeholder="在此填入你的话题和观点…">话题：手机该不该进校园
-我的观点：应当限制而非禁止</textarea>
-<div class="tmpl-preview" id="templatePreview">点击「生成」按钮预览</div></div>
-</div><!-- /writing -->
 
-<!-- ====== CALENDAR ====== -->
+  <div class="card">
+    <h3>🅰 引入对立观点（"他们说"）</h3>
+    <div class="tabs" id="tabsA">
+      <button class="tab-btn active" data-tab="A1" onclick="switchTab('tabsA','A1')">A1 先立后破</button>
+      <button class="tab-btn" data-tab="A2" onclick="switchTab('tabsA','A2')">A2 委婉反驳</button>
+      <button class="tab-btn" data-tab="A3" onclick="switchTab('tabsA','A3')">A3 升维讨论</button>
+      <button class="tab-btn" data-tab="A4" onclick="switchTab('tabsA','A4')">A4 限定突破</button>
+    </div>
+    <div id="tabsA-content"></div>
+  </div>
+
+  <div class="card">
+    <h3>🅱 推进己方论证（"我说"）</h3>
+    <div class="tabs" id="tabsB">
+      <button class="tab-btn active" data-tab="B1" onclick="switchTab('tabsB','B1')">B1 因果分析</button>
+      <button class="tab-btn" data-tab="B2" onclick="switchTab('tabsB','B2')">B2 层次递进</button>
+      <button class="tab-btn" data-tab="B3" onclick="switchTab('tabsB','B3')">B3 类比论证</button>
+      <button class="tab-btn" data-tab="B4" onclick="switchTab('tabsB','B4')">B4 揭示前提</button>
+    </div>
+    <div id="tabsB-content"></div>
+  </div>
+
+  <div class="card">
+    <h3>🅲 价值升华（"所以呢"）</h3>
+    <div class="tabs" id="tabsC">
+      <button class="tab-btn active" data-tab="C1" onclick="switchTab('tabsC','C1')">C1 警示收束</button>
+      <button class="tab-btn" data-tab="C2" onclick="switchTab('tabsC','C2')">C2 辩证收束</button>
+      <button class="tab-btn" data-tab="C3" onclick="switchTab('tabsC','C3')">C3 开放式结尾</button>
+      <button class="tab-btn" data-tab="C4" onclick="switchTab('tabsC','C4')">C4 宏大升华</button>
+    </div>
+    <div id="tabsC-content"></div>
+  </div>
+
+  <div class="card">
+    <h3>✍ 段落组装练习器</h3>
+    <p class="text-light" style="margin-bottom:8px;">选择 A + B + C 模板组合，填入你的话题，生成完整段落骨架。</p>
+    <div class="tmpl-sel">
+      <select id="selA"><option value="A1">A1 先立后破</option><option value="A2">A2 委婉反驳</option><option value="A3">A3 升维讨论</option><option value="A4">A4 限定突破</option></select>
+      <select id="selB"><option value="B1">B1 因果分析</option><option value="B2">B2 层次递进</option><option value="B3">B3 类比论证</option><option value="B4">B4 揭示前提</option></select>
+      <select id="selC"><option value="C1">C1 警示收束</option><option value="C2">C2 辩证收束</option><option value="C3">C3 开放式结尾</option><option value="C4">C4 宏大升华</option></select>
+      <button class="btn-primary" onclick="applyTemplate()">生成</button>
+    </div>
+    <textarea class="tmpl-textarea" id="templateInput" placeholder="在此填入你的话题和观点…">话题：手机该不该进校园
+我的观点：应当限制而非禁止
+对立观点：完全禁止手机入校</textarea>
+    <div class="tmpl-preview" id="templatePreview">点击「生成」按钮预览你的段落</div>
+  </div>
+
+  <div class="card mt-8">
+    <h3>📝 作文真题 · 模板实战</h3>
+    <p class="text-light mb-8">以下为近年高考思辨类作文真题。用「他们说/我说」模板构思一段核心议论段落。</p>
+    
+    <div class="exercise-item">
+      <p><strong>【真题1】</strong> 有人说，人工智能将取代人类的大部分工作；也有人说，人工智能只是工具，关键在人如何使用。对此你怎么看？请写一段话。</p>
+      <button class="btn-small" onclick="toggleAnswer('ex-writing-1')">查看模板参考</button>
+      <div class="ex-answer" id="ex-writing-1" style="display:none">
+        <p><span class="tmpl-tag A">A1</span> <strong>诚然，</strong>AI取代重复性劳动的趋势在某种程度上具有其合理性，例如工厂流水线和基础数据录入；<strong>然而，如果我们审视</strong>人类工作的本质——创造、共情与价值判断——<strong>就会发现</strong>，AI目前触及的只是"执行层"，而非"决策层"。</p>
+        <p><span class="tmpl-tag B">B1</span> <strong>这并非偶然的巧合，而是</strong>技术发展的必然阶段。<strong>究其本质，是因为</strong>机器善于"优化已知"，而人类的价值在于"探索未知"。</p>
+        <p><span class="tmpl-tag C">C1</span> <strong>由此，我们不仅看到了</strong>技术赋能的高效，<strong>更应当警惕</strong>将"人"降格为"被替代品"的思维惯性。</p>
+      </div>
+    </div>
+
+    <div class="exercise-item mt-12">
+      <p><strong>【真题2】</strong> "知之者不如好之者，好之者不如乐之者。"兴趣是最好的老师。但也有人说，成功更多需要毅力和纪律。请写一段议论文段落。</p>
+      <button class="btn-small" onclick="toggleAnswer('ex-writing-2')">查看模板参考</button>
+      <div class="ex-answer" id="ex-writing-2" style="display:none">
+        <p><span class="tmpl-tag A">A2</span> <strong>有人或许会主张：</strong>成功更多依赖毅力和纪律，兴趣不过是起点。<strong>这种看法并非全无道理，但它忽略了一个关键前提——</strong>没有内在兴趣驱动的"毅力"，往往沦为机械的自我强迫，难以持久。</p>
+        <p><span class="tmpl-tag B">B2</span> <strong>事实上，</strong>兴趣与毅力并非对立。<strong>不仅体现在</strong>"乐之者"天然的投入度更高，<strong>更深刻地反映在</strong>——兴趣本身就能持续生成"坚持下去的理由"。</p>
+        <p><span class="tmpl-tag C">C2</span> <strong>或许，最好的答案并不在于</strong>二选一，<strong>而在于我们在</strong>教育设计上<strong>寻得一种平衡——</strong>用兴趣点燃起点，用纪律守护终点。</p>
+      </div>
+    </div>
+
+    <div class="exercise-item mt-12">
+      <p><strong>【真题3】</strong> 材料：移动互联网时代，"碎片化"已成为常态——碎片化阅读、碎片化社交、碎片化时间。有人担忧这种趋势正在消解深度思考能力；也有人认为碎片化是效率的体现。对此你有怎样的思考？</p>
+      <button class="btn-small" onclick="toggleAnswer('ex-writing-3')">查看模板参考</button>
+      <div class="ex-answer" id="ex-writing-3" style="display:none">
+        <p><span class="tmpl-tag A">A3</span> <strong>站在</strong>效率论者的<strong>立场来看，</strong>碎片化确实是信息时代的合理适应。<strong>但当我们把视野放宽到</strong>人类文明的纵深——科学突破、哲学体系、文学巨著——<strong>就会发现</strong>，几乎所有深度创造都诞生于"整块时间"的沉浸之中。</p>
+        <p><span class="tmpl-tag B">B4</span> <strong>从更根本的层面来看，</strong>碎片化之所以值得警惕，<strong>是因为它触及了一个被普遍忽略的前提——</strong>人的认知带宽是有限的。每一次切换都在消耗注意力残留。</p>
+        <p><span class="tmpl-tag C">C4</span> <strong>归根结底，</strong>碎片化与深度思考的争论<strong>所关切的，不仅仅是</strong>阅读习惯的问题，<strong>更关乎每一个人在</strong>信息爆炸的时代里<strong>能否守住思想的完整性。</strong></p>
+      </div>
+    </div>
+  </div></div>
+
+<!-- ======================== BOOKS ======================== -->
+<div class="page" id="page-books">
+  <div class="page-header">
+    <h2>📚 推荐书单</h2>
+    <p class="sub">6 本核心读物，按语文能力维度分类，标注必读章节与练习方案。</p>
+  </div>
+  <div class="card" id="bookList"></div>
+</div>
+
+<!-- ======================== PLAN ======================== -->
+<div class="page" id="page-plan">
+  <div class="page-header">
+    <h2>📅 四周训练计划</h2>
+    <p class="sub">每日 25–30 分钟，完成闪卡 + 标记阅读 + 语法拆解 + 模板练习。</p>
+  </div>
+  <div class="tabs" id="planTabs">
+    <button class="tab-btn active" data-tab="week1" onclick="switchTab('planTabs','week1')">第1周·基础</button>
+    <button class="tab-btn" data-tab="week2" onclick="switchTab('planTabs','week2')">第2周·核心</button>
+    <button class="tab-btn" data-tab="week3" onclick="switchTab('planTabs','week3')">第3周·综合</button>
+    <button class="tab-btn" data-tab="week4" onclick="switchTab('planTabs','week4')">第4周·模拟</button>
+  </div>
+  <div id="planTabs-content"></div>
+  <div class="card mt-16">
+    <h3>📊 自我评估</h3>
+    <div id="selfAssessment"></div>
+  </div>
+</div>
+
+<!-- ======================== METHODOLOGY ======================== -->
+<div class="page" id="page-methodology">
+  <div class="page-header">
+    <h2>🧠 水平四 · 高阶思维方法论</h2>
+    <p class="sub">基于课标"水平四"（高考录取标准）→ 理解阐释 · 推断探究 · 赏析评价 · 发现创新</p>
+  </div>
+
+  <div class="card">
+    <h3>🗣️ 格莱斯会话含义解码法（言外之意）</h3>
+    <p style="font-size:12px;color:var(--text-light);margin-bottom:8px;">语用学 · 格莱斯"会话含义理论" → 解答"分析画线句深层含意"</p>
+    <div style="background:#faf8f5;padding:14px;border-radius:8px;font-size:13px;line-height:2;">
+      <strong>公式：</strong>言外之意 = 字面意义 + 被违反的语用准则 + 说话者真实意图<br>
+      <span class="badge-sm bg-red">准则① 量的准则</span> 信息量过多或过少 = 刻意回避<br>
+      <span class="badge-sm bg-blue">准则② 质的准则</span> 故意说反话 = 讽刺或无奈<br>
+      <span class="badge-sm bg-gold">准则③ 关联准则</span> 答非所问 = 转移话题或暗示<br>
+    </div>
+    <div style="margin-top:12px;">
+      <input class="gram-input" id="implicatureInput" placeholder="输入含有言外之意的对话，点击分析…">
+      <button class="btn-primary" onclick="analyzeImplicature()">🔍 拆解言外之意</button>
+      <div id="implicatureResult" class="mt-12"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>📊 多文本对话矩阵法（比较阅读）</h3>
+    <p style="font-size:12px;color:var(--text-light);margin-bottom:8px;">多元读写理论 → 多文本对比维度：核心观点 / 论据组织 / 情感基调</p>
+    <div style="overflow-x:auto;">
+    <table class="plan-table" style="min-width:600px;">
+      <tr><th>维度</th><th>文本A（庄子）</th><th>文本B（荀子）</th><th>冲突/对话点</th></tr>
+      <tr><td>核心观点</td><td>顺应自然，无为而治</td><td>制天命而用之，人定胜天</td><td>人与自然关系的根本对立</td></tr>
+      <tr><td>论据组织</td><td>寓言故事、神话想象（虚）</td><td>礼乐制度、社会事实（实）</td><td>逻辑论证手段的虚实差异</td></tr>
+      <tr><td>情感基调</td><td>超脱、逍遥、静谧</td><td>积极、刚健、理性</td><td>知识分子对时代困境的不同救赎</td></tr>
+    </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>⚔️ 图尔敏反驳操练法（论证拆解）</h3>
+    <p style="font-size:12px;color:var(--text-light);margin-bottom:8px;">图尔敏论证模型 → 攻克"指出逻辑漏洞并反驳"题型</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px;">
+      <div style="background:#fde8e8;padding:12px;border-radius:8px;">
+        <strong>① 解构对方论证</strong><br>
+        主张(Claim) + 证据(Data) + 前提(Warrant)
+      </div>
+      <div style="background:#d5e8f4;padding:12px;border-radius:8px;">
+        <strong>② 寻找逻辑漏洞</strong><br>
+        证据孤立性？前提何时不成立？
+      </div>
+      <div style="background:#fef5e0;padding:12px;border-radius:8px;grid-column:1/-1;">
+        <strong>③ 构建反驳链条</strong><br>
+        反证数据(Counter-Data) → 推翻前提 → 对方主张崩溃
+      </div>
+    </div>
+    <div style="margin-top:10px;font-size:11px;color:var(--text-light);">
+      <strong>示例：</strong>对方主张"AI将取代作家"→ 前提"文学=词汇排列"→ 反驳"文学核心是情感共鸣，AI无法产生人类体验"→ 前提被推翻
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🎨 文体风格基因映射法（风格比较）</h3>
+    <p style="font-size:12px;color:var(--text-light);margin-bottom:8px;">比较两个文学作品风格异同 → 三维修辞基因图谱</p>
+    <div class="grid3" style="font-size:12px;">
+      <div style="background:#faf8f5;padding:10px;border-radius:6px;text-align:center;">
+        <strong>词汇密度</strong><br><span class="text-light">句式长短、修饰成分</span>
+      </div>
+      <div style="background:#faf8f5;padding:10px;border-radius:6px;text-align:center;">
+        <strong>修辞色彩</strong><br><span class="text-light">素朴 ↔ 绚丽</span>
+      </div>
+      <div style="background:#faf8f5;padding:10px;border-radius:6px;text-align:center;">
+        <strong>情感态度</strong><br><span class="text-light">冷峻批判 ↔ 温情牧歌</span>
+      </div>
+    </div>
+    <p class="text-light mt-8" style="font-size:11px;">例：鲁迅《故乡》的冷峻白描 vs 沈从文《边城》的田园牧歌，同写乡村，基因迥异。</p>
+  </div>
+
+  <div class="card">
+    <h3>📝 写作评估量规（60分·水平四标准）</h3>
+    <div style="overflow-x:auto;">
+    <table class="plan-table">
+      <tr><th style="width:12%;">层级</th><th>论证思维</th><th>语言表达</th></tr>
+      <tr><td><span class="badge-sm bg-gold">50-60分</span></td><td>辩证反驳：主动引入反面观点(Concession)，精准找出前提局限(Rebuttal)，完成高维逻辑整合</td><td>反问、双关等高级修辞，语境契合度高</td></tr>
+      <tr><td><span class="badge-sm bg-blue">42-49分</span></td><td>逻辑闭环：阐明观点与材料关系，类比/因果推导合理，但缺对立观点引入</td><td>通顺，句式有变化，但文采平庸</td></tr>
+      <tr><td><span class="badge-sm bg-red">30-41分</span></td><td>论证扁平：以例代论，罗列万能论据，逻辑链条断裂</td><td>大白话，成语生硬，缺乏学术语言规范</td></tr>
+    </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🎯 情境任务示例（高三模拟）</h3>
+    <div style="background:#faf8f5;padding:14px;border-radius:8px;font-size:13px;line-height:1.9;">
+      <p><strong>【情境任务】</strong>学校举办"传统文化的现代化转身"辩论赛。</p>
+      <p>正方："传统文化应当原汁原味地保留"</p>
+      <p>反方："传统文化应当根据现代审美进行重构"</p>
+      <p>请结合荀子关于"礼乐制度演变"的论述，为<strong>反方</strong>写一段辩词（300字）。</p>
+      <p class="text-light" style="font-size:11px;margin-top:8px;">考查维度：语言建构（辩词体裁）+ 思维提升（反驳逻辑漏洞）+ 实际问题解决</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- ======================== CALENDAR ======================== -->
 <div class="page" id="page-calendar">
-<div class="page-header"><h2>📆 训练日历</h2></div>
-<div id="calContent"></div></div>
+  <div class="page-header">
+    <h2>📆 训练日历</h2>
+    <p class="sub">追踪每日训练记录，标记闪卡/模板/语法完成情况。</p>
+  </div>
+  <div class="card">
+    <div class="cal-header">
+      <button onclick="calPrevMonth()">◀</button>
+      <span class="cal-month" id="calMonthLabel"></span>
+      <button onclick="calNextMonth()">▶</button>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+  <div class="card" id="calDayDetail" style="display:none">
+    <h3 id="calDayTitle"></h3>
+    <div id="calDayContent"></div>
+  </div>
+</div>
+
+<!-- ======================== IMPORT ======================== -->
+<div class="page" id="page-import">
+  <div class="page-header">
+    <h2>📥 导入数据</h2>
+    <p class="sub">导入 CSV 格式的闪卡数据或训练习题，自动写入 SQLite。</p>
+  </div>
+  <div class="card">
+    <h3>📋 CSV 格式说明</h3>
+    <div style="display:grid;gap:6px;font-size:12px;color:var(--text-light);line-height:1.8">
+      <div><span class="badge-sm bg-blue">闪卡</span> 列：<code>front,hl,word,meaning,analogy</code>（对应实词/虚词/文学常识）</div>
+      <div><span class="badge-sm bg-green">练习</span> 列：<code>module,type,question,options,answer,explanation</code></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>📤 选择文件</h3>
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('importFile').click()">
+      <div class="dz-icon">📂</div>
+      <div class="dz-text">点击选择或拖拽 CSV 文件到此处</div>
+      <div class="dz-hint">支持 .csv 格式，UTF-8 编码</div>
+    </div>
+    <input type="file" id="importFile" accept=".csv" style="display:none" onchange="handleImportFile(event)">
+    <div class="flex" style="margin-top:8px;gap:8px">
+      <select id="importDeck" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;min-width:140px">
+        <option value="shici">导入到：文言实词</option>
+        <option value="xuci">导入到：文言虚词</option>
+        <option value="wenxue">导入到：文学常识</option>
+        <option value="exercises">导入到：训练习题</option>
+      </select>
+    </div>
+    <div class="import-preview" id="importPreview" style="display:none"></div>
+    <div class="import-status" id="importStatus" style="display:none"></div>
+    <button class="btn-primary mt-8" id="importBtn" style="display:none" onclick="executeImport()">确认导入</button>
+  </div>
+</div>
+
+<div class="timer-widget minimized" id="timerWidget">
+  <span class="timer-toggle" onclick="toggleTimer()">⏱</span>
+  <div class="timer-body" style="display:none">
+    <div class="timer-label" id="timerLabel">专注训练</div>
+    <div class="timer-display" id="timerDisplay">25:00</div>
+    <div class="timer-presets">
+      <button onclick="setTimer(event, 5)">5分</button>
+      <button onclick="setTimer(event, 15)" class="active">15分</button>
+      <button onclick="setTimer(event, 25)">25分</button>
+      <button onclick="setTimer(event, 45)">45分</button>
+    </div>
+    <button class="timer-btn start" id="timerStartBtn" onclick="startTimer()">▶ 开始</button>
+    <button class="timer-btn reset" id="timerResetBtn" onclick="resetTimer()" style="display:none">↺ 重置</button>
+  </div>
+</div>
 
 </div><!-- /main -->
 
-<script src="js/api.js"></script>
-<script src="js/app.js"></script>
-<script src="js/data.js"></script>
-<script src="js/flashcard.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/app.js"></script>
 </body>
 </html>
