@@ -47,5 +47,5 @@ app.mount("/", StaticFiles(directory=str(STATIC_DIR), html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn
-    print("Starting: http://0.0.0.0:3100")
-    uvicorn.run("main:app", host="0.0.0.0", port=3100, reload=True, log_level="info")
+    print("Starting: http://0.0.0.0:3200")
+    uvicorn.run("main:app", host="0.0.0.0", port=3200, reload=True, log_level="info")
