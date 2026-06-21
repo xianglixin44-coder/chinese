@@ -49,3 +49,7 @@ App.formatTime = function(s) {
   var m = Math.floor(s / 60), sec = s % 60;
   return String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
 };
+
+// Bare aliases for functions extracted from app.js
+var htmlesc = App.htmlesc;
+var sanitizeHTML = App.sanitizeHTML;

@@ -1,3 +1,6 @@
+var htmlesc = App.htmlesc;
+var sanitizeHTML = App.sanitizeHTML;
+
 (function(){
 // ====== 全局事件委托 (新代码用 data-action, 旧 onclick 保留兼容) ======
 document.addEventListener('click', function(e) {
@@ -102,94 +105,7 @@ function navigate(page, keepNav, anchor) {
   if (dtEl) dtEl.textContent = '🕐 ' + dtStr;
 }
 
-const READING_PASSAGES = [
-  {
-    id: 'rc1', title: '信息类文本 · 人工智能与教育',
-    passage: '人工智能正在重塑教育生态。一方面，个性化学习系统可以根据学生的认知水平定制内容，让每个学生都能以适合自己的节奏前进；另一方面，过度依赖算法推荐可能导致"信息茧房"，使学生只能接触自己舒适区内的知识，失去探索未知领域的机会。因此，技术赋能教育的关键不在于技术本身有多先进，而在于我们如何设计"人机协作"的教育生态。当前，一些学校尝试将AI助教引入课堂，由AI负责知识点的讲解与练习推送，教师则专注于情感互动和创造性思维的引导。这种分工模式既发挥了AI在数据处理和个性化推荐上的优势，又保留了教育中不可替代的"人的温度"。不过，也有学者担忧，如果教师过度依赖AI系统，可能会逐渐丧失课程设计的主导权，使教育沦为"算法驱动"而非"理念驱动"。',
-    questions: [
-      { q: '1. 根据原文，下列关于"技术赋能教育"的理解，正确的一项是（3分）',
-        options: ['A. 技术越先进，教育效果就越好', 'B. 技术赋能的关键在于设计人机协作的生态', 'C. AI可以完全替代教师的全部工作', 'D. 算法推荐必然导致信息茧房'],
-        answer: 1 },
-      { q: '2. 文中提到的"AI助教+教师"分工模式，下列表述不符合原文的一项是（3分）',
-        options: ['A. AI负责知识点讲解与练习推送', 'B. 教师专注于情感互动与创造性思维引导', 'C. 该模式完全消除了AI的局限性', 'D. 保留教育中不可替代的"人的温度"'],
-        answer: 2 },
-      { q: '3. 关于学者对AI教育的担忧，下列说法正确的一项是（3分）',
-        options: ['A. 学者认为AI不应进入课堂', 'B. 教师过度依赖AI可能丧失课程设计主导权', 'C. AI已经使教育沦为算法驱动', 'D. 教育不应该使用任何技术手段'],
-        answer: 1 }
-    ]
-  },
-  {
-    id: 'rc2', title: '文学类文本 · 巷口的等待',
-    passage: '他站在巷口，手里攥着一张对折的纸。风从巷子里灌出来，把纸角吹得一掀一掀的，像一只受伤的鸟在扑棱翅膀。他没有打开它——他已经看了太多遍。那些字像是用针尖划在纸面上的，每一个都扎眼睛。他只是在等，等巷子尽头那扇门打开，或者永远不开。暮色渐渐漫上来，巷子里亮起几盏昏黄的灯，把人影拉得又细又长。远处隐约传来饭菜的香味，和孩子们的嬉闹声。他依然站着，像一棵被遗忘在墙角的枯树。',
-    questions: [
-      { q: '1. 下列对文中比喻手法的赏析，不正确的一项是（3分）',
-        options: ['A. "像一只受伤的鸟在扑棱翅膀"以动作写焦虑', 'B. "像用针尖划在纸面上"以痛觉写视觉冲击', 'C. "像一棵被遗忘在墙角的枯树"暗示人物身份卑微', 'D. 三个比喻均服务于人物心理刻画'],
-        answer: 2 },
-      { q: '2. 关于文中环境描写的作用，分析正确的一项是（3分）',
-        options: ['A. 暮色和灯光渲染了温馨的家庭氛围', 'B. 远处饭菜香与嬉闹声暗示人物已放弃等待', 'C. 环境以"暖"衬"冷"，反衬人物的孤独与坚持', 'D. 环境描写仅作为时间推移的交代'],
-        answer: 2 },
-      { q: '3. 下列对全文主旨的理解，最准确的一项是（3分）',
-        options: ['A. 赞美了民间巷弄的生活气息', 'B. 批评了现代人缺乏耐心的等待', 'C. 通过"等待"这一动作写出了希望与绝望的张力', 'D. 呼吁人们珍惜身边的亲情'],
-        answer: 2 }
-    ]
-  },
-  {
-    id: 'rc3', title: '论述类文本 · 经典阅读的价值',
-    passage: '经典之所以为经典，不在于它完美无瑕，而在于它能够持续地与不同时代的读者对话。一部《论语》，两千年来被无数人解读、质疑、再解读，每一次对话都丰富了文本的生命而非消耗它。这正是卡尔维诺所说的："经典是那些你经常听人家说\'我正在重读……\'而不是\'我正在读……\'的书。"然而，在信息爆炸的今天，浅阅读和碎片化阅读正在侵蚀经典的生存空间。有调查显示，超过六成的受访大学生表示"没有完整读过一部经典名著"。这其中固然有时间碎片化的客观原因，但更深层的问题在于：当"快"成为时代精神，"慢"阅读就成了一种奢侈。值得注意的是，经典阅读的价值恰恰在于它的"慢"——它要求读者放慢节奏，深入思考，与文本展开真正的对话。这种"慢"，不是效率的敌人，而是深度理解的必要条件。',
-    questions: [
-      { q: '1. 下列关于原文内容的理解和分析，正确的一项是（3分）',
-        options: ['A. 经典之所以为经典，是因为它完美无瑕', 'B. 对经典的解读会消耗文本的生命力', 'C. 卡尔维诺认为经典是值得反复重读的书', 'D. 经典阅读是效率的敌人'],
-        answer: 2 },
-      { q: '2. 下列对原文论证的相关分析，不正确的一项是（3分）',
-        options: ['A. 引用卡尔维诺的话是为了定义经典', 'B. 用调查数据论证浅阅读现象的存在', 'C. 将"快"与"慢"对举突出经典阅读的价值', 'D. 文章否定了碎片化阅读的一切价值'],
-        answer: 3 },
-      { q: '3. 根据原文，"慢"阅读的含义是（3分）',
-        options: ['A. 阅读速度缓慢', 'B. 放慢节奏，深入思考，与文本展开对话', 'C. 拒绝一切电子阅读', 'D. 每天只读一页书'],
-        answer: 1 }
-    ]
-  }
-];
 
-function checkReadingAnswer(qid, chosen, correct) {
-  var resultEl = document.getElementById(qid + '-result');
-  if (!resultEl) return;
-  resultEl.style.display = 'block';
-  if (chosen === correct) {
-    resultEl.innerHTML = '<p style="color:#27ae60;font-weight:600">✅ 正确！+3分</p>';
-    apiCall('POST', '/api/grammar/log', {sentence: qid, example_idx: -1, module: 'reading'});
-    dbRun("INSERT INTO grammar_log (sentence, example_idx, module) VALUES (?, -1, 'reading')", [qid]);
-    checkStreak(); markTaskDone('reading');
-  } else {
-    var theQ = null;
-    READING_PASSAGES.forEach(function(p) {
-      p.questions.forEach(function(q, i) { if (p.id + '-q' + i === qid) theQ = q; });
-    });
-    var correctText = theQ ? theQ.options[correct] : '';
-    resultEl.innerHTML = '<p style="color:#c0392b;font-weight:600">❌ 错误。正确答案：' + htmlesc(correctText) + '</p>';
-  }
-}
-function renderReadingTabs() {
-  var container = document.getElementById('readingTabs-content');
-  if (!container) return;
-  var h = '';
-  READING_PASSAGES.forEach(function(p) {
-    var isActive = p.id === 'rc1' ? ' active' : '';
-    h += '<div class="tab-content' + isActive + '" id="tab-' + p.id + '">';
-    h += '<div class="ex-passage" style="line-height:2;font-size:14px">' + htmlesc(p.passage) + '</div>';
-    p.questions.forEach(function(q, qi) {
-      var qid = p.id + '-q' + qi;
-      h += '<div class="exercise-item mt-8"><p><strong>' + htmlesc(q.q) + '</strong></p>';
-      h += '<div style="display:grid;gap:4px;margin:8px 0;">';
-      q.options.forEach(function(o, oi) {
-        h += '<label class="ex-option"><input type="radio" name="' + qid + '" value="' + oi + '" onchange="checkReadingAnswer(\'' + qid + '\',' + oi + ',' + q.answer + ')"> ' + htmlesc(o) + '</label>';
-      });
-      h += '</div>';
-      h += '<div class="ex-answer" id="' + qid + '-result" style="display:none"></div></div>';
-    });
-    h += '</div>';
-  });
-  container.innerHTML = h;
-}
 
 function renderSymbols() {
   const html = SYMBOLS.map(s => `<div class="sym-card"><div class="sym">${s.sym}</div><div class="sym-name">${s.name}</div><div class="sym-desc">${s.desc}</div></div>`).join('');
@@ -197,248 +113,14 @@ function renderSymbols() {
 }
 
 // ====== 每日选题加载与渲染 ======
-async function loadDailyExercise(page) {
-  var moduleMap = { reading: 'modern_reading', classical: 'classical_reading', language: 'grammar', writing: 'writing' };
-  var module = moduleMap[page];
-  if (!module) return;
 
-  var containerId = 'daily-' + page;
-  var container = document.getElementById(containerId);
-  if (!container) return;
 
-  if (!apiAvailable) { container.innerHTML = ''; return; }
 
-  try {
-    var data = await fetchDailyExercise(module);
-    if (data && data.exercise) {
-      renderDailyExercise(container, data.exercise, data.is_new);
-    } else {
-      container.innerHTML = '<div class="card" style="text-align:center;color:var(--text-light);padding:24px;">📭 该题型暂无可用题目，请通过导入功能添加。</div>';
-    }
-  } catch(e) {
-    container.innerHTML = ''; // 静默回退到硬编码内容
-  }
-}
 
-function renderDailyExercise(container, ex, isNew) {
-  var badge = isNew ? '<span style="font-size:10px;background:var(--accent2);color:#fff;padding:2px 8px;border-radius:10px;margin-left:6px;">今日新题</span>' : '';
-  var html = '<div class="card" style="border-left:3px solid var(--accent2);"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><h3 style="margin:0;">📋 今日练习' + badge + '</h3></div>';
 
-  if (ex.module === 'modern_reading') {
-    html += '<div class="ex-passage" style="line-height:2;font-size:14px;margin-bottom:12px;">' + htmlesc(ex.content) + '</div>';
-    if (ex.question) {
-      html += '<p><strong>' + htmlesc(ex.question) + '</strong></p>';
-      if (ex.options_json) {
-        try {
-          var opts = JSON.parse(ex.options_json);
-          opts.forEach(function(o, i) {
-            html += '<label class="ex-option"><input type="radio" name="dailyQ" value="' + i + '" onchange="checkDailyAnswer(\'' + ex.module + '\',' + i + ',\'' + ex.answer + '\')"> ' + htmlesc(o) + '</label>';
-          });
-        } catch(e) {}
-      }
-      html += '<div class="ex-answer" id="dailyQ-result" style="display:none;margin-top:8px;"></div>';
-    }
-    if (ex.explanation) {
-      html += '<div id="dailyQ-explanation" style="display:none;margin-top:8px;background:#faf8f5;padding:10px;border-radius:6px;font-size:13px;">' + htmlesc(ex.explanation).replace(/\n/g,'<br>') + '</div>';
-    }
-  } else if (ex.module === 'classical_reading') {
-    html += '<div class="ex-passage" style="font-size:16px;margin-bottom:8px;">' + htmlesc(ex.content) + '</div>';
-    if (ex.question) html += '<p><strong>' + htmlesc(ex.question) + '</strong></p>';
-    if (ex.options_json && ex.options_json !== '[]') {
-      try {
-        JSON.parse(ex.options_json).forEach(function(o, i) {
-          html += '<label class="ex-option"><input type="radio" name="dailyQ" value="' + i + '" onchange="checkDailyAnswer(\'' + ex.module + '\',' + i + ',\'' + ex.answer + '\')"> ' + htmlesc(o) + '</label>';
-        });
-      } catch(e) {}
-    } else {
-      html += '<input class="gram-input" id="dailyInput" placeholder="输入你的答案…"><button class="btn-primary" onclick="checkDailyText(\'' + ex.module + '\')">提交</button>';
-    }
-    html += '<div class="ex-answer" id="dailyQ-result" style="display:none;margin-top:8px;"></div>';
-  } else if (ex.module === 'grammar') {
-    html += '<p style="font-size:15px;margin-bottom:8px;"><strong>句子：</strong>' + htmlesc(ex.content) + '</p>';
-    if (ex.question) html += '<p>' + htmlesc(ex.question) + '</p>';
-    html += '<input class="gram-input" id="dailyInput" placeholder="输入你的分析或答案…"><button class="btn-primary" onclick="checkDailyText(\'' + ex.module + '\')">提交</button>';
-    html += '<div class="ex-answer" id="dailyQ-result" style="display:none;margin-top:8px;"></div>';
-    if (ex.explanation) {
-      html += '<div id="dailyQ-explanation" style="display:none;margin-top:8px;background:#faf8f5;padding:10px;border-radius:6px;font-size:13px;">' + htmlesc(ex.explanation).replace(/\n/g,'<br>') + '</div>';
-    }
-  } else if (ex.module === 'writing') {
-    html += '<p style="font-size:15px;margin-bottom:8px;"><strong>🎯 今日话题：</strong>' + htmlesc(ex.content) + '</p>';
-    try {
-      var extra = JSON.parse(ex.extra_json || '{}');
-      if (extra.template_hint) html += '<p style="font-size:12px;color:var(--accent2);">💡 建议模板：' + htmlesc(extra.template_hint) + '</p>';
-    } catch(e) {}
-    html += '<textarea id="dailyInput" style="width:100%;height:120px;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:13px;resize:vertical;" placeholder="在此写作…"></textarea>';
-    html += '<button class="btn-primary mt-8" onclick="checkDailyText(\'' + ex.module + '\')">提交</button>';
-  }
-
-  html += '</div>';
-  container.innerHTML = html;
-  container.style.display = 'block';
-}
-
-function checkDailyAnswer(module, chosen, correctStr) {
-  var resultEl = document.getElementById('dailyQ-result');
-  var explanationEl = document.getElementById('dailyQ-explanation');
-  if (!resultEl) return;
-  resultEl.style.display = 'block';
-  if (explanationEl) explanationEl.style.display = 'block';
-  var correct = parseInt(correctStr) === chosen;
-  if (correct) {
-    resultEl.innerHTML = '<p style="color:#27ae60;font-weight:600">✅ 正确！</p>';
-    completeDailyExercise(module, 3);
-    markTaskDone(module === 'modern_reading' ? 'reading' : module === 'classical_reading' ? 'classical' : 'language');
-  } else {
-    resultEl.innerHTML = '<p style="color:#c0392b;font-weight:600">❌ 错误。正确答案已在上方解析中。</p>';
-    completeDailyExercise(module, 0);
-  }
-}
-
-function checkDailyText(module) {
-  var input = document.getElementById('dailyInput');
-  var resultEl = document.getElementById('dailyQ-result');
-  var explanationEl = document.getElementById('dailyQ-explanation');
-  if (!input || !resultEl) return;
-  resultEl.style.display = 'block';
-  if (explanationEl) explanationEl.style.display = 'block';
-  if (input.value.trim()) {
-    resultEl.innerHTML = '<p style="color:var(--accent2);font-weight:600">✅ 已提交。对照上方解析检查你的答案。</p>';
-    completeDailyExercise(module, 2);
-    if (module === 'grammar') markTaskDone('language');
-    if (module === 'writing') markTaskDone('writing');
-  }
-}
-
-const SRS_INTERVALS = [1, 2, 4, 8, 16, 32, 64, 128];
-const MASTERY_INTERVAL = 32;
-
-async function initDeck(name) {
-  currentDeck = name; deckIndex = 0;
-  // 优先从服务端题库加载，API 不可用时回退到硬编码数据
-  if (apiAvailable) {
-    try {
-      const r = await fetchFlashcardItems(name);
-      if (r && r.items && r.items.length > 0) {
-        const existing = DECKS[name] || [];
-        const existingFronts = new Set(existing.map(c => c.front));
-        const apiCards = r.items.map(item => {
-          var extra = {};
-          try { extra = JSON.parse(item.extra_json || '{}'); } catch(e) {}
-          return {
-            front: item.content, hl: extra.hl || '', word: extra.word || '',
-            meaning: extra.meaning || '', analogy: extra.analogy || ''
-          };
-        });
-        const newCards = apiCards.filter(c => !existingFronts.has(c.front));
-        if (newCards.length > 0) DECKS[name] = [...existing, ...newCards];
-      }
-    } catch(e) { /* API 不可用，回退硬编码 */ }
-  }
-  const totalCards = DECKS[name].length;
-  const today = new Date().toISOString().slice(0, 10);
-  const srsRows = dbGet("SELECT card_idx, interval_days, repetitions, next_review, mastered FROM card_srs WHERE deck = ?", [name]);
-  const srsMap = {};
-  srsRows.forEach(r => { srsMap[r[0]] = { interval: r[1], reps: r[2], next: r[3], mastered: r[4] }; });
-  const dueIndices = [], newIndices = [];
-  for (let i = 0; i < totalCards; i++) {
-    const s = srsMap[i];
-    if (!s || !s.next) { newIndices.push(i); }
-    else if (s.next <= today && !s.mastered) { dueIndices.push(i); }
-  }
-  shuffle(dueIndices); shuffle(newIndices);
-  var limitedNew = newIndices.slice(0, DAILY_CARD_LIMIT);
-  deckQueue = [...dueIndices, ...limitedNew];
-  const el = document.getElementById('fcStats');
-  if (el) {
-    const mastered = srsRows.filter(r => r[4]).length;
-    var newLabel = limitedNew.length + (newIndices.length > DAILY_CARD_LIMIT ? '（上限' + DAILY_CARD_LIMIT + '）' : '');
-    if (dueIndices.length > 0) el.textContent = `待复习: ${dueIndices.length} | 新卡: ${newLabel} | 已掌握: ${mastered}`;
-    else if (newIndices.length > 0) el.textContent = `新卡: ${newLabel}/${totalCards} | 已掌握: ${mastered}`;
-    else el.textContent = `🎉 全部已掌握！ (${totalCards}张)`;
-  }
-  showCard();
-  document.querySelectorAll('.deck-btn').forEach(b => b.classList.toggle('active', b.dataset.deck === name));
-}
-function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } }
-function showCard() {
-  if (deckQueue.length === 0) {
-    if (cardTimer) { clearInterval(cardTimer); cardTimer = null; }
-    var tEl2 = document.getElementById('fcTimer'); if (tEl2) tEl2.textContent = '';
-    const m = dbGet("SELECT COUNT(*) FROM card_srs WHERE deck = ? AND mastered = 1", [currentDeck]);
-    const mastered = m.length ? m[0][0] : 0;
-    const total = DECKS[currentDeck].length;
-    document.getElementById('fcStats').textContent = mastered >= total ? `🏆 全部掌握！ (${total}张)` : `✅ 今日任务完成！已掌握: ${mastered}/${total}`;
-    document.getElementById('fcFront').textContent = mastered >= total ? '🏆 太棒了！全部掌握' : '✅ 今日任务完成，明天再来！';
-    document.getElementById('fcWord').textContent = ''; document.getElementById('fcMeaning').textContent = ''; document.getElementById('fcAnalogy').textContent = '';
-    flipped = false; document.getElementById('flashcard').classList.remove('flipped'); return;
-  }
-  // Start 20s countdown
-  if (cardTimer) clearInterval(cardTimer);
-  cardSeconds = 20;
-  var timerEl = document.getElementById('fcTimer');
-  if (timerEl) { timerEl.textContent = '⏱ 20s'; timerEl.classList.remove('urgent'); }
-  cardTimer = setInterval(function() {
-    cardSeconds--;
-    if (timerEl) {
-      timerEl.textContent = '⏱ ' + cardSeconds + 's';
-      if (cardSeconds <= 5) timerEl.classList.add('urgent');
-    }
-    if (cardSeconds <= 0) {
-      clearInterval(cardTimer); cardTimer = null;
-      if (timerEl) timerEl.textContent = '⏰ 超时';
-      if (flipped) rateCard('again');
-      else { flipCard(); setTimeout(function() { rateCard('again'); }, 1000); }
-    }
-  }, 1000);
-  const card = DECKS[currentDeck][deckQueue[deckIndex]];
-  document.getElementById('fcStats').textContent = `卡片 ${deckIndex + 1}/${deckQueue.length} · 待复习:${deckQueue.length}`;
-  let frontHTML = card.front;
-  if (card.hl) { frontHTML = card.front.replace(new RegExp('(' + card.hl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'g'), '<span class="fw-bold-highlight">$1</span>'); }
-  document.getElementById('fcFront').innerHTML = sanitizeHTML(frontHTML);
-  document.getElementById('fcWord').textContent = card.word;
-  document.getElementById('fcMeaning').textContent = card.meaning;
-  document.getElementById('fcAnalogy').textContent = card.analogy || '';
-  flipped = false; document.getElementById('flashcard').classList.remove('flipped');
-  updateHomeStats();
-}
-function flipCard() { if (deckQueue.length === 0) return; flipped = !flipped; document.getElementById('flashcard').classList.toggle('flipped', flipped); }
-function rateCard(rating) {
-  if (deckQueue.length === 0) return;
-  if (cardTimer) { clearInterval(cardTimer); cardTimer = null; }
-  if (!flipped) { flipCard(); return; }
-  const cardIdx = deckQueue[deckIndex];
-  if (cardIdx === undefined) return;
-  const card = DECKS[currentDeck][cardIdx];
-  const today = new Date().toISOString().slice(0, 10);
-  apiCall('POST', '/api/flashcard/log', {deck: currentDeck, card_word: card.word, rating});
-  apiCall('POST', '/api/training/session', {date: today, module: '闪卡', duration_min: 5});
-  dbRun("INSERT INTO flashcard_log (deck, card_word, rating) VALUES (?, ?, ?)", [currentDeck, card.word, rating]);
-  const rows = dbGet("SELECT interval_days, repetitions FROM card_srs WHERE deck = ? AND card_idx = ?", [currentDeck, cardIdx]);
-  let interval = rows.length ? rows[0][0] : 0;
-  let reps = rows.length ? rows[0][1] : 0;
-  if (rating === 'again') { interval = 1; reps = 0; }
-  else if (rating === 'hard') { if (interval === 0) interval = 1; reps++; }
-  else if (rating === 'easy') {
-    if (interval === 0) interval = 1;
-    else { const idx = SRS_INTERVALS.indexOf(interval); interval = idx >= 0 && idx < SRS_INTERVALS.length - 1 ? SRS_INTERVALS[idx + 1] : interval; }
-    reps++;
-  }
-  const nextReview = new Date(Date.now() + interval * 86400000).toISOString().slice(0, 10);
-  const mastered = interval >= MASTERY_INTERVAL ? 1 : 0;
-  apiCall('PUT', '/api/card-srs', {deck: currentDeck, card_idx: cardIdx, rating: rating, interval_days: interval, repetitions: reps, next_review: nextReview, mastered});
-  dbRun(`INSERT OR REPLACE INTO card_srs (deck, card_idx, interval_days, repetitions, next_review, mastered) VALUES (?, ?, ?, ?, ?, ?)`, [currentDeck, cardIdx, interval, reps, nextReview, mastered]);
-  if (mastered) { deckQueue.splice(deckIndex, 1); }
-  else if (rating === 'again') { deckQueue.splice(deckIndex, 1); deckQueue.push(cardIdx); }
-  else { deckQueue.splice(deckIndex, 1); }
-  if (deckQueue.length > 0) deckIndex = deckIndex % deckQueue.length; else deckIndex = 0;
-  checkStreak(); showCard();
-  if (deckQueue.length < DECKS[currentDeck].length) markTaskDone('flashcard');
-}
-document.addEventListener('click', e => { const btn = e.target.closest('.deck-btn'); if (btn) initDeck(btn.dataset.deck); });
 
 let currentPage = 'overview', currentDeck = 'shici', deckIndex = 0, deckQueue = [], flipped = false;
 let cardTimer = null, cardSeconds = 20;
-const DAILY_CARD_LIMIT = 20;
 let streak = 0, lastActive = '', templateCount = 0, grammarCount = 0;
 let timerSeconds = 25 * 60, timerRunning = false, timerInterval = null;
 
@@ -565,189 +247,13 @@ function switchTab(tabsId, tabId) {
   const tc = document.getElementById(`tab-${tabId}`); if (tc) tc.classList.add('active');
 }
 
-function renderTemplates() {
-  ['A', 'B', 'C'].forEach(l => {
-    const c = document.getElementById(`tabs${l}-content`); if (!c) return;
-    let h = '';
-    for (let i = 1; i <= 4; i++) { const k = `${l}${i}`; const t = TEMPLATES[k] || ''; h += `<div class="tab-content${i === 1 ? ' active' : ''}" id="tab-${k}"><p style="font-size:14px;line-height:1.8">${htmlesc(t)}</p></div>`; }
-    c.innerHTML = h;
-  });
-}
 
-function applyTemplate() {
-  const a = document.getElementById('selA').value, b = document.getElementById('selB').value, c = document.getElementById('selC').value;
-  const input = document.getElementById('templateInput').value;
-  let p = `<span class="tmpl-tag A">${a}</span> ${htmlesc(TEMPLATES[a])}\n\n`;
-  p += `<span class="tmpl-tag B">${b}</span> ${htmlesc(TEMPLATES[b])}\n\n`;
-  p += `<span class="tmpl-tag C">${c}</span> ${htmlesc(TEMPLATES[c])}\n\n`;
-  p += `<hr style="margin:10px 0"><span class="text-light">你的话题：</span>\n${htmlesc(input)}`;
-  document.getElementById('templatePreview').innerHTML = p;
-  const today = new Date().toISOString().slice(0, 10);
-  apiCall('POST', '/api/template/log', {combo_a: a, combo_b: b, combo_c: c, topic: input.substring(0, 200)});
-  apiCall('POST', '/api/training/session', {date: today, module: '模板', duration_min: 10});
-  dbRun("INSERT INTO template_log (combo_a, combo_b, combo_c, topic) VALUES (?, ?, ?, ?)", [a, b, c, input]);
-  templateCount = getTemplateCount();
-  checkStreak(); updateHomeStats();
-  markTaskDone('writing');
-}
 
-function htmlesc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
-function sanitizeHTML(str) {
-  if (!str) return '';
-  var s = String(str);
-  // Pass 1: strip dangerous tags and event handlers
-  s = s.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-       .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
-       .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
-       .replace(/<embed\b[^>]*>/gi, '')
-       .replace(/<applet\b[^<]*(?:(?!<\/applet>)<[^<]*)*<\/applet>/gi, '')
-       .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
-       .replace(/\bon\w+\s*=\s*["'][^"']*["']/gi, '')
-       .replace(/\bon\w+\s*=\s*[^\s>]*/gi, '')
-       .replace(/\bon\w+\b(?=\s*[^=]|$)/gi, '')  // bare on* attrs like <img onerror>
-       .replace(/javascript\s*:/gi, '')
-       .replace(/vbscript\s*:/gi, '')
-       .replace(/data\s*:\s*text\/html/gi, '');
-  // Pass 2: decode HTML entities and re-check for smuggled tags
-  var decoded;
-  try {
-    var txt = document.createElement('textarea');
-    txt.innerHTML = s; decoded = txt.value;
-  } catch(e) { decoded = s; }
-  if (decoded !== s) {
-    // Re-run stripped-tag regex on decoded text to catch entity-encoded attacks
-    decoded = decoded.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-                     .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
-                     .replace(/\bon\w+\s*=\s*["'][^"']*["']/gi, '')
-                     .replace(/\bon\w+\s*=\s*[^\s>]*/gi, '')
-                     .replace(/javascript\s*:/gi, '');
-    return decoded;
-  }
-  return s;
-}
 
-function loadGrammarExample(idx) {
-  const today = new Date().toISOString().slice(0, 10);
-  document.getElementById('grammarInput').value = GRAMMAR_EXAMPLES[idx].sentence;
-  document.getElementById('grammarResult').innerHTML = `<div class="gram-step"><h4>🔍 诊断结果</h4><pre class="analysis">${GRAMMAR_EXAMPLES[idx].analysis}</pre></div>`;
-  apiCall('POST', '/api/grammar/log', {sentence: GRAMMAR_EXAMPLES[idx].sentence, example_idx: idx, module: '语言运用'});
-  apiCall('POST', '/api/training/session', {date: today, module: '语法', duration_min: 5});
-  dbRun("INSERT INTO grammar_log (sentence, example_idx, module) VALUES (?, ?, 'language')", [GRAMMAR_EXAMPLES[idx].sentence, idx]);
-  grammarCount = getGrammarCount();
-  checkStreak(); updateHomeStats();
-  markTaskDone('language');
-}
-function analyzeGrammar() {
-  const today = new Date().toISOString().slice(0, 10);
-  const input = document.getElementById('grammarInput').value.trim();
-  if (!input) { alert('请输入句子'); return; }
-  document.getElementById('grammarResult').innerHTML = `<div class="gram-step"><h4>🔍 你的句子</h4><p style="font-size:13px;margin-bottom:6px"><strong>原文：</strong>${htmlesc(input)}</p><pre class="analysis">请按三步手动拆解：\n\n1️⃣ 提主干：找出 S+V+O\n  主语：___  谓语：___  宾语：___\n\n2️⃣ 配逻辑：\n  □搭配不当 □成分残缺 □句式杂糅 □语序不当\n\n3️⃣ 画结构：还原完整修饰关系</pre></div>`;
-  apiCall('POST', '/api/grammar/log', {sentence: input, example_idx: -1, module: '语言运用'});
-  apiCall('POST', '/api/training/session', {date: today, module: '语法', duration_min: 5});
-  dbRun("INSERT INTO grammar_log (sentence, example_idx, module) VALUES (?, -1, 'language')", [input]);
-  grammarCount = getGrammarCount();
-  checkStreak(); updateHomeStats();
-}
 
-function loadSyntaxExample(idx) {
-  const today = new Date().toISOString().slice(0, 10);
-  document.getElementById('syntaxInput').value = SYNTAX_EXAMPLES[idx].sentence;
-  document.getElementById('syntaxResult').innerHTML = `<div class="gram-step"><h4>🧩 拆解结果</h4><pre class="analysis">${SYNTAX_EXAMPLES[idx].analysis}</pre></div>`;
-  apiCall('POST', '/api/grammar/log', {sentence: SYNTAX_EXAMPLES[idx].sentence, example_idx: idx, module: '古诗文'});
-  apiCall('POST', '/api/training/session', {date: today, module: '语法', duration_min: 5});
-  dbRun("INSERT INTO grammar_log (sentence, example_idx, module) VALUES (?, ?, 'classical')", [SYNTAX_EXAMPLES[idx].sentence, idx]);
-  grammarCount = getGrammarCount();
-  checkStreak(); updateHomeStats();
-}
-function analyzeSyntax() {
-  const today = new Date().toISOString().slice(0, 10);
-  const input = document.getElementById('syntaxInput').value.trim();
-  if (!input) { alert('请输入文言句子'); return; }
-  document.getElementById('syntaxResult').innerHTML = `<div class="gram-step"><h4>🧩 你的句子</h4><p><strong>原文：</strong>${htmlesc(input)}</p><pre class="analysis">请按三步拆解：\n\n1️⃣ 提主干：找出 S+V+O\n2️⃣ 识别句式：□宾语前置 □介宾后置 □定语后置 □被动句 □省略句\n3️⃣ 还原现代汉语语序</pre></div>`;
-  apiCall('POST', '/api/grammar/log', {sentence: input, example_idx: -1, module: '古诗文'});
-  apiCall('POST', '/api/training/session', {date: today, module: '语法', duration_min: 5});
-  dbRun("INSERT INTO grammar_log (sentence, example_idx, module) VALUES (?, -1, 'classical')", [input]);
-  grammarCount = getGrammarCount();
-  checkStreak(); updateHomeStats();
-}
 
-function loadRhetoricExample(idx) {
-  const today = new Date().toISOString().slice(0, 10);
-  document.getElementById('rhetoricInput').value = RHETORIC_EXAMPLES[idx].sentence;
-  document.getElementById('rhetoricResult').innerHTML = '<div class="gram-step" style="border-left-color: var(--gold);"><h4>🎭 修辞鉴赏解析</h4><pre class="analysis" style="font-family: inherit; font-size:13px;">' + RHETORIC_EXAMPLES[idx].analysis + '</pre></div>';
-  apiCall('POST', '/api/grammar/log', {sentence: RHETORIC_EXAMPLES[idx].sentence, example_idx: idx, module: '修辞鉴赏'});
-  apiCall('POST', '/api/training/session', {date: today, module: '修辞', duration_min: 5});
-  dbRun("INSERT INTO grammar_log (sentence, example_idx, module) VALUES (?, ?, 'rhetoric')", [RHETORIC_EXAMPLES[idx].sentence, idx]);
-  grammarCount = getGrammarCount();
-  checkStreak(); updateHomeStats();
-}
-function analyzeRhetoric() {
-  const today = new Date().toISOString().slice(0, 10);
-  const input = document.getElementById('rhetoricInput').value.trim();
-  if (!input) { alert('请输入含有修辞的句子'); return; }
-  document.getElementById('rhetoricResult').innerHTML = '<div class="gram-step" style="border-left-color: var(--gold);"><h4>🎭 自主修辞分析骨架</h4><p style="font-size:13px; margin-bottom:10px;"><strong>你的句子：</strong>' + htmlesc(input) + '</p><pre class="analysis" style="font-family: inherit; font-size:13px; line-height: 1.8;">请按照高考阅卷的三步公式作答：\n\n1️⃣ <strong>明手法：</strong>这句话运用了________的修辞手法。\n2️⃣ <strong>析具体：</strong>通过将________比作/拟作/对仗________，具体表现了________。\n3️⃣ <strong>阐效果：</strong>该修辞深化了________的主旨，表达了________的情感。</pre></div>';
-  apiCall('POST', '/api/grammar/log', {sentence: input, example_idx: -1, module: '修辞鉴赏'});
-  apiCall('POST', '/api/training/session', {date: today, module: '修辞', duration_min: 5});
-  dbRun("INSERT INTO grammar_log (sentence, example_idx, module) VALUES (?, -1, 'rhetoric')", [input]);
-  grammarCount = getGrammarCount();
-  checkStreak(); updateHomeStats();
-}
 
-function analyzeImplicature() {
-  const today = new Date().toISOString().slice(0, 10);
-  const input = document.getElementById('implicatureInput').value.trim();
-  if (!input) { alert('请输入含有言外之意的对话'); return; }
-  document.getElementById('implicatureResult').innerHTML = '<div class="gram-step" style="border-left-color: var(--accent2);"><h4>🗣️ 言外之意解码框架</h4><p style="font-size:13px; margin-bottom:10px;"><strong>你的句子：</strong>' + htmlesc(input) + '</p><pre class="analysis" style="font-family: inherit; font-size:13px; line-height: 1.8;">请按格莱斯会话含义理论的三步公式作答：\n\n1️⃣ <strong>字面意义：</strong>这句话的表面意思是________。\n2️⃣ <strong>被违反的准则：</strong>它违反了________准则，具体表现为________。\n3️⃣ <strong>真实意图：</strong>说话者实际上想表达的是________。</pre></div>';
-  apiCall('POST', '/api/grammar/log', {sentence: input, example_idx: -1, module: '言外之意'});
-  apiCall('POST', '/api/training/session', {date: today, module: '言外之意', duration_min: 5});
-  dbRun("INSERT INTO grammar_log (sentence, example_idx, module) VALUES (?, -1, 'implicature')", [input]);
-  grammarCount = getGrammarCount();
-  checkStreak(); updateHomeStats();
-}
 
-function loadTranslationExample(idx) {
-  const today = new Date().toISOString().slice(0, 10);
-  document.getElementById('translationInput').value = TRANSLATION_EXAMPLES[idx].sentence;
-  document.getElementById('translationResult').innerHTML = '<div class="gram-step" style="border-left-color: var(--accent);"><h4>🎯 双语对齐与采分点剖析</h4><pre class="analysis" style="font-family: inherit; font-size:13px;">' + TRANSLATION_EXAMPLES[idx].analysis + '</pre></div>';
-  apiCall('POST', '/api/grammar/log', {sentence: TRANSLATION_EXAMPLES[idx].sentence, example_idx: idx, module: '古文翻译'});
-  apiCall('POST', '/api/training/session', {date: today, module: '古文翻译', duration_min: 5});
-  dbRun("INSERT INTO grammar_log (sentence, example_idx, module) VALUES (?, ?, 'translation')", [TRANSLATION_EXAMPLES[idx].sentence, idx]);
-  grammarCount = getGrammarCount();
-  checkStreak(); updateHomeStats();
-}
-function analyzeTranslation() {
-  const today = new Date().toISOString().slice(0, 10);
-  const input = document.getElementById('translationInput').value.trim();
-  if (!input) { alert('请输入文言句子'); return; }
-  document.getElementById('translationResult').innerHTML = '<div class="gram-step" style="border-left-color: var(--accent);"><h4>🎯 自主双语对齐翻译工作台</h4><p style="font-size:13px; margin-bottom:10px;"><strong>输入内容：</strong>' + htmlesc(input) + '</p><pre class="analysis" style="font-family: inherit; font-size:13px; line-height: 1.8;">请按高考阅卷"直译"原则作答：\n\n1️⃣ <strong>字字对齐：</strong>找出句中无法直接用现代汉语套用的单音节词。\n2️⃣ <strong>句式调整：</strong>是否存在倒装？调整为"主-谓-宾-状-定"语序。\n3️⃣ <strong>最终译文：</strong>做到"字字落实"，补充省略成分。</pre></div>';
-  apiCall('POST', '/api/grammar/log', {sentence: input, example_idx: -1, module: '古文翻译'});
-  apiCall('POST', '/api/training/session', {date: today, module: '古文翻译', duration_min: 5});
-  dbRun("INSERT INTO grammar_log (sentence, example_idx, module) VALUES (?, -1, 'translation')", [input]);
-  grammarCount = getGrammarCount();
-  checkStreak(); updateHomeStats();
-}
-
-function loadNovelExample(idx) {
-  const today = new Date().toISOString().slice(0, 10);
-  document.getElementById('novelInput').value = NOVEL_EXAMPLES[idx].title;
-  document.getElementById('novelResult').innerHTML = '<div class="gram-step" style="border-left-color: var(--accent2);"><h4>🕵️‍♂️ 小说叙事特征解析</h4><pre class="analysis" style="font-family: inherit; font-size:13px;">' + NOVEL_EXAMPLES[idx].analysis + '</pre></div>';
-  apiCall('POST', '/api/grammar/log', {sentence: NOVEL_EXAMPLES[idx].title, example_idx: idx, module: '小说鉴赏'});
-  apiCall('POST', '/api/training/session', {date: today, module: '小说', duration_min: 5});
-  dbRun("INSERT INTO grammar_log (sentence, example_idx, module) VALUES (?, ?, 'novel')", [NOVEL_EXAMPLES[idx].title, idx]);
-  grammarCount = getGrammarCount();
-  checkStreak(); updateHomeStats();
-}
-function analyzeNovel() {
-  const today = new Date().toISOString().slice(0, 10);
-  const input = document.getElementById('novelInput').value.trim();
-  if (!input) { alert('请输入小说片段或题目'); return; }
-  document.getElementById('novelResult').innerHTML = '<div class="gram-step" style="border-left-color: var(--accent2);"><h4>🕵️‍♂️ 自主小说叙事学拆解</h4><p style="font-size:13px; margin-bottom:10px;"><strong>输入内容：</strong>' + htmlesc(input) + '</p><pre class="analysis" style="font-family: inherit; font-size:13px; line-height: 1.8;">请从热奈特叙事学维度拆解：\n\n1️⃣ <strong>叙事视角：</strong>第几人称？有限/无限视角？\n2️⃣ <strong>时空结构：</strong>是否存在插叙、补叙或倒叙？\n3️⃣ <strong>核心物象：</strong>反复出现的静物或意象是什么？</pre></div>';
-  apiCall('POST', '/api/grammar/log', {sentence: input, example_idx: -1, module: '小说鉴赏'});
-  apiCall('POST', '/api/training/session', {date: today, module: '小说', duration_min: 5});
-  dbRun("INSERT INTO grammar_log (sentence, example_idx, module) VALUES (?, -1, 'novel')", [input]);
-  grammarCount = getGrammarCount();
-  checkStreak(); updateHomeStats();
-}
 
 function updateHomeStats() {
   var todayStr = new Date().toISOString().slice(0, 10);
@@ -1193,24 +699,10 @@ window.navigate = navigate;
 window.toggleSidebar = toggleSidebar;
 window.closeSidebar = closeSidebar;
 window.toggleGroup = toggleGroup;
-window.flipCard = flipCard;
-window.rateCard = rateCard;
 window.startTask = startTask;
 window.switchTab = switchTab;
 window.toggleAnswer = toggleAnswer;
-window.applyTemplate = applyTemplate;
 window.executeImport = executeImport;
-window.analyzeGrammar = analyzeGrammar;
-window.analyzeSyntax = analyzeSyntax;
-window.analyzeRhetoric = analyzeRhetoric;
-window.analyzeTranslation = analyzeTranslation;
-window.analyzeNovel = analyzeNovel;
-window.analyzeImplicature = analyzeImplicature;
-window.loadGrammarExample = loadGrammarExample;
-window.loadSyntaxExample = loadSyntaxExample;
-window.loadRhetoricExample = loadRhetoricExample;
-window.loadTranslationExample = loadTranslationExample;
-window.loadNovelExample = loadNovelExample;
 window.toggleTimer = toggleTimer;
 window.setTimer = setTimer;
 window.startTimer = startTimer;
@@ -1218,7 +710,6 @@ window.resetTimer = resetTimer;
 window.calPrevMonth = calPrevMonth;
 window.calNextMonth = calNextMonth;
 window.showDayDetail = showDayDetail;
-window.checkReadingAnswer = checkReadingAnswer;
 window.checkClassicalQ4 = checkClassicalQ4;
 window.doCheck = doCheck;
 window.checkBingju1 = checkBingju1;
@@ -1226,17 +717,12 @@ window.checkBingju2 = checkBingju2;
 window.checkBingju3 = checkBingju3;
 window.checkBingju4 = checkBingju4;
 window.checkBingju5 = checkBingju5;
-window.checkDailyAnswer = checkDailyAnswer;
-window.checkDailyText = checkDailyText;
 window.handleImportFile = handleImportFile;
 window.saveAssessment = saveAssessment;
 window.renderCalendar = renderCalendar;
 window.renderRecords = renderRecords;
 window.renderMethodPage = renderMethodPage;
-window.initDeck = initDeck;
 window.renderSymbols = renderSymbols;
-window.renderReadingTabs = renderReadingTabs;
-window.renderTemplates = renderTemplates;
 window.renderBooks = renderBooks;
 window.renderPlan = renderPlan;
 window.renderSelfAssessment = renderSelfAssessment;
@@ -1244,6 +730,4 @@ window.renderDailyChecklist = renderDailyChecklist;
 window.markTaskDone = markTaskDone;
 window.updateHomeStats = updateHomeStats;
 window.checkStreak = checkStreak;
-window.loadDailyExercise = loadDailyExercise;
-window.renderDailyExercise = renderDailyExercise;
 })();
