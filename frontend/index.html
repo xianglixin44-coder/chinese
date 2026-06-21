@@ -144,17 +144,6 @@
   </div>
 
   <div class="card mt-8">
-    <h3>📋 阅读理解 · 选择题训练（高考标准）</h3>
-    <p class="text-light mb-8">阅读以下文本，完成选择题。每题 3 分，答案点击即显示。</p>
-    <div class="tabs" id="readingTabs">
-      <button class="tab-btn active" data-tab="rc1" onclick="switchTab('readingTabs','rc1')">信息类</button>
-      <button class="tab-btn" data-tab="rc2" onclick="switchTab('readingTabs','rc2')">文学类</button>
-      <button class="tab-btn" data-tab="rc3" onclick="switchTab('readingTabs','rc3')">论述类</button>
-    </div>
-    <div id="readingTabs-content"></div>
-  </div>
-
-  <div class="card mt-8">
     <h3>🧭 150 分结构地图</h3>
     <div class="score-map">
       <div class="score-node root" onclick="navigate('reading', true)">
@@ -287,6 +276,17 @@
   <div class="card" style="text-align:center;padding:24px;">
     <p style="font-size:14px;margin-bottom:8px;">💡 本题型核心方法是<strong>主动标记阅读法</strong></p>
     <button class="btn-small" onclick="navigate('method',false);setTimeout(function(){document.getElementById('method-marking').scrollIntoView({behavior:'smooth'});},150)" style="font-size:13px;padding:8px 18px;">🧠 查看方法详解 →</button>
+  </div>
+
+  <div class="card mt-8">
+    <h3>📋 阅读理解 · 选择题训练（高考标准）</h3>
+    <p class="text-light mb-8">阅读以下文本，完成选择题。每题 3 分，答案点击即显示。</p>
+    <div class="tabs" id="readingTabs">
+      <button class="tab-btn active" data-tab="rc1" onclick="switchTab('readingTabs','rc1')">信息类</button>
+      <button class="tab-btn" data-tab="rc2" onclick="switchTab('readingTabs','rc2')">文学类</button>
+      <button class="tab-btn" data-tab="rc3" onclick="switchTab('readingTabs','rc3')">论述类</button>
+    </div>
+    <div id="readingTabs-content"></div>
   </div>
 
   <div class="card mt-8">
