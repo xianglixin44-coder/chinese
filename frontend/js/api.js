@@ -1,5 +1,6 @@
-const API_BASE = 'http://localhost:3200';
-const AUTH_TOKEN = 'chinese-trainer-2026';
+(function(){
+var API_BASE = App.API_BASE || 'http://localhost:3200';
+var AUTH_TOKEN = App.AUTH_TOKEN || 'chinese-trainer-2026';
 let apiAvailable = false;
 
 let dbLocal = null;
@@ -374,3 +375,25 @@ async function fetchRecords(days) {
 async function fetchMethods() {
   return await apiCall('GET', '/api/methods');
 }
+
+// Export to global
+window.apiAvailable = apiAvailable;
+window.fetchExercises = fetchExercises;
+window.fetchFlashcardItems = fetchFlashcardItems;
+window.fetchDailyExercise = fetchDailyExercise;
+window.completeDailyExercise = completeDailyExercise;
+window.fetchRecords = fetchRecords;
+window.fetchMethods = fetchMethods;
+window.apiCall = apiCall;
+window.syncStreak = syncStreak;
+window.localRun = localRun;
+window.localQuery = localQuery;
+window.dbGet = localQuery;
+window.dbRun = localRun;
+window.getStreak = getStreak;
+window.setStreak = setStreak;
+window.getTemplateCount = getTemplateCount;
+window.getGrammarCount = getGrammarCount;
+window.saveAssessment = saveAssessment;
+window.checkApi = checkApi;
+})();

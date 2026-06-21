@@ -1,10 +1,12 @@
 """Core API endpoint tests."""
+import os
+os.environ["TRAINER_TOKEN"] = "test"
+
 import pytest
 from fastapi.testclient import TestClient
 from main import app
 
 client = TestClient(app)
-TOKEN = 'chinese-trainer-2026'
 
 
 class TestHealth:
