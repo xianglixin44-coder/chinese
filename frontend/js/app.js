@@ -1,8 +1,15 @@
 var htmlesc = App.htmlesc;
 var sanitizeHTML = App.sanitizeHTML;
 
+// ================================================================
+//  app.js — 语文提高训练 · 核心逻辑
+//  Section: ① Core → ② State → ③ Daily → ④ Pages → ⑤ Data
+// ================================================================
+
 (function(){
-// ====== 全局事件委托 (新代码用 data-action, 旧 onclick 保留兼容) ======
+// ================================================================
+//  ① CORE: 全局事件委托 + 导航 + 侧边栏 + 计时器
+// ================================================================
 document.addEventListener('click', function(e) {
   var el = e.target.closest('[data-action]');
   if (!el) return;
@@ -114,7 +121,9 @@ function renderSymbols() {
   var g = document.getElementById('symGrid'); if (g) g.innerHTML = html;
 }
 
-// ====== 每日选题加载与渲染 ======
+// ================================================================
+//  ② STATE: 全局状态变量 (通过 getter/setter 代理到 window)
+// ================================================================
 
 
 
@@ -126,7 +135,9 @@ var cardTimer = null, cardSeconds = 20;
 var streak = 0, lastActive = '', templateCount = 0, grammarCount = 0;
 var timerSeconds = 25 * 60, timerRunning = false, timerInterval = null;
 
-// Daily task tracking
+// ================================================================
+//  ③ DAILY: 每日任务清单 + 进度条 + 庆祝页
+// ================================================================
 const DAILY_TASKS = ['flashcard', 'reading', 'classical', 'language', 'writing'];
 var completedTasks = {};
 async function loadCompletedTasks() {
@@ -207,8 +218,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateHomeStats();
 });
 
+// ================================================================
+//  ④ PAGES: 各页面渲染函数 (书籍/计划/评估/选项卡/统计)
+// ================================================================
 function renderBooks() {
-  const l = document.getElementById('bookList'); if (!l) return;
   l.innerHTML = BOOKS.map(b => `<div class="book-row"><div class="rank">${b.rank}</div><div><h4>${b.title}</h4><div class="author">${b.author}</div><div class="desc">${b.desc}</div><span class="tag ${b.tagClass}">${b.tag}</span></div></div>`).join('');
 }
 
@@ -773,7 +786,9 @@ function exportData(dataset) {
   document.body.removeChild(a);
 }
 
-// ====== 错题本 ======
+// ================================================================
+//  ⑤ DATA: 答题记录 + 错题本 + 训练记录 + 数据维护
+// ================================================================
 function recordWrongAnswer(exerciseName, userAnswer, correctAnswer) {
   var module = '';
   var questionEl = document.getElementById(`ex-${exerciseName}`);

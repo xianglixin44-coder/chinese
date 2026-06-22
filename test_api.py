@@ -250,3 +250,142 @@ class TestStatic:
     def test_js_app(self):
         r = client.get("/js/app.js")
         assert r.status_code == 200
+
+    def test_sql_wasm(self):
+        r = client.get("/sql-wasm.wasm")
+        assert r.status_code == 200
+
+
+class TestWrongItems:
+    def test_add_wrong(self):
+        r = client.post("/api/wrong", json={
+            "exercise_id": 0, "module": "grammar",
+            "question": "测试错题", "user_answer": "A", "correct_answer": "B"
+        })
+        assert r.status_code == 200
+        assert r.json()["ok"] is True
+
+    def test_list_wrong(self):
+        r = client.get("/api/wrong")
+        assert r.status_code == 200
+        assert "items" in r.json()
+
+    def test_list_wrong_by_module(self):
+        r = client.get("/api/wrong?module=grammar")
+        assert r.status_code == 200
+
+    def test_delete_wrong(self):
+        # Create then delete
+        client.post("/api/wrong", json={
+            "exercise_id": 0, "module": "grammar",
+            "question": "待删除", "user_answer": "X", "correct_answer": "Y"
+        })
+        items = client.get("/api/wrong?module=grammar").json()["items"]
+        if items:
+            wid = items[0]["id"]
+            r = client.delete(f"/api/wrong/{wid}")
+            assert r.status_code == 200
+            assert r.json()["ok"] is True
+
+
+class TestTrainingLog:
+    def test_add_log(self):
+        r = client.post("/api/training-log", json={
+            "module": "grammar", "question": "测试题目",
+            "user_answer": "B", "correct_answer": "A", "is_correct": 0
+        })
+        assert r.status_code == 200
+        assert r.json()["ok"] is True
+
+    def test_list_log(self):
+        r = client.get("/api/training-log?limit=5")
+        assert r.status_code == 200
+        assert "items" in r.json()
+
+    def test_list_log_filtered(self):
+        r = client.get("/api/training-log?module=grammar&is_correct=0")
+        assert r.status_code == 200
+
+    def test_log_stats(self):
+        r = client.get("/api/training-log/stats")
+        assert r.status_code == 200
+        data = r.json()
+        assert "total" in data
+        assert "correct" in data
+        assert "wrong" in data
+        assert "to_review" in data
+
+    def test_update_note(self):
+        # Create then update
+        r = client.post("/api/training-log", json={
+            "module": "grammar", "question": "纠错测试",
+            "user_answer": "C", "correct_answer": "D", "is_correct": 0
+        })
+        log_id = r.json().get("id")
+        if log_id:
+            r2 = client.put(f"/api/training-log/{log_id}/note", json={"note": "这是纠错笔记"})
+            assert r2.status_code == 200
+            assert r2.json()["ok"] is True
+
+    def test_mark_reviewed(self):
+        items = client.get("/api/training-log?limit=1&is_correct=0").json()["items"]
+        if items:
+            r = client.put(f"/api/training-log/{items[0]['id']}/review")
+            assert r.status_code == 200
+
+
+class TestExport:
+    def test_export_flashcards(self):
+        r = client.get("/api/export/flashcards")
+        assert r.status_code == 200
+        assert "牌组" in r.text
+
+    def test_export_training_log(self):
+        r = client.get("/api/export/training_log")
+        assert r.status_code == 200
+
+    def test_export_methods(self):
+        r = client.get("/api/export/methods")
+        assert r.status_code == 200
+        assert "标题" in r.text
+
+    def test_export_wrong_items(self):
+        r = client.get("/api/export/wrong_items")
+        assert r.status_code == 200
+
+    def test_export_exercises(self):
+        r = client.get("/api/export/exercises")
+        assert r.status_code == 200
+        assert "模块" in r.text
+
+    def test_export_unknown_dataset(self):
+        r = client.get("/api/export/nonexistent")
+        assert r.status_code == 200
+        assert "error" in r.json()
+
+
+class TestAuth:
+    """AuthMiddleware tests — POST endpoints require token when TRAINER_TOKEN != 'test'."""
+    def test_get_endpoints_no_auth(self):
+        """GET endpoints should work without auth"""
+        endpoints = ["/api/health", "/api/streak", "/api/stats/template"]
+        for ep in endpoints:
+            r = client.get(ep)
+            assert r.status_code == 200, f"{ep} should return 200"
+
+
+class TestImportExercises:
+    def test_import_csv_rows(self):
+        r = client.post("/api/import/exercises", json={
+            "rows": [
+                ["grammar", "bingju", "测试病句", '["A","B","C","D"]', "B", "解析内容"],
+                ["modern_reading", "choice", "测试阅读", '["A","B"]', "A", "阅读解析"]
+            ]
+        })
+        assert r.status_code == 200
+        assert r.json()["ok"] is True
+
+    def test_import_empty_rows(self):
+        r = client.post("/api/import/exercises", json={"rows": []})
+        assert r.status_code == 200
+        assert r.json()["count"] == 0
