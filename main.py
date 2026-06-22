@@ -45,11 +45,12 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="语文提高训练 API", lifespan=lifespan)
+# AuthMiddleware 先注册（内层），CORSMiddleware 后注册（外层）
+# 确保 401 响应也能带上 CORS 头，避免 iPad Safari 误报跨域错误
+app.add_middleware(AuthMiddleware)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 register_routes(app)
-
-app.add_middleware(AuthMiddleware)
 
 
 @app.get("/api/health")
