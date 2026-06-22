@@ -635,6 +635,14 @@ async function executeImport() {
   if (deck === 'shici' || deck === 'xuci' || deck === 'wenxue') {
     const newCards = importData.map(row => ({ front: row[0] || '', hl: row[1] || '', word: row[2] || '', meaning: row[3] || '', analogy: row[4] || '' }));
     DECKS[deck].push(...newCards); count = newCards.length;
+    // Also persist to DB exercises table
+    for (const card of newCards) {
+      const extra = JSON.stringify({hl: card.hl, word: card.word, meaning: card.meaning, analogy: card.analogy});
+      apiCall('POST', '/api/exercises', {
+        module: 'flashcard', type: deck, title: '', content: card.front,
+        options_json: '[]', answer: '', explanation: '', extra_json: extra
+      });
+    }
   // 现代文阅读题库 — CSV 列: passage_type, title, passage, question, options_json, answer_idx, explanation
   } else if (deck === 'modern_reading') {
     for (const row of importData) {
