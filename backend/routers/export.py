@@ -46,6 +46,13 @@ EXPORT_TABLES = {
         "headers": ["模块", "题目", "用户答案", "正确答案", "错误次数", "时间"],
         "transform": lambda r: [r["module"], r["question"], r["user_answer"], r["correct_answer"], str(r["wrong_count"]), r["wrong_at"]],
     },
+    "exercises": {
+        "table": "exercises",
+        "where": "1=1",
+        "columns": ["module", "type", "title", "content", "options_json", "answer", "explanation", "extra_json"],
+        "headers": ["模块", "题型", "标题", "内容", "选项JSON", "答案", "解析", "扩展JSON"],
+        "transform": lambda r: [r["module"], r["type"], r["title"], r["content"], r["options_json"], r["answer"], r["explanation"], r["extra_json"]],
+    },
 }
 
 
