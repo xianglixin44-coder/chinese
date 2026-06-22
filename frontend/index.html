@@ -815,6 +815,17 @@
     <div class="import-status" id="importStatus" style="display:none"></div>
     <button class="btn-primary mt-8" id="importBtn" style="display:none" onclick="executeImport()">确认导入</button>
   </div>
+
+  <div class="card" style="margin-top:14px;">
+    <h3>📤 数据导出</h3>
+    <p style="font-size:12px;color:var(--text-light);margin-bottom:10px;">下载 CSV 文件，可用 Excel 编辑后重新导入。</p>
+    <div class="flex" style="gap:8px;flex-wrap:wrap;">
+      <button class="btn-small" onclick="exportData('flashcards')" style="background:var(--accent2);color:#fff;">🃏 闪卡数据</button>
+      <button class="btn-small" onclick="exportData('training_log')" style="background:#27ae60;color:#fff;">📋 训练记录</button>
+      <button class="btn-small" onclick="exportData('methods')" style="background:#8e44ad;color:#fff;">🧠 训练方法</button>
+      <button class="btn-small" onclick="exportData('wrong_items')" style="background:#e74c3c;color:#fff;">📝 错题本</button>
+    </div>
+  </div>
 </div>
 
 <div class="timer-widget minimized" id="timerWidget">

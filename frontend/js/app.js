@@ -760,6 +760,18 @@ window.renderWrongPage = renderWrongPage;
 window.recordWrongAnswer = recordWrongAnswer;
 window.renderTrainingHistory = renderTrainingHistory;
 window.recordTrainingLog = recordTrainingLog;
+window.exportData = exportData;
+
+// ====== 数据导出 ======
+function exportData(dataset) {
+  var url = API_BASE + '/api/export/' + dataset + '?token=' + AUTH_TOKEN;
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = dataset + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
 
 // ====== 错题本 ======
 function recordWrongAnswer(exerciseName, userAnswer, correctAnswer) {
