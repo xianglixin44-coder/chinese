@@ -45,13 +45,13 @@ document.addEventListener('click', function(e) {
 
 function checkStreak() {
   const today = new Date().toDateString();
-  if (lastActive !== today && lastActive !== '') {
+  if (S.lastActive !== today && S.lastActive !== '') {
     const yesterday = new Date(Date.now() - 86400000).toDateString();
-    streak = lastActive === yesterday ? streak + 1 : 0;
-  } else if (lastActive === '') { streak = 1; }
-  lastActive = today;
-  syncStreak(streak, today);
-  document.getElementById('streakBadge').textContent = `🔥 ${streak}天`;
+    S.streak = S.lastActive === yesterday ? S.streak + 1 : 0;
+  } else if (S.lastActive === '') { S.streak = 1; }
+  S.lastActive = today;
+  syncStreak(S.streak, today);
+  document.getElementById('streakBadge').textContent = `🔥 ${S.streak}天`;
 }
 
 function toggleSidebar() {
@@ -88,7 +88,7 @@ function navigate(page, keepNav, anchor) {
     var overviewNav = document.querySelector('.nav-item[data-page="overview"]');
     if (overviewNav) overviewNav.classList.add('active');
   }
-  currentPage = page;
+  S.currentPage = page;
   document.getElementById('sidebar').classList.remove('open');
   if (page === 'calendar') { renderCalendar(); }
   if (page === 'records') { renderRecords(); }
@@ -121,8 +121,10 @@ function renderSymbols() {
   var g = document.getElementById('symGrid'); if (g) g.innerHTML = html;
 }
 
+var S = App.state;  // shared state object (minification-safe)
+
 // ================================================================
-//  ② STATE: 全局状态变量 (通过 getter/setter 代理到 window)
+//  ② STATE: 全局状态变量 (通过 App.state + getter/setter 共享)
 // ================================================================
 
 
@@ -130,19 +132,19 @@ function renderSymbols() {
 
 
 
-var currentPage = 'overview', currentDeck = 'shici', deckIndex = 0, deckQueue = [], flipped = false;
-var cardTimer = null, cardSeconds = 20;
-var streak = 0, lastActive = '', templateCount = 0, grammarCount = 0;
-var timerSeconds = 25 * 60, timerRunning = false, timerInterval = null;
+S.currentPage = 'overview'; S.currentDeck = 'shici'; S.deckIndex = 0; S.deckQueue = []; S.flipped = false;
+S.cardTimer = null; S.cardSeconds = 20;
+S.streak = 0; S.lastActive = ''; S.templateCount = 0; S.grammarCount = 0;
+S.timerSeconds = 25 * 60; S.timerRunning = false; S.timerInterval = null;
 
 // ================================================================
 //  ③ DAILY: 每日任务清单 + 进度条 + 庆祝页
 // ================================================================
 const DAILY_TASKS = ['flashcard', 'reading', 'classical', 'language', 'writing'];
-var completedTasks = {};
+S.completedTasks = {};
 async function loadCompletedTasks() {
   const today = new Date().toISOString().slice(0, 10);
-  completedTasks = {};
+  S.completedTasks = {};
   // Try server first
   if (apiAvailable) {
     try {
@@ -151,30 +153,30 @@ async function loadCompletedTasks() {
         body: JSON.stringify({sql: "SELECT task FROM daily_tasks WHERE date = ?", params: [today]})
       });
       const data = await r.json();
-      if (data && data.rows) { data.rows.forEach(r => { completedTasks[r[0]] = true; }); }
+      if (data && data.rows) { data.rows.forEach(r => { S.completedTasks[r[0]] = true; }); }
     } catch(e) {}
   }
   // Local fallback
   const rows = dbGet("SELECT task FROM daily_tasks WHERE date = ?", [today]);
-  rows.forEach(r => { completedTasks[r[0]] = true; });
+  rows.forEach(r => { S.completedTasks[r[0]] = true; });
   renderDailyChecklist();
 }
 function markTaskDone(task) {
   const today = new Date().toISOString().slice(0, 10);
   dbRun("INSERT OR IGNORE INTO daily_tasks (date, task) VALUES (?, ?)", [today, task]);
   apiCall('POST', '/api/training/session', {date: today, module: task, duration_min: 5});
-  completedTasks[task] = true;
+  S.completedTasks[task] = true;
   renderDailyChecklist();
 }
 function renderDailyChecklist() {
-  const done = Object.keys(completedTasks).length;
+  const done = Object.keys(S.completedTasks).length;
   const total = DAILY_TASKS.length;
   const pct = Math.round(done / total * 100);
   document.getElementById('progressLabel').textContent = `已完成 ${done} / ${total} 项`;
   document.getElementById('progressFill').style.width = pct + '%';
   DAILY_TASKS.forEach(task => {
     const el = document.querySelector(`.daily-task[data-task="${task}"]`);
-    if (el) el.classList.toggle('done', !!completedTasks[task]);
+    if (el) el.classList.toggle('done', !!S.completedTasks[task]);
   });
   if (done >= total) {
     var now = new Date();
@@ -187,10 +189,10 @@ function renderDailyChecklist() {
     document.getElementById('celebration').classList.add('show');
     document.getElementById('taskProgress').style.display = 'none';
     document.getElementById('dailyChecklist').style.display = 'none';
-    document.getElementById('celebCards').textContent = DECKS[currentDeck].length;
+    document.getElementById('celebCards').textContent = DECKS[S.currentDeck].length;
     document.getElementById('celebTemplates').textContent = getTemplateCount();
     document.getElementById('celebGrammar').textContent = getGrammarCount();
-    document.getElementById('celebDay').textContent = streak;
+    document.getElementById('celebDay').textContent = S.streak;
     document.getElementById('celebMeta').textContent = '完成于 ' + dateStr + ' ' + timeStr + ' · 训练用时 ' + totalMin + ' 分钟';
   }
 }
@@ -204,8 +206,8 @@ function startTask(page) {
 document.addEventListener('DOMContentLoaded', async () => {
   await checkApi();
   var st = await getStreak();
-  streak = st.count;
-  lastActive = st.lastActive;
+  S.streak = st.count;
+  S.lastActive = st.S.lastActive;
   await loadCompletedTasks();
   checkStreak();
   renderSymbols();
@@ -272,7 +274,7 @@ function switchTab(tabsId, tabId) {
 
 function updateHomeStats() {
   var todayStr = new Date().toISOString().slice(0, 10);
-  var cardCount = dbGet("SELECT COUNT(*) FROM flashcard_log WHERE deck=? AND date(reviewed_at)=?", [currentDeck, todayStr]);
+  var cardCount = dbGet("SELECT COUNT(*) FROM flashcard_log WHERE deck=? AND date(reviewed_at)=?", [S.currentDeck, todayStr]);
   var cardToday = cardCount.length ? cardCount[0][0] : 0;
   const elC = document.getElementById('ovCards'); if (elC) elC.textContent = cardToday;
   const elT = document.getElementById('ovTemplates'); if (elT) elT.textContent = getTemplateCount();
@@ -562,27 +564,27 @@ function toggleTimer() {
 function setTimer(evt, mins) {
   document.querySelectorAll('.timer-presets button').forEach(b => b.classList.remove('active'));
   if (evt && evt.target) evt.target.classList.add('active');
-  timerSeconds = mins * 60;
+  S.timerSeconds = mins * 60;
   resetTimer(true);
 }
 function formatTime(s) { const m = Math.floor(s / 60), sec = s % 60; return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`; }
 function startTimer() {
-  if (timerRunning) {
-    clearInterval(timerInterval); timerRunning = false;
+  if (S.timerRunning) {
+    clearInterval(S.timerInterval); S.timerRunning = false;
     document.getElementById('timerStartBtn').textContent = '▶ 开始';
     document.getElementById('timerStartBtn').classList.replace('pause', 'start');
     document.getElementById('timerDisplay').classList.remove('running');
   } else {
-    timerRunning = true;
+    S.timerRunning = true;
     document.getElementById('timerStartBtn').textContent = '⏸ 暂停';
     document.getElementById('timerStartBtn').classList.replace('start', 'pause');
     document.getElementById('timerDisplay').classList.add('running');
     document.getElementById('timerResetBtn').style.display = 'block';
-    timerInterval = setInterval(() => {
-      timerSeconds--;
-      document.getElementById('timerDisplay').textContent = formatTime(timerSeconds);
-      if (timerSeconds <= 0) {
-        clearInterval(timerInterval); timerRunning = false;
+    S.timerInterval = setInterval(() => {
+      S.timerSeconds--;
+      document.getElementById('timerDisplay').textContent = formatTime(S.timerSeconds);
+      if (S.timerSeconds <= 0) {
+        clearInterval(S.timerInterval); S.timerRunning = false;
         document.getElementById('timerDisplay').textContent = '00:00';
         document.getElementById('timerDisplay').classList.remove('running');
         const mins = Math.round((parseInt(document.querySelector('.timer-presets button.active')?.textContent) || 15));
@@ -596,9 +598,9 @@ function startTimer() {
   }
 }
 function resetTimer(keepMins = true) {
-  clearInterval(timerInterval); timerRunning = false;
-  if (!keepMins) { const activeBtn = document.querySelector('.timer-presets button.active'); timerSeconds = (parseInt(activeBtn?.textContent) || 15) * 60; }
-  document.getElementById('timerDisplay').textContent = formatTime(timerSeconds);
+  clearInterval(S.timerInterval); S.timerRunning = false;
+  if (!keepMins) { const activeBtn = document.querySelector('.timer-presets button.active'); S.timerSeconds = (parseInt(activeBtn?.textContent) || 15) * 60; }
+  document.getElementById('timerDisplay').textContent = formatTime(S.timerSeconds);
   document.getElementById('timerDisplay').classList.remove('running');
   document.getElementById('timerStartBtn').textContent = '▶ 开始';
   document.getElementById('timerStartBtn').classList.replace('pause', 'start');
@@ -930,27 +932,13 @@ function removeWrong(id) {
   setTimeout(function() { renderWrongPage(); }, 1000);
 }
 window.removeWrong = removeWrong;
-// Export shared state for cross-file access (flashcard.js, exercises.js)
-// Use Object.defineProperty getter/setter to keep window in sync with IIFE-local vars
-var _exports = [
-  'currentPage', 'currentDeck', 'deckIndex', 'deckQueue', 'flipped',
-  'cardTimer', 'cardSeconds',
-  'streak', 'lastActive', 'templateCount', 'grammarCount',
-  'timerSeconds', 'timerRunning', 'timerInterval',
-  'completedTasks'
-];
-for (var i = 0; i < _exports.length; i++) {
-  (function(name) {
-    Object.defineProperty(window, name, {
-      get: function() {
-        // eval to access IIFE-local var by name
-        return eval(name);
-      },
-      set: function(v) {
-        eval(name + ' = v');
-      },
-      configurable: true, enumerable: true
-    });
-  })(_exports[i]);
-}
+// Export shared state via getter/setter (minification-safe, no eval)
+var _stateVars = ['currentPage','currentDeck','deckIndex','deckQueue','flipped','cardTimer','cardSeconds','streak','lastActive','templateCount','grammarCount','timerSeconds','timerRunning','timerInterval','completedTasks'];
+_stateVars.forEach(function(k) {
+  Object.defineProperty(window, k, {
+    get: function() { return S[k]; },
+    set: function(v) { S[k] = v; },
+    configurable: true, enumerable: true
+  });
+});
 })();

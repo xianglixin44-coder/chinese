@@ -1,6 +1,14 @@
 // config.js — 全局常量
 var App = window.App || {};
 
+App.state = {
+  currentPage: 'overview', currentDeck: 'shici', deckIndex: 0, deckQueue: [], flipped: false,
+  cardTimer: null, cardSeconds: 20,
+  streak: 0, lastActive: '', templateCount: 0, grammarCount: 0,
+  timerSeconds: 25 * 60, timerRunning: false, timerInterval: null,
+  completedTasks: {}
+};
+
 App.SYMBOLS = [
   {sym:"[ ]",name:"核心概念框",desc:"关键词、核心意象、反复出现的词"},
   {sym:"/",name:"层次分割线",desc:"事实→分析→结论的逻辑转换处"},
