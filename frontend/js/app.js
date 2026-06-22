@@ -679,6 +679,17 @@ async function executeImport() {
       });
       if (r && r.ok) count++;
     }
+  // 方法库导入 — CSV 列: sort_order, icon, title, source, description, target_module, target_page, extra_json
+  } else if (deck === 'methods') {
+    for (const row of importData) {
+      if (row.length < 3) continue;
+      const r = await apiCall('POST', '/api/methods', {
+        sort_order: parseInt(row[0])||99, icon: row[1]||'', title: row[2]||'',
+        source: row[3]||'', description: row[4]||'',
+        target_module: row[5]||'', target_page: row[6]||'', extra_json: row[7]||'{}'
+      });
+      if (r && r.ok) count++;
+    }
   // 通用习题导入（兼容旧格式）
   } else if (deck === 'exercises') {
     const rows = importData.filter(r => r && r.length >= 6).map(r => [r[0]||'', r[1]||'', r[2]||'', r[3]||'', r[4]||'', r[5]||'']);
