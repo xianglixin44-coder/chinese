@@ -85,11 +85,16 @@ CREATE TABLE IF NOT EXISTS daily_assignments (
 
 CREATE TABLE IF NOT EXISTS methods (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    slug TEXT UNIQUE NOT NULL,
+    sort_order INTEGER DEFAULT 0,
+    icon TEXT DEFAULT '',
     title TEXT NOT NULL,
-    category TEXT DEFAULT '',
-    content_html TEXT DEFAULT '',
-    sort_order INTEGER DEFAULT 0
+    source TEXT DEFAULT '',
+    description TEXT DEFAULT '',
+    target_module TEXT DEFAULT '',
+    target_page TEXT DEFAULT '',
+    extra_json TEXT DEFAULT '{}',
+    status TEXT DEFAULT 'active',
+    created_at TEXT DEFAULT (datetime('now','localtime'))
 );
 
 CREATE TABLE IF NOT EXISTS exercises (
