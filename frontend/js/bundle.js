@@ -1,6 +1,14 @@
 // config.js — 全局常量
 var App = window.App || {};
 
+App.state = {
+  currentPage: 'overview', currentDeck: 'shici', deckIndex: 0, deckQueue: [], flipped: false,
+  cardTimer: null, cardSeconds: 20,
+  streak: 0, lastActive: '', templateCount: 0, grammarCount: 0,
+  timerSeconds: 25 * 60, timerRunning: false, timerInterval: null,
+  completedTasks: {}
+};
+
 App.SYMBOLS = [
   {sym:"[ ]",name:"核心概念框",desc:"关键词、核心意象、反复出现的词"},
   {sym:"/",name:"层次分割线",desc:"事实→分析→结论的逻辑转换处"},
@@ -305,6 +313,8 @@ let dbLocal = null;
     dbLocal.run("CREATE TABLE IF NOT EXISTS assessments (item TEXT, week INTEGER, score INTEGER DEFAULT 0, updated_at TEXT DEFAULT (datetime('now','localtime')), PRIMARY KEY(item, week))");
     dbLocal.run("CREATE TABLE IF NOT EXISTS training_sessions (id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, module TEXT, duration_min INTEGER, created_at TEXT DEFAULT (datetime('now','localtime')))");
     dbLocal.run("CREATE TABLE IF NOT EXISTS daily_tasks (date TEXT, task TEXT, PRIMARY KEY(date, task))");
+    dbLocal.run("CREATE TABLE IF NOT EXISTS wrong_items (id INTEGER PRIMARY KEY AUTOINCREMENT, exercise_id INTEGER, module TEXT, question TEXT, user_answer TEXT, correct_answer TEXT, wrong_count INTEGER DEFAULT 1, wrong_at TEXT DEFAULT (datetime('now','localtime')), reviewed INTEGER DEFAULT 0)");
+    dbLocal.run("CREATE TABLE IF NOT EXISTS training_log (id INTEGER PRIMARY KEY AUTOINCREMENT, module TEXT, exercise_id INTEGER DEFAULT 0, question TEXT, user_answer TEXT, correct_answer TEXT, is_correct INTEGER DEFAULT 0, score INTEGER DEFAULT 0, correction_note TEXT DEFAULT '', reviewed INTEGER DEFAULT 0, attempt_count INTEGER DEFAULT 1, created_at TEXT DEFAULT (datetime('now','localtime')))");
     console.log('📦 Local SQLite ready');
   } catch(e) { console.warn('Local DB:', e.message); }
 })();
@@ -990,8 +1000,15 @@ window.loadDailyExercise = loadDailyExercise;
 window.renderDailyExercise = renderDailyExercise;var htmlesc = App.htmlesc;
 var sanitizeHTML = App.sanitizeHTML;
 
+// ================================================================
+//  app.js — 语文提高训练 · 核心逻辑
+//  Section: ① Core → ② State → ③ Daily → ④ Pages → ⑤ Data
+// ================================================================
+
 (function(){
-// ====== 全局事件委托 (新代码用 data-action, 旧 onclick 保留兼容) ======
+// ================================================================
+//  ① CORE: 全局事件委托 + 导航 + 侧边栏 + 计时器
+// ================================================================
 document.addEventListener('click', function(e) {
   var el = e.target.closest('[data-action]');
   if (!el) return;
@@ -1027,13 +1044,13 @@ document.addEventListener('click', function(e) {
 
 function checkStreak() {
   const today = new Date().toDateString();
-  if (lastActive !== today && lastActive !== '') {
+  if (S.lastActive !== today && S.lastActive !== '') {
     const yesterday = new Date(Date.now() - 86400000).toDateString();
-    streak = lastActive === yesterday ? streak + 1 : 0;
-  } else if (lastActive === '') { streak = 1; }
-  lastActive = today;
-  syncStreak(streak, today);
-  document.getElementById('streakBadge').textContent = `🔥 ${streak}天`;
+    S.streak = S.lastActive === yesterday ? S.streak + 1 : 0;
+  } else if (S.lastActive === '') { S.streak = 1; }
+  S.lastActive = today;
+  syncStreak(S.streak, today);
+  document.getElementById('streakBadge').textContent = `🔥 ${S.streak}天`;
 }
 
 function toggleSidebar() {
@@ -1070,11 +1087,13 @@ function navigate(page, keepNav, anchor) {
     var overviewNav = document.querySelector('.nav-item[data-page="overview"]');
     if (overviewNav) overviewNav.classList.add('active');
   }
-  currentPage = page;
+  S.currentPage = page;
   document.getElementById('sidebar').classList.remove('open');
   if (page === 'calendar') { renderCalendar(); }
   if (page === 'records') { renderRecords(); }
   if (page === 'method') { renderMethodPage(); }
+  if (page === 'wrong') { renderWrongPage(); }
+  if (page === 'history') { renderTrainingHistory(); }
   // 锚点跳转（如闪卡区域）
   if (anchor) {
     setTimeout(function() {
@@ -1101,24 +1120,30 @@ function renderSymbols() {
   var g = document.getElementById('symGrid'); if (g) g.innerHTML = html;
 }
 
-// ====== 每日选题加载与渲染 ======
+var S = App.state;  // shared state object (minification-safe)
+
+// ================================================================
+//  ② STATE: 全局状态变量 (通过 App.state + getter/setter 共享)
+// ================================================================
 
 
 
 
 
 
-var currentPage = 'overview', currentDeck = 'shici', deckIndex = 0, deckQueue = [], flipped = false;
-var cardTimer = null, cardSeconds = 20;
-var streak = 0, lastActive = '', templateCount = 0, grammarCount = 0;
-var timerSeconds = 25 * 60, timerRunning = false, timerInterval = null;
+S.currentPage = 'overview'; S.currentDeck = 'shici'; S.deckIndex = 0; S.deckQueue = []; S.flipped = false;
+S.cardTimer = null; S.cardSeconds = 20;
+S.streak = 0; S.lastActive = ''; S.templateCount = 0; S.grammarCount = 0;
+S.timerSeconds = 25 * 60; S.timerRunning = false; S.timerInterval = null;
 
-// Daily task tracking
+// ================================================================
+//  ③ DAILY: 每日任务清单 + 进度条 + 庆祝页
+// ================================================================
 const DAILY_TASKS = ['flashcard', 'reading', 'classical', 'language', 'writing'];
-var completedTasks = {};
+S.completedTasks = {};
 async function loadCompletedTasks() {
   const today = new Date().toISOString().slice(0, 10);
-  completedTasks = {};
+  S.completedTasks = {};
   // Try server first
   if (apiAvailable) {
     try {
@@ -1127,30 +1152,30 @@ async function loadCompletedTasks() {
         body: JSON.stringify({sql: "SELECT task FROM daily_tasks WHERE date = ?", params: [today]})
       });
       const data = await r.json();
-      if (data && data.rows) { data.rows.forEach(r => { completedTasks[r[0]] = true; }); }
+      if (data && data.rows) { data.rows.forEach(r => { S.completedTasks[r[0]] = true; }); }
     } catch(e) {}
   }
   // Local fallback
   const rows = dbGet("SELECT task FROM daily_tasks WHERE date = ?", [today]);
-  rows.forEach(r => { completedTasks[r[0]] = true; });
+  rows.forEach(r => { S.completedTasks[r[0]] = true; });
   renderDailyChecklist();
 }
 function markTaskDone(task) {
   const today = new Date().toISOString().slice(0, 10);
   dbRun("INSERT OR IGNORE INTO daily_tasks (date, task) VALUES (?, ?)", [today, task]);
   apiCall('POST', '/api/training/session', {date: today, module: task, duration_min: 5});
-  completedTasks[task] = true;
+  S.completedTasks[task] = true;
   renderDailyChecklist();
 }
 function renderDailyChecklist() {
-  const done = Object.keys(completedTasks).length;
+  const done = Object.keys(S.completedTasks).length;
   const total = DAILY_TASKS.length;
   const pct = Math.round(done / total * 100);
   document.getElementById('progressLabel').textContent = `已完成 ${done} / ${total} 项`;
   document.getElementById('progressFill').style.width = pct + '%';
   DAILY_TASKS.forEach(task => {
     const el = document.querySelector(`.daily-task[data-task="${task}"]`);
-    if (el) el.classList.toggle('done', !!completedTasks[task]);
+    if (el) el.classList.toggle('done', !!S.completedTasks[task]);
   });
   if (done >= total) {
     var now = new Date();
@@ -1163,10 +1188,10 @@ function renderDailyChecklist() {
     document.getElementById('celebration').classList.add('show');
     document.getElementById('taskProgress').style.display = 'none';
     document.getElementById('dailyChecklist').style.display = 'none';
-    document.getElementById('celebCards').textContent = DECKS[currentDeck].length;
+    document.getElementById('celebCards').textContent = DECKS[S.currentDeck].length;
     document.getElementById('celebTemplates').textContent = getTemplateCount();
     document.getElementById('celebGrammar').textContent = getGrammarCount();
-    document.getElementById('celebDay').textContent = streak;
+    document.getElementById('celebDay').textContent = S.streak;
     document.getElementById('celebMeta').textContent = '完成于 ' + dateStr + ' ' + timeStr + ' · 训练用时 ' + totalMin + ' 分钟';
   }
 }
@@ -1180,8 +1205,8 @@ function startTask(page) {
 document.addEventListener('DOMContentLoaded', async () => {
   await checkApi();
   var st = await getStreak();
-  streak = st.count;
-  lastActive = st.lastActive;
+  S.streak = st.count;
+  S.lastActive = st.S.lastActive;
   await loadCompletedTasks();
   checkStreak();
   renderSymbols();
@@ -1194,8 +1219,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateHomeStats();
 });
 
+// ================================================================
+//  ④ PAGES: 各页面渲染函数 (书籍/计划/评估/选项卡/统计)
+// ================================================================
 function renderBooks() {
-  const l = document.getElementById('bookList'); if (!l) return;
   l.innerHTML = BOOKS.map(b => `<div class="book-row"><div class="rank">${b.rank}</div><div><h4>${b.title}</h4><div class="author">${b.author}</div><div class="desc">${b.desc}</div><span class="tag ${b.tagClass}">${b.tag}</span></div></div>`).join('');
 }
 
@@ -1246,7 +1273,7 @@ function switchTab(tabsId, tabId) {
 
 function updateHomeStats() {
   var todayStr = new Date().toISOString().slice(0, 10);
-  var cardCount = dbGet("SELECT COUNT(*) FROM flashcard_log WHERE deck=? AND date(reviewed_at)=?", [currentDeck, todayStr]);
+  var cardCount = dbGet("SELECT COUNT(*) FROM flashcard_log WHERE deck=? AND date(reviewed_at)=?", [S.currentDeck, todayStr]);
   var cardToday = cardCount.length ? cardCount[0][0] : 0;
   const elC = document.getElementById('ovCards'); if (elC) elC.textContent = cardToday;
   const elT = document.getElementById('ovTemplates'); if (elT) elT.textContent = getTemplateCount();
@@ -1260,7 +1287,7 @@ document.addEventListener('click', e => {
 
 function toggleAnswer(id) { const el = document.getElementById(id); if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none'; }
 function checkClassicalQ4(radio) { const ans = document.getElementById('ex-classical-4'); if (ans) ans.style.display = 'block'; document.querySelectorAll('input[name="q4"]').forEach(r => { const label = r.closest('.ex-option'); if (label) { label.classList.remove('correct', 'wrong'); if (r.checked && r.value === 'B') label.classList.add('correct'); else if (r.checked) label.classList.add('wrong'); } }); }
-function doCheck(name, correct) { document.getElementById(`ex-${name}`).style.display = 'block'; document.querySelectorAll(`input[name="${name}"]`).forEach(r => { const l = r.closest('.ex-option'); if (l) { l.classList.remove('correct', 'wrong'); if (r.checked && r.value === correct) l.classList.add('correct'); else if (r.checked) l.classList.add('wrong'); } }); }
+function doCheck(name, correct) { document.getElementById(`ex-${name}`).style.display = 'block'; var wrong=false; var userAns=''; document.querySelectorAll(`input[name="${name}"]`).forEach(r => { const l = r.closest('.ex-option'); if (l) { l.classList.remove('correct', 'wrong'); if (r.checked && r.value === correct) { l.classList.add('correct'); userAns=r.value; } else if (r.checked) { l.classList.add('wrong'); wrong=true; userAns=r.value; } } }); if (!userAns) userAns='未作答'; var questionEl=document.getElementById(`ex-${name}`); var question=(questionEl?.closest('.exercise-item')?.querySelector('strong')?.textContent)||name; var module=''; if (name.startsWith('reading')) module='modern_reading'; else if (name.startsWith('classical')) module='classical_reading'; else if (name.startsWith('bingju')) module='grammar'; else if (name.startsWith('language')) module='grammar'; else module='grammar'; recordTrainingLog(module, question, userAns, correct, wrong?0:1); if (wrong) { apiCall('POST', '/api/wrong', {exercise_id:0,module:module,question_type:'',question:question,user_answer:userAns,correct_answer:correct,explanation:''}); localRun("INSERT INTO wrong_items (exercise_id,module,question,user_answer,correct_answer) VALUES (?,?,?,?,?)",[0,module,question,userAns,correct]); } }
 function checkBingju1(r) { doCheck('bingju1', 'B'); } function checkBingju2(r) { doCheck('bingju2', 'A'); } function checkBingju3(r) { doCheck('bingju3', 'C'); } function checkBingju4(r) { doCheck('bingju4', 'B'); } function checkBingju5(r) { doCheck('bingju5', 'B'); }
 
 async function renderMethodPage() {
@@ -1285,6 +1312,11 @@ async function renderMethodPage() {
       {id:2,sort_order:2,icon:'🃏',title:'费曼闪卡法',source:'间隔重复+费曼学习法',description:'1→2→4→8→16→32→64→128天',target_page:'古诗文阅读页',extra_json:'{"tips":["每日新卡上限20张","答对升级答错重置","间隔≥32天=已掌握"]}'},
       {id:3,sort_order:3,icon:'🧩',title:'语法成分解构图',source:'结构主义语法',description:'三步法:提主干→配逻辑→画结构',target_page:'语言文字运用页',extra_json:'{}'},
       {id:4,sort_order:4,icon:'🗣️',title:'他们说/我说模板',source:'《They Say / I Say》',description:'A引入对立+B推进己方+C升华收束',target_page:'写作表达页',extra_json:'{}'},
+      {id:5,sort_order:5,icon:'🕵️\u200d♂️',title:'小说叙事密码拆解',source:'热奈特叙事学',description:'三维度:叙事视角+时空结构+核心物象',target_page:'现代文阅读页',extra_json:'{"steps":["判视角","析时空","解物象"]}'},
+      {id:6,sort_order:6,icon:'🎭',title:'修辞效果三步拆解法',source:'高考阅卷标准',description:'明手法(1分)→析具体(2分)→阐效果(2分)',target_page:'语言文字运用页',extra_json:'{"formula":"手法(1分)+具体分析(2分)+效果情感(2分)=5分"}'},
+      {id:7,sort_order:7,icon:'🗣️',title:'言外之意解码法',source:'格莱斯会话含义理论',description:'字面意义+被违反的语用准则+真实意图',target_page:'语言文字运用页',extra_json:'{"formula":"字面意义+违反准则+真实意图","rules":["量准则","质准则","关系准则","方式准则"]}'},
+      {id:8,sort_order:8,icon:'🔗',title:'连贯衔接速查',source:'语篇语言学',description:'6类逻辑连词速查表',target_page:'语言文字运用页',extra_json:'{}'},
+      {id:9,sort_order:9,icon:'🎯',title:'文言文双语对齐翻译法',source:'对比语言学',description:'字字落实+句法还原+规范译文',target_page:'古诗文阅读页',extra_json:'{"steps":["字字落实","句法还原","规范译文"]}'},
     ];
   }
 
@@ -1531,27 +1563,27 @@ function toggleTimer() {
 function setTimer(evt, mins) {
   document.querySelectorAll('.timer-presets button').forEach(b => b.classList.remove('active'));
   if (evt && evt.target) evt.target.classList.add('active');
-  timerSeconds = mins * 60;
+  S.timerSeconds = mins * 60;
   resetTimer(true);
 }
 function formatTime(s) { const m = Math.floor(s / 60), sec = s % 60; return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`; }
 function startTimer() {
-  if (timerRunning) {
-    clearInterval(timerInterval); timerRunning = false;
+  if (S.timerRunning) {
+    clearInterval(S.timerInterval); S.timerRunning = false;
     document.getElementById('timerStartBtn').textContent = '▶ 开始';
     document.getElementById('timerStartBtn').classList.replace('pause', 'start');
     document.getElementById('timerDisplay').classList.remove('running');
   } else {
-    timerRunning = true;
+    S.timerRunning = true;
     document.getElementById('timerStartBtn').textContent = '⏸ 暂停';
     document.getElementById('timerStartBtn').classList.replace('start', 'pause');
     document.getElementById('timerDisplay').classList.add('running');
     document.getElementById('timerResetBtn').style.display = 'block';
-    timerInterval = setInterval(() => {
-      timerSeconds--;
-      document.getElementById('timerDisplay').textContent = formatTime(timerSeconds);
-      if (timerSeconds <= 0) {
-        clearInterval(timerInterval); timerRunning = false;
+    S.timerInterval = setInterval(() => {
+      S.timerSeconds--;
+      document.getElementById('timerDisplay').textContent = formatTime(S.timerSeconds);
+      if (S.timerSeconds <= 0) {
+        clearInterval(S.timerInterval); S.timerRunning = false;
         document.getElementById('timerDisplay').textContent = '00:00';
         document.getElementById('timerDisplay').classList.remove('running');
         const mins = Math.round((parseInt(document.querySelector('.timer-presets button.active')?.textContent) || 15));
@@ -1565,9 +1597,9 @@ function startTimer() {
   }
 }
 function resetTimer(keepMins = true) {
-  clearInterval(timerInterval); timerRunning = false;
-  if (!keepMins) { const activeBtn = document.querySelector('.timer-presets button.active'); timerSeconds = (parseInt(activeBtn?.textContent) || 15) * 60; }
-  document.getElementById('timerDisplay').textContent = formatTime(timerSeconds);
+  clearInterval(S.timerInterval); S.timerRunning = false;
+  if (!keepMins) { const activeBtn = document.querySelector('.timer-presets button.active'); S.timerSeconds = (parseInt(activeBtn?.textContent) || 15) * 60; }
+  document.getElementById('timerDisplay').textContent = formatTime(S.timerSeconds);
   document.getElementById('timerDisplay').classList.remove('running');
   document.getElementById('timerStartBtn').textContent = '▶ 开始';
   document.getElementById('timerStartBtn').classList.replace('pause', 'start');
@@ -1617,6 +1649,14 @@ async function executeImport() {
   if (deck === 'shici' || deck === 'xuci' || deck === 'wenxue') {
     const newCards = importData.map(row => ({ front: row[0] || '', hl: row[1] || '', word: row[2] || '', meaning: row[3] || '', analogy: row[4] || '' }));
     DECKS[deck].push(...newCards); count = newCards.length;
+    // Also persist to DB exercises table
+    for (const card of newCards) {
+      const extra = JSON.stringify({hl: card.hl, word: card.word, meaning: card.meaning, analogy: card.analogy});
+      apiCall('POST', '/api/exercises', {
+        module: 'flashcard', type: deck, title: '', content: card.front,
+        options_json: '[]', answer: '', explanation: '', extra_json: extra
+      });
+    }
   // 现代文阅读题库 — CSV 列: passage_type, title, passage, question, options_json, answer_idx, explanation
   } else if (deck === 'modern_reading') {
     for (const row of importData) {
@@ -1658,6 +1698,17 @@ async function executeImport() {
       const r = await apiCall('POST', '/api/exercises', {
         module: 'writing', content: row[0]||'',
         extra_json: JSON.stringify({template_hint: row[1]||'', sample_answer: row[2]||'', scoring_guide: row[3]||''})
+      });
+      if (r && r.ok) count++;
+    }
+  // 方法库导入 — CSV 列: sort_order, icon, title, source, description, target_module, target_page, extra_json
+  } else if (deck === 'methods') {
+    for (const row of importData) {
+      if (row.length < 3) continue;
+      const r = await apiCall('POST', '/api/methods', {
+        sort_order: parseInt(row[0])||99, icon: row[1]||'', title: row[2]||'',
+        source: row[3]||'', description: row[4]||'',
+        target_module: row[5]||'', target_page: row[6]||'', extra_json: row[7]||'{}'
       });
       if (r && r.ok) count++;
     }
@@ -1719,27 +1770,174 @@ window.renderDailyChecklist = renderDailyChecklist;
 window.markTaskDone = markTaskDone;
 window.updateHomeStats = updateHomeStats;
 window.checkStreak = checkStreak;
-// Export shared state for cross-file access (flashcard.js, exercises.js)
-// Use Object.defineProperty getter/setter to keep window in sync with IIFE-local vars
-var _exports = [
-  'currentPage', 'currentDeck', 'deckIndex', 'deckQueue', 'flipped',
-  'cardTimer', 'cardSeconds',
-  'streak', 'lastActive', 'templateCount', 'grammarCount',
-  'timerSeconds', 'timerRunning', 'timerInterval',
-  'completedTasks'
-];
-for (var i = 0; i < _exports.length; i++) {
-  (function(name) {
-    Object.defineProperty(window, name, {
-      get: function() {
-        // eval to access IIFE-local var by name
-        return eval(name);
-      },
-      set: function(v) {
-        eval(name + ' = v');
-      },
-      configurable: true, enumerable: true
-    });
-  })(_exports[i]);
+window.renderWrongPage = renderWrongPage;
+window.recordWrongAnswer = recordWrongAnswer;
+window.renderTrainingHistory = renderTrainingHistory;
+window.recordTrainingLog = recordTrainingLog;
+window.exportData = exportData;
+
+// ====== 数据导出 ======
+function exportData(dataset) {
+  var url = API_BASE + '/api/export/' + dataset + '?token=' + AUTH_TOKEN;
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = dataset + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
+
+// ================================================================
+//  ⑤ DATA: 答题记录 + 错题本 + 训练记录 + 数据维护
+// ================================================================
+function recordWrongAnswer(exerciseName, userAnswer, correctAnswer) {
+  var module = '';
+  var questionEl = document.getElementById(`ex-${exerciseName}`);
+  var question = questionEl?.closest('.exercise-item')?.querySelector('strong')?.textContent || exerciseName;
+  if (exerciseName.startsWith('reading')) module = 'modern_reading';
+  else if (exerciseName.startsWith('classical')) module = 'classical_reading';
+  else if (exerciseName.startsWith('bingju') || exerciseName.startsWith('language')) module = 'grammar';
+  else if (exerciseName.startsWith('writing')) module = 'writing';
+  apiCall('POST', '/api/wrong', {
+    exercise_id: 0, module: module, question_type: '', question: question,
+    user_answer: userAnswer, correct_answer: correctAnswer, explanation: ''
+  });
+  localRun("INSERT INTO wrong_items (exercise_id, module, question, user_answer, correct_answer) VALUES (?,?,?,?,?)",
+    [0, module, question, userAnswer, correctAnswer]);
+  // Also record to unified training_log
+  recordTrainingLog(module, question, userAnswer, correctAnswer, 0);
+}
+
+// ====== 统一训练记录 ======
+function recordTrainingLog(module, question, userAnswer, correctAnswer, isCorrect) {
+  apiCall('POST', '/api/training-log', {
+    module: module, exercise_id: 0, question: question,
+    user_answer: userAnswer, correct_answer: correctAnswer,
+    is_correct: isCorrect, score: 0
+  });
+  localRun("INSERT INTO training_log (module, question, user_answer, correct_answer, is_correct) VALUES (?,?,?,?,?)",
+    [module, question, userAnswer, correctAnswer, isCorrect]);
+}
+
+async function renderTrainingHistory() {
+  var el = document.getElementById('trainingHistoryContent');
+  if (!el) return;
+  var filter = document.getElementById('tlogFilter')?.value || '';
+  var items = [];
+  if (apiAvailable) {
+    try {
+      var qs = filter ? '?module=' + encodeURIComponent(filter) + '&limit=200' : '?limit=200';
+      var data = await apiCall('GET', '/api/training-log' + qs);
+      if (data && data.items) items = data.items;
+    } catch(e) {}
+  }
+  if (!items.length) {
+    var rows = localQuery("SELECT * FROM training_log ORDER BY created_at DESC LIMIT 200", []);
+    items = rows.map(function(r) { return {id:r[0],module:r[1],question:r[3],user_answer:r[4],correct_answer:r[5],is_correct:r[6],correction_note:r[8],reviewed:r[9],created_at:r[11]}; });
+  }
+  if (!items.length) {
+    el.innerHTML = '<div class="card" style="text-align:center;padding:40px;"><p style="font-size:18px;">📊 暂无训练记录</p><p style="color:var(--text-light);">完成练习后记录自动显示在此。</p></div>';
+    return;
+  }
+  var correct = items.filter(function(i) { return i.is_correct; }).length;
+  var wrong = items.length - correct;
+  var html = '<div class="card" style="margin-bottom:10px;"><div style="display:flex;gap:20px;font-size:13px;">';
+  html += '<span>📊 总计 <strong>' + items.length + '</strong></span>';
+  html += '<span style="color:#27ae60;">✅ ' + correct + '</span>';
+  html += '<span style="color:#e74c3c;">❌ ' + wrong + '</span>';
+  html += '<span>📝 待复习 <strong style="color:#e67e22;">' + items.filter(function(i){return !i.is_correct && !i.reviewed;}).length + '</strong></span>';
+  html += '<select id="tlogFilter" onchange="renderTrainingHistory()" style="margin-left:auto;font-size:12px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;background:var(--card-bg);">';
+  html += '<option value="">全部模块</option>';
+  var MODS = {modern_reading:'现代文阅读',classical_reading:'古诗文阅读',grammar:'语言文字运用',writing:'写作表达',flashcard:'闪卡'};
+  Object.keys(MODS).forEach(function(k) {
+    html += '<option value="' + k + '"' + (filter===k?' selected':'') + '>' + MODS[k] + '</option>';
+  });
+  html += '</select></div></div>';
+  items.forEach(function(item, i) {
+    var cls = item.is_correct ? 'border-left:3px solid #27ae60;' : 'border-left:3px solid #e74c3c;';
+    html += '<div class="card" style="margin-top:6px;' + cls + 'padding:10px 14px;">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:start;">';
+    html += '<div style="flex:1;">';
+    html += '<p style="font-size:11px;color:var(--text-light);margin-bottom:3px;">' + (item.created_at||'').slice(0,16) + ' · ' + (MODS[item.module]||item.module) + '</p>';
+    html += '<p style="font-size:13px;margin-bottom:4px;"><strong>' + htmlesc(item.question) + '</strong></p>';
+    html += '<p style="font-size:12px;margin-bottom:1px;">你的答案：<span style="color:' + (item.is_correct?'#27ae60':'#e74c3c') + ';">' + htmlesc(item.user_answer||'(空)') + '</span>';
+    if (!item.is_correct) html += ' → 正确答案：<span style="color:#27ae60;">' + htmlesc(item.correct_answer||'') + '</span>';
+    html += '</p>';
+    if (item.correction_note) html += '<p style="font-size:12px;color:var(--accent2);margin-top:4px;">📝 纠错笔记：' + htmlesc(item.correction_note) + '</p>';
+    html += '</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">';
+    html += '<button class="btn-small" onclick="editCorrectionNote(' + item.id + ')" style="font-size:11px;padding:2px 8px;">✏️ 纠错</button>';
+    if (!item.reviewed) html += '<button class="btn-small" onclick="markReviewed(' + item.id + ')" style="font-size:11px;padding:2px 8px;background:#e67e22;color:#fff;">👁 已复习</button>';
+    html += '</div></div></div>';
+  });
+  el.innerHTML = html;
+}
+
+function editCorrectionNote(id) {
+  var note = prompt('请输入纠错笔记：');
+  if (note === null) return;
+  apiCall('PUT', '/api/training-log/' + id + '/note', {note: note});
+  localRun("UPDATE training_log SET correction_note=? WHERE id=?", [note, id]);
+  renderTrainingHistory();
+}
+
+function markReviewed(id) {
+  apiCall('PUT', '/api/training-log/' + id + '/review');
+  localRun("UPDATE training_log SET reviewed=1 WHERE id=?", [id]);
+  renderTrainingHistory();
+}
+window.editCorrectionNote = editCorrectionNote;
+window.markReviewed = markReviewed;
+window.recordTrainingLog = recordTrainingLog;
+
+async function renderWrongPage() {
+  var el = document.getElementById('wrongContent');
+  if (!el) return;
+  var items = [];
+  if (apiAvailable) {
+    try {
+      var data = await apiCall('GET', '/api/wrong');
+      if (data && data.items) items = data.items;
+    } catch(e) {}
+  }
+  if (!items.length) {
+    var local = localQuery("SELECT * FROM wrong_items ORDER BY wrong_at DESC", []);
+    items = local.map(function(r) { return {id:r[0], question:r[4], user_answer:r[5], correct_answer:r[6], wrong_count:r[7]||1, reviewed:r[9]||0}; });
+  }
+  if (!items.length) {
+    el.innerHTML = '<div class="card" style="text-align:center;padding:40px;"><p style="font-size:18px;">🎉 暂无错题</p><p style="color:var(--text-light);">继续练习，答错的题目会自动收录到这里。</p></div>';
+    return;
+  }
+  var html = '<div class="card"><h3>📋 错题列表 (' + items.length + '题)</h3></div>';
+  items.forEach(function(item, i) {
+    html += '<div class="card" id="wrong-' + item.id + '" style="margin-top:8px;">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:start;">';
+    html += '<div style="flex:1;"><p style="font-size:13px;color:var(--text-light);margin-bottom:4px;">#' + (i+1) + ' · 错' + (item.wrong_count||1) + '次</p>';
+    html += '<p style="font-size:14px;margin-bottom:6px;"><strong>' + htmlesc(item.question) + '</strong></p>';
+    html += '<p style="font-size:12px;margin-bottom:2px;"><span style="color:#e74c3c;">❌ 你的答案：' + htmlesc(item.user_answer||'') + '</span></p>';
+    html += '<p style="font-size:12px;color:#27ae60;">✅ 正确答案：' + htmlesc(item.correct_answer||'') + '</p>';
+    html += '</div>';
+    html += '<button class="btn-small" onclick="removeWrong(' + item.id + ')" style="background:#27ae60;color:#fff;white-space:nowrap;">✅ 已掌握</button>';
+    html += '</div></div>';
+  });
+  el.innerHTML = html;
+}
+
+function removeWrong(id) {
+  apiCall('DELETE', '/api/wrong/' + id);
+  localRun("DELETE FROM wrong_items WHERE id=?", [id]);
+  var card = document.getElementById('wrong-' + id);
+  if (card) { card.style.opacity = '0.3'; card.querySelector('button').textContent = '已移除'; card.querySelector('button').disabled = true; }
+  setTimeout(function() { renderWrongPage(); }, 1000);
+}
+window.removeWrong = removeWrong;
+// Export shared state via getter/setter (minification-safe, no eval)
+var _stateVars = ['currentPage','currentDeck','deckIndex','deckQueue','flipped','cardTimer','cardSeconds','streak','lastActive','templateCount','grammarCount','timerSeconds','timerRunning','timerInterval','completedTasks'];
+_stateVars.forEach(function(k) {
+  Object.defineProperty(window, k, {
+    get: function() { return S[k]; },
+    set: function(v) { S[k] = v; },
+    configurable: true, enumerable: true
+  });
+});
 })();
