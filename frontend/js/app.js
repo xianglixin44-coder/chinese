@@ -169,16 +169,10 @@ function markTaskDone(task) {
   renderDailyChecklist();
 }
 function updateTaskCounts() {
-  var map = {flashcard:'flashcard',reading:'modern_reading',classical:'classical_reading',language:'grammar',writing:'writing'};
-  for (var t in map) {
+  var counts = {flashcard:193, reading:9, classical:50, language:9, writing:9};
+  for (var t in counts) {
     var el = document.getElementById('taskCnt-'+t);
-    if (!el) continue;
-    try {
-      var rows = localQuery('SELECT COUNT(*) FROM exercises WHERE module=?', [map[t]]);
-      var n = rows.length && rows[0] ? rows[0][0] : 0;
-      el.textContent = n > 0 ? ' · ' + n + '题' : '';
-      el.style.cssText = 'font-size:11px;color:var(--accent);margin-left:4px;';
-    } catch(e) { el.textContent = ''; }
+    if (el) { el.textContent = ' · ' + counts[t] + '题'; el.style.cssText = 'font-size:11px;color:var(--accent);margin-left:4px;'; }
   }
 }
 function renderDailyChecklist() {
@@ -220,7 +214,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await checkApi();
   var st = await getStreak();
   S.streak = st.count;
-  S.lastActive = st.S.lastActive;
+  S.lastActive = st.lastActive;
   await loadCompletedTasks();
   checkStreak();
   renderSymbols();
