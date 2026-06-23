@@ -168,12 +168,20 @@ function markTaskDone(task) {
   S.completedTasks[task] = true;
   renderDailyChecklist();
 }
+function saveQuota(el) {
+  var v = parseInt(el.value) || 1;
+  el.value = Math.max(parseInt(el.min)||1, Math.min(parseInt(el.max)||99, v));
+  var key = el.id.replace('quota-','');
+  try { localStorage.setItem('quota_'+key, el.value); } catch(e) {}
+  updateTaskCounts();
+}
 function updateTaskCounts() {
   var counts = {flashcard:193, reading:9, classical:50, language:9, writing:9};
-  var daily = App.DAILY_COUNTS;
   for (var t in counts) {
     var el = document.getElementById('taskCnt-'+t);
-    if (el) { el.textContent = ' · ' + (daily[t]||'?') + '/' + counts[t] + '题'; }
+    var inp = document.getElementById('quota-'+t);
+    var d = inp ? parseInt(inp.value)||1 : (App.DAILY_COUNTS[t]||1);
+    if (el) { el.textContent = ' · ' + d + '/' + counts[t] + '题'; }
   }
 }
 function renderDailyChecklist() {
@@ -227,6 +235,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderTemplates();
   initDeck('shici');
   updateHomeStats();
+  // Restore saved daily quotas
+  ['flashcard','reading','classical','language','writing'].forEach(function(t) {
+    var v = localStorage.getItem('quota_'+t);
+    if (v) { var el = document.getElementById('quota-'+t); if (el) el.value = v; }
+  });
 });
 
 // ================================================================
@@ -785,6 +798,8 @@ window.recordWrongAnswer = recordWrongAnswer;
 window.renderTrainingHistory = renderTrainingHistory;
 window.recordTrainingLog = recordTrainingLog;
 window.exportData = exportData;
+
+window.saveQuota = saveQuota;
 
 // ====== 数据导出 ======
 function exportData(dataset) {

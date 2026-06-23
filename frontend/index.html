@@ -95,6 +95,17 @@
   </div>
 
   <div class="daily-checklist" id="dailyChecklist">
+  <div class="daily-settings" id="dailySettings" style="display:flex;gap:8px;align-items:center;padding:6px 10px;margin-bottom:8px;background:var(--surface);border-radius:8px;font-size:11px;color:var(--text-light);cursor:pointer" onclick="this.nextElementSibling.classList.toggle('hidden')">
+    ⚙️ 每日配额 <span style="font-size:10px">(点击展开)</span>
+  </div>
+  <div class="daily-quotas hidden" style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;padding:8px 10px;margin-bottom:8px;background:var(--surface);border-radius:8px;font-size:11px;">
+    <span>🃏 闪卡:</span><input type="number" id="quota-flashcard" min="1" max="50" value="20" style="width:50px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;text-align:center;" onchange="saveQuota(this)">
+    <span>📖 现代文:</span><input type="number" id="quota-reading" min="1" max="20" value="3" style="width:50px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;text-align:center;" onchange="saveQuota(this)">
+    <span>🏛️ 古诗文:</span><input type="number" id="quota-classical" min="1" max="30" value="5" style="width:50px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;text-align:center;" onchange="saveQuota(this)">
+    <span>✍️ 语法:</span><input type="number" id="quota-language" min="1" max="20" value="3" style="width:50px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;text-align:center;" onchange="saveQuota(this)">
+    <span>📝 写作:</span><input type="number" id="quota-writing" min="1" max="10" value="1" style="width:50px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;text-align:center;" onchange="saveQuota(this)">
+  </div>
+
     <div class="daily-task" data-task="flashcard" onclick="startTask('flashcard')">
       <div class="task-check">1</div>
       <div class="task-info">
