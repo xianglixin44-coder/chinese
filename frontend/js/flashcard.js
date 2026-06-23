@@ -6,6 +6,9 @@ var deckQueue = [];
 var currentDeck, deckIndex, flipped, cardTimer, cardSeconds;
 async function initDeck(name) {
   currentDeck = name; deckIndex = 0;
+  // 显示加载状态
+  var fcFront = document.getElementById('fcFront');
+  if (fcFront) fcFront.textContent = '⏳ 加载中...';
   // 优先从服务端题库加载，API 不可用时回退到硬编码数据
   if (apiAvailable) {
     try {
