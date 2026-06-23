@@ -3,6 +3,7 @@
 // Provides: initDeck, shuffle, showCard, flipCard, rateCard
 
 var deckQueue = [];
+var currentDeck, deckIndex, flipped, cardTimer, cardSeconds;
 async function initDeck(name) {
   currentDeck = name; deckIndex = 0;
   // 优先从服务端题库加载，API 不可用时回退到硬编码数据
@@ -49,6 +50,8 @@ async function initDeck(name) {
   }
   showCard();
   document.querySelectorAll('.deck-btn').forEach(b => b.classList.toggle('active', b.dataset.deck === name));
+  // Sync state object (used by app.js updateHomeStats etc.)
+  if (typeof S !== 'undefined') { S.currentDeck = name; S.deckQueue = deckQueue; }
 }
 function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } }
 function showCard() {
@@ -88,11 +91,13 @@ function showCard() {
   document.getElementById('fcFront').innerHTML = sanitizeHTML(frontHTML);
   document.getElementById('fcWord').textContent = card.word;
   document.getElementById('fcMeaning').textContent = card.meaning;
+  document.getElementById('fcSentence').textContent = card.sentence || '';
   document.getElementById('fcAnalogy').textContent = card.analogy || '';
   flipped = false; document.getElementById('flashcard').classList.remove('flipped');
+  if (typeof S !== 'undefined') { S.currentDeck = currentDeck; S.flipped = flipped; S.cardSeconds = cardSeconds; }
   updateHomeStats();
 }
-function flipCard() { if (deckQueue.length === 0) return; flipped = !flipped; document.getElementById('flashcard').classList.toggle('flipped', flipped); }
+function flipCard() { if (deckQueue.length === 0) return; flipped = !flipped; document.getElementById('flashcard').classList.toggle('flipped', flipped); if (typeof S !== 'undefined') S.flipped = flipped; }
 function rateCard(rating) {
   if (deckQueue.length === 0) return;
   if (cardTimer) { clearInterval(cardTimer); cardTimer = null; }
