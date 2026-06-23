@@ -234,7 +234,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderPlan();
   renderSelfAssessment();
   renderTemplates();
-  initDeck('shici');
+  await initDeck('shici');
   updateHomeStats();
   // Restore saved daily quotas
   ['flashcard','reading','classical','language','writing'].forEach(function(t) {
