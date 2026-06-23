@@ -1,6 +1,13 @@
 -- 语文提高训练 · 共享数据库 Schema
 -- 用于 backend/database.py 和 frontend sql.js 双端
 
+CREATE TABLE IF NOT EXISTS modules (
+    id TEXT PRIMARY KEY,
+    label TEXT NOT NULL,
+    icon TEXT DEFAULT '',
+    sort_order INTEGER DEFAULT 0
+);
+
 CREATE TABLE IF NOT EXISTS streak (
     id INTEGER PRIMARY KEY CHECK(id=1),
     count INTEGER DEFAULT 0,
@@ -88,7 +95,7 @@ CREATE TABLE IF NOT EXISTS methods (
 
 CREATE TABLE IF NOT EXISTS exercises (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    module TEXT NOT NULL,
+    module TEXT NOT NULL REFERENCES modules(id),
     category TEXT DEFAULT '',
     question_type TEXT DEFAULT '',
     title TEXT DEFAULT '',
@@ -102,7 +109,7 @@ CREATE TABLE IF NOT EXISTS exercises (
 
 CREATE TABLE IF NOT EXISTS training_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    module TEXT NOT NULL,
+    module TEXT NOT NULL REFERENCES modules(id),
     exercise_id INTEGER DEFAULT 0,
     question TEXT DEFAULT '',
     user_answer TEXT DEFAULT '',

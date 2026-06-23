@@ -10,6 +10,7 @@ let dbLocal = null;
   try {
     const SQL = await initSqlJs({ locateFile: f => f });
     dbLocal = new SQL.Database();
+    dbLocal.run("CREATE TABLE IF NOT EXISTS modules (id TEXT PRIMARY KEY, label TEXT NOT NULL, icon TEXT DEFAULT '', sort_order INTEGER DEFAULT 0)");
     dbLocal.run("CREATE TABLE IF NOT EXISTS streak (id INTEGER PRIMARY KEY CHECK(id=1), count INTEGER DEFAULT 0, last_active TEXT)");
     dbLocal.run("INSERT OR IGNORE INTO streak VALUES (1,0,'')");
     dbLocal.run("CREATE TABLE IF NOT EXISTS flashcard_log (id INTEGER PRIMARY KEY AUTOINCREMENT, deck TEXT, card_word TEXT, rating TEXT, reviewed_at TEXT DEFAULT (datetime('now','localtime')))");
