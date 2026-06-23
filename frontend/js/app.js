@@ -168,6 +168,19 @@ function markTaskDone(task) {
   S.completedTasks[task] = true;
   renderDailyChecklist();
 }
+function updateTaskCounts() {
+  var map = {flashcard:'flashcard',reading:'modern_reading',classical:'classical_reading',language:'grammar',writing:'writing'};
+  for (var t in map) {
+    var el = document.getElementById('taskCnt-'+t);
+    if (!el) continue;
+    try {
+      var rows = localQuery('SELECT COUNT(*) FROM exercises WHERE module=?', [map[t]]);
+      var n = rows.length && rows[0] ? rows[0][0] : 0;
+      el.textContent = n > 0 ? ' · ' + n + '题' : '';
+      el.style.cssText = 'font-size:11px;color:var(--accent);margin-left:4px;';
+    } catch(e) { el.textContent = ''; }
+  }
+}
 function renderDailyChecklist() {
   const done = Object.keys(S.completedTasks).length;
   const total = DAILY_TASKS.length;
@@ -211,6 +224,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadCompletedTasks();
   checkStreak();
   renderSymbols();
+  updateTaskCounts();
   renderReadingTabs();
   renderBooks();
   renderPlan();
