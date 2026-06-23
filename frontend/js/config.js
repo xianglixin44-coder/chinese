@@ -24,6 +24,7 @@ App.SRS_INTERVALS = [1, 2, 4, 8, 16, 32, 64, 128];
 App.MASTERY_INTERVAL = 32;
 App.DAILY_CARD_LIMIT = 20;
 App.DAILY_TASKS = ['flashcard', 'reading', 'classical', 'language', 'writing'];
+App.DAILY_COUNTS = { flashcard: 20, reading: 3, classical: 5, language: 3, writing: 1 };
 App.API_BASE = 'http://localhost:3200';
 
 // Global aliases for split files that reference bare names

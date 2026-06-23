@@ -170,9 +170,10 @@ function markTaskDone(task) {
 }
 function updateTaskCounts() {
   var counts = {flashcard:193, reading:9, classical:50, language:9, writing:9};
+  var daily = App.DAILY_COUNTS;
   for (var t in counts) {
     var el = document.getElementById('taskCnt-'+t);
-    if (el) { el.textContent = ' · ' + counts[t] + '题'; el.style.cssText = 'font-size:11px;color:var(--accent);margin-left:4px;'; }
+    if (el) { el.textContent = ' · ' + (daily[t]||'?') + '/' + counts[t] + '题'; }
   }
 }
 function renderDailyChecklist() {
