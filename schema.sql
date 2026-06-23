@@ -48,17 +48,6 @@ CREATE TABLE IF NOT EXISTS training_sessions (
     created_at TEXT DEFAULT (datetime('now','localtime'))
 );
 
-CREATE TABLE IF NOT EXISTS imported_exercises (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    module TEXT,
-    ex_type TEXT,
-    question TEXT,
-    options_json TEXT,
-    answer TEXT,
-    explanation TEXT,
-    created_at TEXT DEFAULT (datetime('now','localtime'))
-);
-
 CREATE TABLE IF NOT EXISTS card_srs (
     deck TEXT,
     card_idx INTEGER,

@@ -107,7 +107,7 @@ def import_exercises(body: ImportExercises):
         for row in body.rows:
             if len(row) >= 6:
                 conn.execute(
-                    "INSERT INTO imported_exercises (module, ex_type, question, options_json, answer, explanation) VALUES (?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO exercises (module, type, question, options_json, answer, explanation, content) VALUES (?, ?, ?, ?, ?, ?, '')",
                     [row[0] or '', row[1] or '', row[2] or '', row[3] or '', row[4] or '', row[5] or ''])
                 count += 1
         conn.commit()
