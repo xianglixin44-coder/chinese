@@ -92,7 +92,7 @@ function navigate(page, keepNav, anchor) {
   document.getElementById('sidebar').classList.remove('open');
   if (page === 'calendar') { renderCalendar(); }
   if (page === 'records') { renderRecords(); }
-  if (page === 'classical' && deckQueue.length > 0) { showCard(); }
+  if (page === 'classical' && deckQueue && deckQueue.length > 0) { showCard(); }
   if (page === 'method') { renderMethodPage(); }
   if (page === 'wrong') { renderWrongPage(); }
   if (page === 'history') { renderTrainingHistory(); }

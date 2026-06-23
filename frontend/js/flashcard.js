@@ -2,6 +2,7 @@
 // Depends on: config.js, utils.js, data.js, api.js
 // Provides: initDeck, shuffle, showCard, flipCard, rateCard
 
+var deckQueue = [];
 async function initDeck(name) {
   currentDeck = name; deckIndex = 0;
   // 优先从服务端题库加载，API 不可用时回退到硬编码数据
