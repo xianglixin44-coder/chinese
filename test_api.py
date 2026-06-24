@@ -389,3 +389,50 @@ class TestImportExercises:
         r = client.post("/api/import/exercises", json={"rows": []})
         assert r.status_code == 200
         assert r.json()["count"] == 0
+
+class TestDuanju:
+    """断句题库完整性测试"""
+    import json as _json
+
+    def test_duanju_api_returns_items(self):
+        """API应返回足量断句题目"""
+        r = client.get("/api/exercises?module=classical_reading&type=duanju&limit=200")
+        assert r.status_code == 200
+        data = r.json()
+        assert "items" in data
+        assert len(data["items"]) >= 20, f"至少应有20道断句题，实际{len(data['items'])}道"
+
+    def test_duanju_each_has_valid_options(self):
+        """每道断句题应有4个带/的选项"""
+        r = client.get("/api/exercises?module=classical_reading&type=duanju&limit=200")
+        for item in r.json()["items"]:
+            opts = self._json.loads(item["options_json"])
+            assert len(opts) == 4, f"id={item['id']} 选项数={len(opts)}，应为4"
+            for o in opts:
+                assert '/' in o, f"id={item['id']} 选项缺少断句符"
+
+    def test_duanju_each_has_valid_answer(self):
+        """答案应为A/B/C/D"""
+        r = client.get("/api/exercises?module=classical_reading&type=duanju&limit=200")
+        for item in r.json()["items"]:
+            assert item["answer"] in ("A","B","C","D"), f"id={item['id']} 答案={item['answer']}"
+
+    def test_duanju_each_has_content(self):
+        """每道题应有原文"""
+        r = client.get("/api/exercises?module=classical_reading&type=duanju&limit=200")
+        for item in r.json()["items"]:
+            assert len(item["content"]) > 10, f"id={item['id']} 内容过短"
+
+    def test_duanju_each_has_explanation(self):
+        """每道题应有解析"""
+        r = client.get("/api/exercises?module=classical_reading&type=duanju&limit=200")
+        for item in r.json()["items"]:
+            assert len(item.get("explanation","")) > 10, f"id={item['id']} 缺少解析"
+
+    def test_duanju_answer_matches_option(self):
+        """答案索引对应正确选项"""
+        r = client.get("/api/exercises?module=classical_reading&type=duanju&limit=200")
+        for item in r.json()["items"]:
+            opts = self._json.loads(item["options_json"])
+            aidx = ord(item["answer"]) - 65
+            assert 0 <= aidx < len(opts), f"id={item['id']} 答案索引越界"
