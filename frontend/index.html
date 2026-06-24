@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>语文提高训练</title>
 <script src="/sql-wasm.js"></script>
-<link rel="stylesheet" href="/css/style.css?v=2.4">
+<link rel="stylesheet" href="/css/style.css?v=3.0">
 </head>
 <body>
 
@@ -322,94 +322,115 @@
       <button class="btn-hard" onclick="rateCard('hard')">🤔 模糊</button>
       <button class="btn-easy" onclick="rateCard('easy')">😊 记得</button>
     </div>
-  </div>
 
+  <!-- ===== 高考题型训练（按高考全国卷结构组织） ===== -->
+
+  <!-- 题型一：文言文阅读（19分） -->
   <div class="card">
-    <h3>🧩 文言特殊句式拆解</h3>
-    <p style="margin-bottom:8px;">像数学题一样拆解宾语前置、介宾后置、定语后置。</p>
-    <div class="flex" style="margin-bottom:8px;">
-      <span class="badge-sm bg-blue" style="cursor:pointer;" onclick="loadSyntaxExample(0)">宾语前置: 大王来何操</span>
-      <span class="badge-sm bg-red" style="cursor:pointer;" onclick="loadSyntaxExample(1)">介宾后置: 战于长勺</span>
-      <span class="badge-sm bg-gold" style="cursor:pointer;" onclick="loadSyntaxExample(2)">定语后置: 马之千里者</span>
+    <div class="flex" style="align-items:center;gap:8px;margin-bottom:8px;">
+      <h3 style="margin:0;">📖 题型一：文言文阅读</h3>
+      <span class="score-badge" style="background:#e8f0e8;color:#27ae60;font-size:11px;">19分</span>
     </div>
-    <input class="gram-input" id="syntaxInput" placeholder="输入文言句子…">
-    <button class="btn-primary" onclick="analyzeSyntax()">🔍 拆解</button>
-    <div id="syntaxResult" class="mt-12"></div>
+    <div class="gaokao-tabs" style="display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap;">
+      <span class="gk-tab active" data-gk="duanju" onclick="switchGKTab('classical','duanju',this)" style="padding:4px 12px;border-radius:12px;font-size:12px;cursor:pointer;background:var(--primary);color:#fff;">✂️ 断句 3分</span>
+      <span class="gk-tab" data-gk="wenhua" onclick="switchGKTab('classical','wenhua',this)" style="padding:4px 12px;border-radius:12px;font-size:12px;cursor:pointer;background:var(--surface);border:1px solid var(--border);">🏛️ 文化常识 3分</span>
+      <span class="gk-tab" data-gk="neirong" onclick="switchGKTab('classical','neirong',this)" style="padding:4px 12px;border-radius:12px;font-size:12px;cursor:pointer;background:var(--surface);border:1px solid var(--border);">📋 内容概括 3分</span>
+      <span class="gk-tab" data-gk="fanyi" onclick="switchGKTab('classical','fanyi',this)" style="padding:4px 12px;border-radius:12px;font-size:12px;cursor:pointer;background:var(--surface);border:1px solid var(--border);">📝 翻译 10分</span>
+    </div>
+
+    <!-- 断句 -->
+    <div class="gk-panel" id="gk-classical-duanju">
+      <p class="text-light mb-8">选择正确断句位置，模拟高考第10题。</p>
+      <div class="flex" style="margin-bottom:10px;flex-wrap:wrap;gap:4px;">
+        <span class="badge-sm bg-blue" style="cursor:pointer;" onclick="loadDuanjuExample(0)">2019 I卷 贾生</span>
+        <span class="badge-sm bg-red" style="cursor:pointer;" onclick="loadDuanjuExample(1)">苏轼</span>
+        <span class="badge-sm bg-gold" style="cursor:pointer;" onclick="loadDuanjuExample(2)">2017 I卷 谢弘微</span>
+        <span class="badge-sm bg-blue" style="cursor:pointer;" onclick="loadDuanjuExample(3)">2020 I卷 苏轼传</span>
+        <span class="badge-sm bg-red" style="cursor:pointer;" onclick="loadDuanjuExample(4)">吴起</span>
+      </div>
+      <input type="hidden" id="duanjuIdx" value="0">
+      <div id="duanjuContent"><p style="color:var(--text-light);font-size:13px;">点击标签开始练习</p></div>
+      <button class="btn-primary mt-8" onclick="nextDuanju()" style="font-size:13px;">下一题 →</button>
+    </div>
+
+    <!-- 文化常识 -->
+    <div class="gk-panel" id="gk-classical-wenhua" style="display:none;">
+      <p class="text-light mb-8">高考第11题：古代文化常识选择。</p>
+      <div id="wenhuaContent">
+        <p style="color:var(--text-light);font-size:13px;">准备中——可先使用闪卡「文学常识」牌组</p>
+      </div>
+    </div>
+
+    <!-- 内容概括 -->
+    <div class="gk-panel" id="gk-classical-neirong" style="display:none;">
+      <p class="text-light mb-8">高考第12题：对原文内容的概括和分析。</p>
+      <div id="neirongContent">
+        <p style="color:var(--text-light);font-size:13px;">准备中——可结合断句和翻译练习</p>
+      </div>
+    </div>
+
+    <!-- 翻译 -->
+    <div class="gk-panel" id="gk-classical-fanyi" style="display:none;">
+      <p class="text-light mb-8">高考第13题：翻译文中画线句子（10分）。</p>
+      <div class="flex" style="margin-bottom:8px;flex-wrap:wrap;gap:4px;">
+        <span class="badge-sm bg-blue" style="cursor:pointer;" onclick="loadTranslationExample(0)">词类活用（面、刺）</span>
+        <span class="badge-sm bg-red" style="cursor:pointer;" onclick="loadTranslationExample(1)">被动句（为所吞）</span>
+        <span class="badge-sm bg-gold" style="cursor:pointer;" onclick="loadTranslationExample(2)">古今异义（卑鄙）</span>
+      </div>
+      <input class="gram-input" id="translationInput" placeholder="输入文言句子，生成对齐分析…">
+      <button class="btn-primary" onclick="analyzeTranslation()">🔍 双语对齐拆解</button>
+      <div id="translationResult" class="mt-12"></div>
+      <hr style="margin:12px 0;border:none;border-top:1px solid var(--border);">
+      <p style="font-size:12px;color:var(--text-light);margin-bottom:6px;"><strong>翻译练习：</strong></p>
+      <div class="exercise-item">
+        <p><strong>1.</strong> 群臣吏民能<span class="fw-bold-highlight" style="border-bottom:2px solid var(--gold);color:var(--gold);">面</span>刺寡人之过者，受上赏。</p>
+        <button class="btn-small" onclick="toggleAnswer('ex-classical-1')">查看答案</button>
+        <div class="ex-answer" id="ex-classical-1" style="display:none">
+          <p><strong>翻译：</strong>能够<strong>当面</strong>指责我的过失的，给予上赏。</p>
+          <p><strong>考点：</strong>「面」— 名词作状语，当面。</p>
+        </div>
+      </div>
+      <div class="exercise-item mt-8">
+        <p><strong>2.</strong> 大王来<span class="fw-bold-highlight" style="border-bottom:2px solid var(--gold);color:var(--gold);">何</span>操？</p>
+        <button class="btn-small" onclick="toggleAnswer('ex-classical-2')">查看答案</button>
+        <div class="ex-answer" id="ex-classical-2" style="display:none">
+          <p><strong>翻译：</strong>大王来时带了<strong>什么</strong>？</p>
+          <p><strong>考点：</strong>宾语前置句（大王来操何）</p>
+        </div>
+      </div>
+      <div class="exercise-item mt-8">
+        <p><strong>3.</strong> 故余<span class="fw-bold-highlight" style="border-bottom:2px solid var(--gold);color:var(--gold);">虽</span>愚，<span class="fw-bold-highlight" style="border-bottom:2px solid var(--gold);color:var(--gold);">卒</span>获有所闻。</p>
+        <button class="btn-small" onclick="toggleAnswer('ex-classical-3')">查看答案</button>
+        <div class="ex-answer" id="ex-classical-3" style="display:none">
+          <p><strong>翻译：</strong>所以我<strong>即使</strong>愚笨，<strong>最终</strong>还是有所收获。</p>
+          <p><strong>考点：</strong>「虽」表让步，「卒」意为最终。</p>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="card mt-8">
-    <h3>🎯 文言文双语对齐与采分点剖析（对比语言学应用）</h3>
-    <p style="margin-bottom:10px;">对应高考文言文翻译主观题（10分） · 核心方法：直译对齐法（字字落实 + 句法还原）。</p>
-    <div class="flex" style="margin-bottom:8px;">
-      <span class="badge-sm bg-blue" style="cursor:pointer;" onclick="loadTranslationExample(0)">例一：词类活用（面、刺）</span>
-      <span class="badge-sm bg-red" style="cursor:pointer;" onclick="loadTranslationExample(1)">例二：特殊句式与被动（为所吞）</span>
-      <span class="badge-sm bg-gold" style="cursor:pointer;" onclick="loadTranslationExample(2)">例三：双音节词古今异义（卑鄙）</span>
+  <!-- 题型二：古代诗歌阅读（9分） -->
+  <div class="card">
+    <div class="flex" style="align-items:center;gap:8px;margin-bottom:8px;">
+      <h3 style="margin:0;">🎭 题型二：古代诗歌阅读</h3>
+      <span class="score-badge" style="background:#fde8e8;color:#c0392b;font-size:11px;">9分</span>
     </div>
-    <input class="gram-input" id="translationInput" placeholder="输入文言句子，点击生成对齐分析…">
-    <button class="btn-primary" onclick="analyzeTranslation()">🔍 双语对齐拆解</button>
-    <div id="translationResult" class="mt-12"></div>
+    <p class="text-light mb-8">高考第14~15题：诗歌理解选择 + 简答。</p>
+    <div id="poemContent">
+      <p style="color:var(--text-light);font-size:13px;">准备中——可结合闪卡文学常识训练</p>
+    </div>
   </div>
 
-  <div class="card mt-8">
-    <h3>📝 文言文翻译练习</h3>
-    <p class="text-light mb-8">翻译下列句子，注意加粗字词和特殊句式。</p>
-    
-    <div class="exercise-item">
-      <p><strong>1.</strong> 群臣吏民能<span class="fw-bold-highlight" style="border-bottom:2px solid var(--gold);color:var(--gold);">面</span>刺寡人之过者，受上赏。</p>
-      <button class="btn-small" onclick="toggleAnswer('ex-classical-1')">查看答案</button>
-      <div class="ex-answer" id="ex-classical-1" style="display:none">
-        <p><strong>翻译：</strong>群臣、官吏和百姓，能够<strong>当面</strong>指责我的过失的，给予上等奖赏。</p>
-        <p><strong>考点：</strong>「面」— 名词作状语，当面（而非脸面）。</p>
-      </div>
+  <!-- 题型三：名篇名句默写（6分） -->
+  <div class="card">
+    <div class="flex" style="align-items:center;gap:8px;margin-bottom:8px;">
+      <h3 style="margin:0;">✍️ 题型三：名篇名句默写</h3>
+      <span class="score-badge" style="background:#e8f0e8;color:#27ae60;font-size:11px;">6分</span>
     </div>
-
-    <div class="exercise-item mt-8">
-      <p><strong>2.</strong> 大王来<span class="fw-bold-highlight" style="border-bottom:2px solid var(--gold);color:var(--gold);">何</span>操？</p>
-      <button class="btn-small" onclick="toggleAnswer('ex-classical-2')">查看答案</button>
-      <div class="ex-answer" id="ex-classical-2" style="display:none">
-        <p><strong>翻译：</strong>大王来时带了<strong>什么</strong>？</p>
-        <p><strong>考点：</strong>疑问代词「何」作宾语前置 = <strong>宾语前置句</strong>（正常语序：大王来操何？）</p>
-      </div>
+    <p class="text-light mb-8">高考第16题：情境式默写（3小题，每空1分）。</p>
+    <div id="moxieContent">
+      <p style="color:var(--text-light);font-size:13px;">准备中——可先复习必修+选修必背篇目</p>
     </div>
-
-    <div class="exercise-item mt-8">
-      <p><strong>3.</strong> 故余<span class="fw-bold-highlight" style="border-bottom:2px solid var(--gold);color:var(--gold);">虽</span>愚，<span class="fw-bold-highlight" style="border-bottom:2px solid var(--gold);color:var(--gold);">卒</span>获有所闻。</p>
-      <button class="btn-small" onclick="toggleAnswer('ex-classical-3')">查看答案</button>
-      <div class="ex-answer" id="ex-classical-3" style="display:none">
-        <p><strong>翻译：</strong>所以我<strong>即使</strong>愚笨，<strong>最终</strong>还是有所收获。</p>
-        <p><strong>考点：</strong>「虽」— 即使（表让步，≠虽然）；「卒」— 最终（≠死亡/兵卒）。</p>
-      </div>
-    </div>
-
-    <div class="exercise-item mt-8">
-      <p><strong>4.</strong> 下列句子中，属于<span class="fw-bold-highlight" style="border-bottom:2px solid var(--gold);color:var(--gold);">介宾后置</span>的一句是：</p>
-      <div style="display:grid;gap:4px;margin:8px 0;">
-        <label class="ex-option"><input type="radio" name="q4" value="A" onchange="checkClassicalQ4(this)"> A. 大王来何操？</label>
-        <label class="ex-option"><input type="radio" name="q4" value="B" onchange="checkClassicalQ4(this)"> B. 战于长勺。</label>
-        <label class="ex-option"><input type="radio" name="q4" value="C" onchange="checkClassicalQ4(this)"> C. 马之千里者。</label>
-        <label class="ex-option"><input type="radio" name="q4" value="D" onchange="checkClassicalQ4(this)"> D. 二虫尽为所吞。</label>
-      </div>
-      <div class="ex-answer" id="ex-classical-4" style="display:none">
-        <p><strong>✅ 正确答案：B（战于长勺 = 在长勺作战）</strong></p>
-        <p>A = 宾语前置 | C = 定语后置 | D = 被动句</p>
-      </div>
-    </div>
-
-  <div class="card mt-8">
-    <h3>✂️ 文言文断句训练</h3>
-    <p class="text-light mb-8">高考断句题（3分）—— 选择正确断句位置，系统自动解析考点。</p>
-    <div class="flex" style="margin-bottom:10px;flex-wrap:wrap;gap:4px;">
-      <span class="badge-sm bg-blue" style="cursor:pointer;" onclick="loadDuanjuExample(0)">2019 I卷 贾生</span>
-      <span class="badge-sm bg-red" style="cursor:pointer;" onclick="loadDuanjuExample(1)">苏轼</span>
-      <span class="badge-sm bg-gold" style="cursor:pointer;" onclick="loadDuanjuExample(2)">2017 I卷 谢弘微</span>
-      <span class="badge-sm bg-blue" style="cursor:pointer;" onclick="loadDuanjuExample(3)">2020 I卷 苏轼传</span>
-      <span class="badge-sm bg-red" style="cursor:pointer;" onclick="loadDuanjuExample(4)">吴起</span>
-    </div>
-    <input type="hidden" id="duanjuIdx" value="0">
-    <div id="duanjuContent">
-      <p style="color:var(--text-light);font-size:13px;">点击上方标签开始练习</p>
-    </div>
-    <button class="btn-primary mt-8" onclick="nextDuanju()" style="font-size:13px;">下一题 →</button>
   </div>
 
   </div></div>
