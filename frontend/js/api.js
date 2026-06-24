@@ -289,6 +289,7 @@ window.getGrammarCount = getGrammarCount;
 window.saveAssessment = saveAssessment;
 window.checkApi = checkApi;
 window.loadDuanjuFromDB = loadDuanjuFromDB;
+window.DUANJU_EXAMPLES = DUANJU_EXAMPLES;
 window.DECKS = DECKS;
 window.DECK_XUCI = DECK_XUCI;
 window.PLAN_WEEKS = PLAN_WEEKS;
