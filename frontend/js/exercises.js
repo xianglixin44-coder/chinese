@@ -583,6 +583,11 @@ function checkMoxie(idx) {
   apiCall('POST','/api/training/log',{module:'名篇默写',exercise_id:idx,question:items[idx].question,user_answer:input,correct_answer:answer,is_correct:isCorrect?1:0});
 }
 
+window.loadDuanjuExample = loadDuanjuExample;
+window.checkDuanju = checkDuanju;
+window.nextDuanju = nextDuanju;
+window.ensureDuanjuLoaded = ensureDuanjuLoaded;
+window.switchGKTab = switchGKTab;
 window.applyTemplate = applyTemplate;
 window.analyzeGrammar = analyzeGrammar;
 window.analyzeSyntax = analyzeSyntax;
