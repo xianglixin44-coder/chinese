@@ -820,7 +820,6 @@ async function loadDuanjuFromDB() {
     var data = await fetchExercises('classical_reading', 'duanju');
     if (data && data.items && data.items.length) {
       DUANJU_EXAMPLES = data.items.map(function(item, i) {
-        window.DUANJU_EXAMPLES = DUANJU_EXAMPLES;  // sync IIFE var → window
         var opts = [];
         try { opts = JSON.parse(item.options_json); } catch(e) {}
         var answerIdx = (item.answer || 'A').charCodeAt(0) - 65;
@@ -834,6 +833,7 @@ async function loadDuanjuFromDB() {
           analysis: (item.explanation || '') + (src ? '\n📚 出处：' + src : '')
         };
       });
+      window.DUANJU_EXAMPLES = DUANJU_EXAMPLES;  // sync after map completes
     }
   } catch(e) { console.warn('断句数据加载失败', e); }
   return DUANJU_EXAMPLES;
