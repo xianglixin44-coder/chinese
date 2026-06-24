@@ -179,6 +179,7 @@ async function loadDuanjuFromDB() {
     var data = await fetchExercises('classical_reading', 'duanju');
     if (data && data.items && data.items.length) {
       DUANJU_EXAMPLES = data.items.map(function(item, i) {
+        window.DUANJU_EXAMPLES = DUANJU_EXAMPLES;  // sync IIFE var → window
         var opts = [];
         try { opts = JSON.parse(item.options_json); } catch(e) {}
         var answerIdx = (item.answer || 'A').charCodeAt(0) - 65;
@@ -287,7 +288,6 @@ window.getTemplateCount = getTemplateCount;
 window.getGrammarCount = getGrammarCount;
 window.saveAssessment = saveAssessment;
 window.checkApi = checkApi;
-window.DUANJU_EXAMPLES = DUANJU_EXAMPLES;
 window.loadDuanjuFromDB = loadDuanjuFromDB;
 window.DECKS = DECKS;
 window.DECK_XUCI = DECK_XUCI;
