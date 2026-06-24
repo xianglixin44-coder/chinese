@@ -342,14 +342,14 @@
     <div class="gk-panel" id="gk-classical-duanju">
       <p class="text-light mb-8">选择正确断句位置，模拟高考第10题。</p>
       <div class="flex" style="margin-bottom:10px;flex-wrap:wrap;gap:4px;">
-        <span class="badge-sm bg-blue" style="cursor:pointer;" onclick="loadDuanjuExample(0)">2019 I卷 贾生</span>
-        <span class="badge-sm bg-red" style="cursor:pointer;" onclick="loadDuanjuExample(1)">苏轼</span>
-        <span class="badge-sm bg-gold" style="cursor:pointer;" onclick="loadDuanjuExample(2)">2017 I卷 谢弘微</span>
-        <span class="badge-sm bg-blue" style="cursor:pointer;" onclick="loadDuanjuExample(3)">2020 I卷 苏轼传</span>
-        <span class="badge-sm bg-red" style="cursor:pointer;" onclick="loadDuanjuExample(4)">吴起</span>
+        <span class="badge-sm bg-blue" style="cursor:pointer;" onclick="loadDuanjuExample(0)">🔀 随机一题</span>
+        <span class="badge-sm bg-red" style="cursor:pointer;" onclick="loadDuanjuExample('random')">🎲 随机抽题</span>
+      </div>
+      <div class="flex" style="margin-bottom:10px;flex-wrap:wrap;gap:4px;" id="duanjuTagList">
+        <span style="color:var(--text-light);font-size:12px;">共 <span id="duanjuTotalCount">0</span> 题 · 点击上方开始</span>
       </div>
       <input type="hidden" id="duanjuIdx" value="0">
-      <div id="duanjuContent"><p style="color:var(--text-light);font-size:13px;">点击标签开始练习</p></div>
+      <div id="duanjuContent"><p style="color:var(--text-light);font-size:13px;">🔽 点击「随机一题」或「随机抽题」开始练习</p></div>
       <button class="btn-primary mt-8" onclick="nextDuanju()" style="font-size:13px;">下一题 →</button>
     </div>
 
