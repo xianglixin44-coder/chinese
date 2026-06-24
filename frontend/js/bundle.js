@@ -812,53 +812,32 @@ const SYMBOLS = [
   {sentence:"战于长勺", analysis:"Step1 提主干：（省略主语）+战（V）+于长勺（补语）\n→ 现代汉语语序应为「在长勺作战」\n→ 介宾短语「于长勺」后置于动词 = 介宾后置（状语后置）\n\nStep2 规则：古汉语中，「于/以」引导的介宾结构常放在动词之后\n\nStep3 现代语序：「在长勺作战」"},
   {sentence:"马之千里者", analysis:"Step1 提主干：马（中心词）+之（助词）+千里（定语）+者（助词）\n→ 现代语序应为「千里马」或「能行千里的马」\n→ 定语「千里」后置于中心词「马」= 定语后置\n\nStep2 标志：中心词+之+定语+者\n\nStep3 现代语序：「能行千里的马」"},
 ];
-const DUANJU_EXAMPLES = [
-  {sentence:"贾生名谊洛阳人也年十八以能诵诗属书闻于郡中吴廷尉为河南守闻其秀才召置门下甚幸爱",
-   options:[
-     "贾生名谊/洛阳人也/年十八/以能诵诗属书闻于郡中吴廷尉/为河南守/闻其秀才召置门下/甚幸爱",
-     "贾生名谊/洛阳人也/年十八/以能诵诗属书闻于郡中/吴廷尉为河南守/闻其秀才/召置/门下甚幸爱",
-     "贾生名谊/洛阳人也/年十八/以能诵诗属书闻于郡中/吴廷尉为河南守/闻其秀才/召置门下/甚幸爱",
-     "贾生名谊/洛阳人也/年十八/以能诵诗属书闻/于郡中吴廷尉为河南守/闻其秀才/召置门下甚幸爱"
-   ],
-   answer:2,
-   analysis:"【第一步】找名词主语：「贾生」「吴廷尉」各领一句\n【第二步】看虚词：「也」后必断\n【第三步】「闻其秀才」动宾完整，不能拆分；「召置门下」是固定搭配\n→ 正确答案：C (2019全国I卷)"},
-  {sentence:"苏轼字子瞻眉州眉山人母程氏亲授以书闻古今成败辄能语其要",
-   options:[
-     "苏轼字子瞻/眉州眉山人/母程氏亲授以书/闻古今成败/辄能语其要",
-     "苏轼字子瞻眉州/眉山人/母程氏亲授以书闻/古今成败辄能语其要",
-     "苏轼字子瞻/眉州眉山人母/程氏亲授以书/闻古今成败辄能语其要",
-     "苏轼字子瞻/眉州眉山人/母程氏亲授/以书闻古今成败/辄能语其要"
-   ],
-   answer:0,
-   analysis:"【第一步】「子瞻」是字，后断\n【第二步】「眉州眉山人」籍贯，独立成句\n【第三步】「母程氏」新主语出现，前断\n→ 正确答案：A"},
-  {sentence:"童幼时精神端审时然后言所继叔父混名知人见而异之谓思曰此儿深中夙敏方成佳器有子如此足矣",
-   options:[
-     "童幼时/精神端审/时然后言/所继叔父混名知人/见而异之/谓思曰/此儿深中夙敏方成/佳器有子如此/足矣",
-     "童幼时/精神端审/时然后言所继叔父/混名知人/见而异之/谓思曰/此儿深中夙敏/方成佳器/有子如此/足矣",
-     "童幼时/精神端审/时然后言所继叔父/混名知人/见而异之/谓思曰/此儿深中夙敏方成/佳器有子如此/足矣",
-     "童幼时/精神端审/时然后言/所继叔父混名知人/见而异之/谓思曰/此儿深中夙敏/方成佳器/有子如此/足矣"
-   ],
-   answer:3,
-   analysis:"【第一步】「童幼时」时间状语独立断\n【第二步】「精神端审」主谓结构完整\n【第三步】「谓思曰」对话标志，前后皆断\n→ 正确答案：D (2017全国I卷)"},
-  {sentence:"三年权知礼部贡举会大雪苦寒士坐庭中噤未能言轼宽其禁约使得尽技巡辅内侍每摧辱举子且持暧昧单词诬以为罪轼尽奏逐之",
-   options:[
-     "三年/权知礼部贡举/会大雪苦寒/士坐庭中/噤未能言/轼宽其禁约/使得尽技/巡辅内侍每摧辱举子/且持暧昧单词/诬以为罪/轼尽奏逐之",
-     "三年/权知礼部贡举/会大雪苦寒/士坐庭中噤/未能言轼/宽其禁约/使得尽技/巡辅内侍/每摧辱举子且持暧昧单词/诬以为罪/轼尽奏逐之",
-     "三年/权知礼部贡举/会大雪苦寒/士坐庭中噤/未能言轼/宽其禁约/使得尽技巡辅内侍/每摧辱举子/且持暧昧单词/诬以为罪/轼尽奏逐之",
-     "三年/权知礼部贡举/会大雪苦寒/士坐庭中/噤未能言/轼宽其禁约/使得尽技巡辅内侍/每摧辱举子/且持暧昧单词/诬以为罪/轼尽奏逐之"
-   ],
-   answer:0,
-   analysis:"【第一步】「三年」时间状语后断\n【第二步】「士坐庭中/噤未能言」两个连续主谓，中间断\n【第三步】「轼」新主语出现前必断\n→ 正确答案：A (2020全国I卷)"},
-  {sentence:"鲁人或曰夫鲁小国而有战胜之名则诸侯图鲁矣且鲁卫兄弟之国也而君用起则是弃卫鲁君疑之谢吴起",
-   options:[
-     "鲁人或曰/夫鲁小国/而有战胜之名/则诸侯图鲁矣/且鲁卫兄弟之国也/而君用起/则是弃卫/鲁君疑之/谢吴起",
-     "鲁人或曰夫/鲁小国而有战胜之名/则诸侯图鲁矣/且鲁卫兄弟之国也/而君用起/则是弃卫/鲁君疑之谢吴起",
-     "鲁人或曰/夫鲁小国/而有战胜之名/则诸侯图鲁矣/且鲁卫兄弟之国也/而君用起则/是弃卫鲁君/疑之谢吴起",
-     "鲁人或曰夫鲁/小国而有战胜之名/则诸侯图鲁矣/且鲁卫兄弟之国也/而君用起/则是弃卫/鲁君疑之/谢吴起"
-   ],
-   answer:0,
-   analysis:"【第一步】「曰」后断——对话标志最高优先级\n【第二步】「夫」句首发语词，后接完整句子\n【第三步】「矣」「也」句末语气词后必断\n→ 正确答案：A"},
-];
+// 断句题库 — 从后端数据库动态加载
+var DUANJU_EXAMPLES = [];
+async function loadDuanjuFromDB() {
+  if (DUANJU_EXAMPLES.length > 0) return DUANJU_EXAMPLES;
+  try {
+    var data = await fetchExercises('classical_reading', 'duanju');
+    if (data && data.items && data.items.length) {
+      DUANJU_EXAMPLES = data.items.map(function(item, i) {
+        var opts = [];
+        try { opts = JSON.parse(item.options_json); } catch(e) {}
+        var answerIdx = (item.answer || 'A').charCodeAt(0) - 65;
+        if (answerIdx < 0 || answerIdx > 3) answerIdx = 0;
+        var src = '';
+        try { var ext = JSON.parse(item.extra_json); src = ext.source || ''; } catch(e) {}
+        return {
+          sentence: item.content || '',
+          options: opts,
+          answer: answerIdx,
+          analysis: (item.explanation || '') + (src ? '\n📚 出处：' + src : '')
+        };
+      });
+    }
+  } catch(e) { console.warn('断句数据加载失败', e); }
+  return DUANJU_EXAMPLES;
+}
+;
 
 const TRANSLATION_EXAMPLES = [
   {sentence:"群臣吏民能面刺寡人之过者，受上赏。",analysis:"📌 【双语字字对齐与采分点】\n\n1️⃣ 【字字落实（对齐）】:\n- 群臣吏民：大小官吏和百姓\n- 能：能够\n- 面：【采分点1】当面（名词作状语，译为「当面」，不能译为「脸面」）\n- 刺：【采分点2】指责/批评\n- 寡人：我（君王自称）\n- 之：的\n- 过：过失/过错\n- 者：……的人（定语后置标志）\n- 受：获得\n- 上赏：上等奖赏\n\n2️⃣ 【句法还原（结构调整）】:\n- 原文「群臣吏民能面刺寡人之过者」属于定语后置句。\n\n3️⃣ 【高考规范译文】:\n大小官吏和百姓，能够当面指责我的过错的，给予上等奖赏。"},
@@ -949,6 +928,8 @@ window.getTemplateCount = getTemplateCount;
 window.getGrammarCount = getGrammarCount;
 window.saveAssessment = saveAssessment;
 window.checkApi = checkApi;
+window.DUANJU_EXAMPLES = DUANJU_EXAMPLES;
+window.loadDuanjuFromDB = loadDuanjuFromDB;
 window.DECKS = DECKS;
 window.DECK_XUCI = DECK_XUCI;
 window.PLAN_WEEKS = PLAN_WEEKS;
@@ -1405,10 +1386,23 @@ function analyzeNovel() {
   checkStreak(); updateHomeStats();
 }
 
-// ====== 断句训练 ======
-function loadDuanjuExample(idx) {
+// ====== 断句训练（从后端数据库加载）======
+async function loadDuanjuExample(idx) {
+  // 确保数据已加载
+  await ensureDuanjuLoaded();
+  // 随机模式
+  if (idx === 'random') {
+    var total = (DUANJU_EXAMPLES && DUANJU_EXAMPLES.length) || 1;
+    idx = Math.floor(Math.random() * total);
+  }
   const today = new Date().toISOString().slice(0, 10);
-  var ex = DUANJU_EXAMPLES[idx];
+  var examples = DUANJU_EXAMPLES;
+  if (!examples || !examples.length) {
+    document.getElementById('duanjuContent').innerHTML = '<p style="color:var(--text-light);font-size:13px;">暂无断句题目，请先导入数据。</p>';
+    return;
+  }
+  if (idx >= examples.length) idx = 0;
+  var ex = examples[idx];
   var html = '<div class="duanju-exercise">';
   html += '<div class="duanju-passage"><p><strong>原文（无标点）：</strong></p>';
   html += '<p class="duanju-text" style="font-size:16px;line-height:2;letter-spacing:1px;background:#f8f6f0;padding:12px;border-radius:6px;border:1px solid #e0d8c8;">' + htmlesc(ex.sentence) + '</p></div>';
@@ -1432,17 +1426,30 @@ function loadDuanjuExample(idx) {
   checkStreak(); updateHomeStats();
 }
 
+async function ensureDuanjuLoaded() {
+  if (typeof loadDuanjuFromDB === 'function' && (!DUANJU_EXAMPLES || !DUANJU_EXAMPLES.length)) {
+    await loadDuanjuFromDB();
+  }
+  // 更新题目总数
+  var cntEl = document.getElementById('duanjuTotalCount');
+  if (cntEl && DUANJU_EXAMPLES) cntEl.textContent = DUANJU_EXAMPLES.length;
+}
+
 function checkDuanju(idx, selected, el) {
-  var ex = DUANJU_EXAMPLES[idx];
+  var examples = DUANJU_EXAMPLES;
+  if (!examples || !examples.length || idx >= examples.length) return;
+  var ex = examples[idx];
   var allOpts = document.querySelectorAll('.duanju-options .ex-option');
   allOpts.forEach(function(o) { o.style.borderColor = 'var(--border)'; o.style.background = ''; });
   if (selected === ex.answer) {
     el.style.borderColor = '#27ae60'; el.style.background = '#e8f8e8';
   } else {
     el.style.borderColor = '#c0392b'; el.style.background = '#fde8e8';
-    allOpts[ex.answer].style.borderColor = '#27ae60'; allOpts[ex.answer].style.background = '#e8f8e8';
+    if (ex.answer >= 0 && ex.answer < allOpts.length) {
+      allOpts[ex.answer].style.borderColor = '#27ae60'; allOpts[ex.answer].style.background = '#e8f8e8';
+    }
   }
-  document.getElementById('duanju-result-' + idx).innerHTML = '<div class="ex-answer" style="display:block;border-left:3px solid ' + (selected === ex.answer ? '#27ae60' : '#c0392b') + ';padding:10px 14px;background:#fafafa;border-radius:6px;margin-top:8px;"><p style="font-weight:600;margin-bottom:4px;">' + (selected === ex.answer ? '✅ 正确！' : '❌ 正确答案是 ' + ['A','B','C','D'][ex.answer]) + '</p><pre class="analysis" style="font-family:inherit;font-size:13px;white-space:pre-wrap;">' + ex.analysis + '</pre></div>';
+  document.getElementById('duanju-result-' + idx).innerHTML = '<div class="ex-answer" style="display:block;border-left:3px solid ' + (selected === ex.answer ? '#27ae60' : '#c0392b') + ';padding:10px 14px;background:#fafafa;border-radius:6px;margin-top:8px;"><p style="font-weight:600;margin-bottom:4px;">' + (selected === ex.answer ? '✅ 正确！' : '❌ 正确答案是 ' + ['A','B','C','D'][ex.answer]) + '</p><pre class="analysis" style="font-family:inherit;font-size:13px;white-space:pre-wrap;">' + (ex.analysis || '') + '</pre></div>';
   if (selected !== ex.answer) {
     apiCall('POST', '/api/training/log', {module: '断句', exercise_id: idx, question: ex.sentence.substring(0, 30), user_answer: ['A','B','C','D'][selected], correct_answer: ['A','B','C','D'][ex.answer], is_correct: 0});
   }
@@ -1450,32 +1457,214 @@ function checkDuanju(idx, selected, el) {
 
 function nextDuanju() {
   var idx = parseInt(document.getElementById('duanjuIdx').value || '0');
-  var next = (idx + 1) % DUANJU_EXAMPLES.length;
+  var total = (DUANJU_EXAMPLES && DUANJU_EXAMPLES.length) || 1;
+  var next = (idx + 1) % total;
   loadDuanjuExample(next);
 }
-
-// ====== 高考题型切换 ======
+// ====== 高考题型切换（含断句数据自动加载）======
 function switchGKTab(page, tab, el) {
-  // Hide all panels
-  var panels = document.querySelectorAll('#page-' + page + ' .gk-panel');
-  panels.forEach(function(p) { p.style.display = 'none'; });
-  // Show selected panel
-  var target = document.getElementById('gk-' + page + '-' + tab);
-  if (target) target.style.display = 'block';
-  // Update tab styles
-  var tabs = document.querySelectorAll('#page-' + page + ' .gk-tab');
-  tabs.forEach(function(t) {
-    t.style.background = 'var(--surface)';
-    t.style.color = 'inherit';
-    t.style.border = '1px solid var(--border)';
-  });
-  el.style.background = 'var(--primary)';
-  el.style.color = '#fff';
-  el.style.border = '1px solid var(--primary)';
+  // 切换标签样式
+  var parent = el.closest('.gaokao-tabs') || el.parentElement;
+  if (parent) {
+    parent.querySelectorAll('.gk-tab').forEach(function(t) {
+      t.style.background = 'var(--surface)';
+      t.style.color = 'var(--text-light)';
+      t.style.border = '1px solid var(--border)';
+    });
+    el.style.background = 'var(--primary)';
+    el.style.color = '#fff';
+  }
+  // 切换面板
+  var panelId = 'gk-' + page + '-' + tab;
+  document.querySelectorAll('[id^="gk-' + page + '-"]').forEach(function(p) { p.style.display = 'none'; });
+  var panel = document.getElementById(panelId);
+  if (panel) panel.style.display = 'block';
+  // 如果是断句标签，自动加载数据
+  if (tab === 'duanju') {
+    ensureDuanjuLoaded().then(function() {
+      var total = (DUANJU_EXAMPLES && DUANJU_EXAMPLES.length) || 0;
+      var cntEl = document.getElementById('duanjuTotalCount');
+      if (cntEl) cntEl.textContent = total;
+    });
+  }
 }
+
+// switchGKTab already defined above (merged)
 
 // ====== 后续扩展：文化常识、诗歌、默写（可在此添加数据） ======
 
+
+
+// ====== 文化常识（3分）======
+var WENHUA_LOADED = false;
+function loadWenhua() {
+  if (WENHUA_LOADED) return;
+  WENHUA_LOADED = true;
+  const today = new Date().toISOString().slice(0, 10);
+  fetchExercises('classical_reading', 'wenhua').then(function(r) {
+    if (!r || !r.items || !r.items.length) {
+      document.getElementById('wenhuaContent').innerHTML = '<p style="color:var(--text-light);font-size:13px;">暂无数据</p>';
+      return;
+    }
+    var html = '';
+    r.items.forEach(function(ex, idx) {
+      html += '<div class="exercise-item" style="margin-bottom:14px;">';
+      html += '<p style="font-size:13px;margin-bottom:6px;"><strong>' + (idx+1) + '.</strong> ' + htmlesc(ex.question || ex.content) + '</p>';
+      var opts = JSON.parse(ex.options_json || '[]');
+      var labels = ['A','B','C','D'];
+      opts.forEach(function(o, oi) {
+        html += '<label class="ex-option" style="display:block;margin-bottom:4px;padding:6px 10px;border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:12px;" onclick="checkWenhua(' + idx + ',' + oi + ',this)">';
+        html += '<strong>' + labels[oi] + '.</strong> ' + htmlesc(o);
+        html += '</label>';
+      });
+      html += '<div id="wenhua-result-' + idx + '" class="mt-4"></div>';
+      html += '</div>';
+    });
+    document.getElementById('wenhuaContent').innerHTML = html;
+    window._wenhuaData = r.items;
+    apiCall('POST','/api/training/session',{date:today,module:'文化常识',duration_min:3});
+    checkStreak(); updateHomeStats();
+  });
+}
+
+function checkWenhua(idx, selected, el) {
+  var items = window._wenhuaData;
+  if (!items || idx >= items.length) return;
+  var answer = items[idx].answer;
+  var answerIdx = ['A','B','C','D'].indexOf(answer);
+  var allOpts = el.parentElement.querySelectorAll('.ex-option');
+  allOpts.forEach(function(o) { o.style.borderColor = 'var(--border)'; o.style.background = ''; });
+  if (selected === answerIdx) {
+    el.style.borderColor = '#27ae60'; el.style.background = '#e8f8e8';
+  } else {
+    el.style.borderColor = '#c0392b'; el.style.background = '#fde8e8';
+    if (answerIdx >= 0) { allOpts[answerIdx].style.borderColor = '#27ae60'; allOpts[answerIdx].style.background = '#e8f8e8'; }
+  }
+  document.getElementById('wenhua-result-' + idx).innerHTML = '<div class="ex-answer" style="display:block;border-left:3px solid ' + (selected===answerIdx?'#27ae60':'#c0392b') + ';padding:8px 12px;background:#fafafa;border-radius:4px;margin-top:4px;font-size:12px;"><p>' + (selected===answerIdx?'✅ 正确！':'❌ 正确答案：' + answer) + '</p><p style="color:#555;margin-top:2px;">' + htmlesc(items[idx].explanation || '') + '</p></div>';
+}
+
+// ====== 内容概括（3分）======
+var NEIRONG_LOADED = false;
+function loadNeirong() {
+  if (NEIRONG_LOADED) return;
+  NEIRONG_LOADED = true;
+  const today = new Date().toISOString().slice(0, 10);
+  fetchExercises('classical_reading', 'neirong').then(function(r) {
+    if (!r || !r.items || !r.items.length) { document.getElementById('neirongContent').innerHTML = '<p style="color:var(--text-light);">暂无数据</p>'; return; }
+    var html = '';
+    r.items.forEach(function(ex, idx) {
+      html += '<div class="exercise-item" style="margin-bottom:14px;"><p style="font-size:13px;margin-bottom:6px;"><strong>' + (idx+1) + '.</strong> ' + htmlesc(ex.question || ex.content) + '</p>';
+      var opts = JSON.parse(ex.options_json || '[]');
+      var labels = ['A','B','C','D'];
+      opts.forEach(function(o, oi) {
+        html += '<label class="ex-option" style="display:block;margin-bottom:4px;padding:6px 10px;border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:12px;" onclick="checkNeirong(' + idx + ',' + oi + ',this)">';
+        html += '<strong>' + labels[oi] + '.</strong> ' + htmlesc(o) + '</label>';
+      });
+      html += '<div id="neirong-result-' + idx + '" class="mt-4"></div></div>';
+    });
+    document.getElementById('neirongContent').innerHTML = html;
+    window._neirongData = r.items;
+    apiCall('POST','/api/training/session',{date:today,module:'内容概括',duration_min:3});
+    checkStreak(); updateHomeStats();
+  });
+}
+function checkNeirong(idx, selected, el) {
+  var items = window._neirongData;
+  if (!items || idx >= items.length) return;
+  var answer = items[idx].answer;
+  var answerIdx = ['A','B','C','D'].indexOf(answer);
+  var allOpts = el.parentElement.querySelectorAll('.ex-option');
+  allOpts.forEach(function(o) { o.style.borderColor = 'var(--border)'; o.style.background = ''; });
+  if (selected === answerIdx) {
+    el.style.borderColor = '#27ae60'; el.style.background = '#e8f8e8';
+  } else {
+    el.style.borderColor = '#c0392b'; el.style.background = '#fde8e8';
+    if (answerIdx >= 0) { allOpts[answerIdx].style.borderColor = '#27ae60'; allOpts[answerIdx].style.background = '#e8f8e8'; }
+  }
+  document.getElementById('neirong-result-' + idx).innerHTML = '<div class="ex-answer" style="display:block;border-left:3px solid ' + (selected===answerIdx?'#27ae60':'#c0392b') + ';padding:8px 12px;background:#fafafa;border-radius:4px;margin-top:4px;font-size:12px;"><p>' + (selected===answerIdx?'✅ 正确！':'❌ 正确答案：' + answer) + '</p><p style="color:#555;margin-top:2px;">' + htmlesc(items[idx].explanation || '') + '</p></div>';
+}
+
+// ====== 诗歌阅读（9分）======
+var POEM_LOADED = false;
+function loadPoem() {
+  if (POEM_LOADED) return;
+  POEM_LOADED = true;
+  const today = new Date().toISOString().slice(0, 10);
+  fetchExercises('classical_reading', 'poem').then(function(r) {
+    if (!r || !r.items || !r.items.length) { document.getElementById('poemContent').innerHTML = '<p style="color:var(--text-light);">暂无数据</p>'; return; }
+    var html = '';
+    r.items.forEach(function(ex, idx) {
+      html += '<div class="exercise-item" style="margin-bottom:14px;">';
+      html += '<div style="background:#f8f6f0;padding:10px 14px;border-radius:6px;margin-bottom:8px;font-size:13px;line-height:1.8;font-family:KaiTi,STKaiti,serif;">' + htmlesc(ex.content || ex.question).replace(/\n/g,'<br>') + '</div>';
+      html += '<div style="margin-top:6px;"><div class="badge-sm bg-blue" style="font-size:11px;">选择题（3分）</div></div>';
+      var opts = JSON.parse(ex.options_json || '[]');
+      var labels = ['A','B','C','D'];
+      opts.forEach(function(o, oi) {
+        html += '<label class="ex-option" style="display:block;margin-bottom:4px;padding:6px 10px;border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:12px;" onclick="checkPoem(' + idx + ',' + oi + ',this)">';
+        html += '<strong>' + labels[oi] + '.</strong> ' + htmlesc(o) + '</label>';
+      });
+      html += '<div id="poem-result-' + idx + '" class="mt-4"></div></div>';
+    });
+    document.getElementById('poemContent').innerHTML = html;
+    window._poemData = r.items;
+    apiCall('POST','/api/training/session',{date:today,module:'诗歌鉴赏',duration_min:5});
+    checkStreak(); updateHomeStats();
+  });
+}
+function checkPoem(idx, selected, el) {
+  var items = window._poemData;
+  if (!items || idx >= items.length) return;
+  var answer = items[idx].answer;
+  var answerIdx = ['A','B','C','D'].indexOf(answer);
+  var allOpts = el.parentElement.querySelectorAll('.ex-option');
+  allOpts.forEach(function(o) { o.style.borderColor = 'var(--border)'; o.style.background = ''; });
+  if (selected === answerIdx) {
+    el.style.borderColor = '#27ae60'; el.style.background = '#e8f8e8';
+  } else {
+    el.style.borderColor = '#c0392b'; el.style.background = '#fde8e8';
+    if (answerIdx >= 0) { allOpts[answerIdx].style.borderColor = '#27ae60'; allOpts[answerIdx].style.background = '#e8f8e8'; }
+  }
+  var extra = '<p style="color:#555;margin-top:2px;">' + htmlesc(items[idx].explanation || '') + '</p>';
+  document.getElementById('poem-result-' + idx).innerHTML = '<div class="ex-answer" style="display:block;border-left:3px solid ' + (selected===answerIdx?'#27ae60':'#c0392b') + ';padding:8px 12px;background:#fafafa;border-radius:4px;margin-top:4px;font-size:12px;"><p>' + (selected===answerIdx?'✅ 正确！':'❌ 正确答案：' + answer) + '</p>' + extra + '</div>';
+}
+
+// ====== 名篇默写（6分）======
+var MOXIE_LOADED = false;
+function loadMoxie() {
+  if (MOXIE_LOADED) return;
+  MOXIE_LOADED = true;
+  const today = new Date().toISOString().slice(0, 10);
+  fetchExercises('classical_reading', 'moxie').then(function(r) {
+    if (!r || !r.items || !r.items.length) { document.getElementById('moxieContent').innerHTML = '<p style="color:var(--text-light);">暂无数据</p>'; return; }
+    var html = '';
+    r.items.forEach(function(ex, idx) {
+      html += '<div class="exercise-item" style="margin-bottom:14px;padding:10px 14px;background:#fafafa;border-radius:6px;">';
+      html += '<p style="font-size:13px;margin-bottom:6px;line-height:1.6;">' + htmlesc(ex.question || ex.content).replace(/\n/g,'<br>') + '</p>';
+      html += '<input class="gram-input" id="moxie-input-' + idx + '" placeholder="输入答案（上下句用逗号分隔）…" style="font-size:13px;padding:6px 10px;">';
+      html += ' <button class="btn-small" onclick="checkMoxie(' + idx + ')" style="font-size:12px;">核对</button>';
+      html += '<div id="moxie-result-' + idx + '" class="mt-4"></div></div>';
+    });
+    document.getElementById('moxieContent').innerHTML = html;
+    window._moxieData = r.items;
+    apiCall('POST','/api/training/session',{date:today,module:'名篇默写',duration_min:3});
+    checkStreak(); updateHomeStats();
+  });
+}
+function checkMoxie(idx) {
+  var items = window._moxieData;
+  if (!items || idx >= items.length) return;
+  var input = document.getElementById('moxie-input-' + idx).value.trim();
+  var answer = items[idx].answer;
+  var isCorrect = input.replace(/[，。；""''「」]/g,'') === answer.replace(/[，。；""''「」]/g,'');
+  document.getElementById('moxie-result-' + idx).innerHTML = '<div class="ex-answer" style="display:block;border-left:3px solid ' + (isCorrect?'#27ae60':'#e67e22') + ';padding:8px 12px;background:#fafafa;border-radius:4px;margin-top:4px;font-size:12px;"><p>' + (isCorrect?'✅ 正确！':'📝 参考答案：' + answer) + '</p><p style="color:#555;margin-top:2px;">' + htmlesc(items[idx].explanation || '') + '</p></div>';
+  apiCall('POST','/api/training/log',{module:'名篇默写',exercise_id:idx,question:items[idx].question,user_answer:input,correct_answer:answer,is_correct:isCorrect?1:0});
+}
+
+window.loadDuanjuExample = loadDuanjuExample;
+window.checkDuanju = checkDuanju;
+window.nextDuanju = nextDuanju;
+window.ensureDuanjuLoaded = ensureDuanjuLoaded;
+window.switchGKTab = switchGKTab;
 window.applyTemplate = applyTemplate;
 window.analyzeGrammar = analyzeGrammar;
 window.analyzeSyntax = analyzeSyntax;

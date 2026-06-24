@@ -395,24 +395,7 @@ function switchGKTab(page, tab, el) {
   }
 }
 
-function switchGKTab(page, tab, el) {
-  // Hide all panels
-  var panels = document.querySelectorAll('#page-' + page + ' .gk-panel');
-  panels.forEach(function(p) { p.style.display = 'none'; });
-  // Show selected panel
-  var target = document.getElementById('gk-' + page + '-' + tab);
-  if (target) target.style.display = 'block';
-  // Update tab styles
-  var tabs = document.querySelectorAll('#page-' + page + ' .gk-tab');
-  tabs.forEach(function(t) {
-    t.style.background = 'var(--surface)';
-    t.style.color = 'inherit';
-    t.style.border = '1px solid var(--border)';
-  });
-  el.style.background = 'var(--primary)';
-  el.style.color = '#fff';
-  el.style.border = '1px solid var(--primary)';
-}
+// switchGKTab already defined above (merged)
 
 // ====== 后续扩展：文化常识、诗歌、默写（可在此添加数据） ======
 
