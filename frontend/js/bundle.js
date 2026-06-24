@@ -959,7 +959,16 @@ async function initDeck(name) {
     else el.textContent = `🎉 全部已掌握！ (${totalCards}张)`;
   }
   showCard();
-  document.querySelectorAll('.deck-btn').forEach(b => b.classList.toggle('active', b.dataset.deck === name));
+  document.querySelectorAll('.deck-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.deck === name);
+    // 更新按钮上的数量标签
+    var dk = b.dataset.deck;
+    var cnt = (DECKS[dk] || []).length;
+    if (cnt > 0 && !b.textContent.includes('(' + cnt + ')')) {
+      var baseName = b.textContent.replace(/\s*\(\d+\)/, '');
+      b.textContent = baseName + ' (' + cnt + ')';
+    }
+  });
   // Sync state object (used by app.js updateHomeStats etc.)
   if (typeof S !== 'undefined') { S.currentDeck = name; S.deckQueue = deckQueue; }
 }
