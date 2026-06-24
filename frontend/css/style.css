@@ -66,16 +66,16 @@ body{font-family:-apple-system,"PingFang SC","Noto Sans SC",sans-serif;backgroun
 .flashcard-wrap{perspective:1000px;max-width:480px;margin:0 auto;cursor:pointer}
 .flashcard{position:relative;width:100%;min-height:200px;transition:transform .5s;transform-style:preserve-3d;border-radius:var(--radius);box-shadow:var(--shadow)}
 .flashcard.flipped{transform:rotateY(180deg)}
-.fc-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:var(--radius);padding:28px 22px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
-.fc-front{background:linear-gradient(135deg,#1a1a2e 0%,#2c3e50 100%);color:#fff}
+.fc-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:var(--radius);padding:28px 22px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;overflow-y:auto}
+.fc-front{background:linear-gradient(135deg,#1a1a2e 0%,#2c3e50 100%);color:#fff;overflow-y:auto}
 .fc-front .fc-label{font-size:11px;opacity:.5;margin-bottom:12px}
-.fc-front .fc-main{font-size:24px;font-weight:700;line-height:1.5}
+.fc-front .fc-main{font-size:24px;font-weight:700;line-height:1.5;word-break:break-word;max-width:100%}
 .fc-front .fc-hint{font-size:12px;opacity:.4;margin-top:16px}
-.fc-back{background:var(--surface);transform:rotateY(180deg);border:2px solid var(--border)}
+.fc-back{background:var(--surface);transform:rotateY(180deg);border:2px solid var(--border);overflow-y:auto}
 .fc-back .fc-group{margin-bottom:10px;width:100%}
 .fc-back .fc-lbl{font-size:10px;text-transform:uppercase;color:var(--accent);font-weight:700;letter-spacing:1px}
-.fc-back .fc-txt{font-size:17px;font-weight:600;margin-top:2px}
-.fc-back .fc-analogy{font-size:13px;color:var(--accent2);margin-top:6px;padding:7px 12px;background:#eef6fb;border-radius:6px;display:inline-block}
+.fc-back .fc-txt{font-size:17px;font-weight:600;margin-top:2px;word-break:break-word;max-width:100%}
+.fc-back .fc-analogy{font-size:13px;color:var(--accent2);margin-top:6px;padding:7px 12px;background:#eef6fb;border-radius:6px;display:block;word-break:break-word;line-height:1.6}
 
 .fc-controls{display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap}
 .fc-controls button{padding:8px 20px;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;transition:var(--transition)}

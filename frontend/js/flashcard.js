@@ -95,7 +95,13 @@ function showCard() {
   document.getElementById('fcWord').textContent = card.word;
   document.getElementById('fcMeaning').textContent = card.meaning;
   document.getElementById('fcSentence').textContent = card.sentence || '';
-  document.getElementById('fcAnalogy').textContent = card.analogy || '';
+  // 古今对译：显示词语的现代汉语释义 + 原文对照
+  var analogyText = card.analogy || '';
+  var transText = '';
+  if (card.word && card.meaning && card.meaning !== card.word) {
+    transText = '「' + card.word + '」→ ' + card.meaning;
+  }
+  document.getElementById('fcAnalogy').textContent = transText || analogyText;
   flipped = false; document.getElementById('flashcard').classList.remove('flipped');
   if (typeof S !== 'undefined') { S.currentDeck = currentDeck; S.flipped = flipped; S.cardSeconds = cardSeconds; }
   updateHomeStats();
