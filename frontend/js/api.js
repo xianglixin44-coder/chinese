@@ -129,7 +129,7 @@ const SYMBOLS = [
   {front:"安求其能千里也",hl:"安",word:"安·怎么",meaning:"怎么能要求它日行千里",analogy:"= how could"},
   {front:"安得广厦千万间",hl:"安",word:"安·哪里",meaning:"哪里能得到千万间宽敞的大厦",analogy:"= where"},
   {front:"安居乐业",hl:"安",word:"安·安定/平安",meaning:"安定地生活愉快地工作",analogy:"= peaceful/stable"},
-];const DECKS = {shici:DECK_SHIPIN, xuci:DECK_XUCI, wenxue:DECK_WENXUE, guhanyu:DECK_GUHANYU, gzshici:DECK_GZSHICI};const PLAN_WEEKS = {
+];const DECKS = {shici:DECK_SHIPIN, xuci:DECK_XUCI, wenxue:DECK_WENXUE, gzshici:DECK_GZSHICI};const PLAN_WEEKS = {
   week1:{title:"第1周·基础搭建",days:[
     ["晨刷虚词之而其为","午读短文标[]/?","晚拆2简单单句"],
     ["晨刷虚词以于为","午同篇标★~~~","晚拆《出师表》1句"],
