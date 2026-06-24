@@ -21,7 +21,8 @@ async function initDeck(name) {
           try { extra = JSON.parse(item.extra_json || '{}'); } catch(e) {}
           return {
             front: item.content, hl: extra.hl || '', word: extra.word || '',
-            meaning: extra.meaning || '', analogy: extra.analogy || ''
+            meaning: extra.meaning || '', analogy: extra.analogy || '',
+            sentence: extra.sentence || item.content || ''
           };
         });
         const newCards = apiCards.filter(c => !existingFronts.has(c.front));
