@@ -1011,7 +1011,7 @@ function showCard() {
   var displayParts = [];
   if (transText) displayParts.push(transText);
   if (sourceText) displayParts.push('📖 ' + sourceText);
-  document.getElementById('fcAnalogy').textContent = displayParts.join('\n');
+  document.getElementById('fcAnalogy').innerHTML = displayParts.join('<br>');
   flipped = false; document.getElementById('flashcard').classList.remove('flipped');
   if (typeof S !== 'undefined') { S.currentDeck = currentDeck; S.flipped = flipped; S.cardSeconds = cardSeconds; }
   updateHomeStats();
