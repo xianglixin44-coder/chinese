@@ -291,6 +291,55 @@ function analyzeNovel() {
   grammarCount = getGrammarCount();
   checkStreak(); updateHomeStats();
 }
+
+// ====== 断句训练 ======
+function loadDuanjuExample(idx) {
+  const today = new Date().toISOString().slice(0, 10);
+  var ex = DUANJU_EXAMPLES[idx];
+  var html = '<div class="duanju-exercise">';
+  html += '<div class="duanju-passage"><p><strong>原文（无标点）：</strong></p>';
+  html += '<p class="duanju-text" style="font-size:16px;line-height:2;letter-spacing:1px;background:#f8f6f0;padding:12px;border-radius:6px;border:1px solid #e0d8c8;">' + htmlesc(ex.sentence) + '</p></div>';
+  html += '<div class="duanju-options" style="margin-top:10px;">';
+  var labels = ['A', 'B', 'C', 'D'];
+  for (var i = 0; i < ex.options.length; i++) {
+    html += '<label class="ex-option" style="display:block;margin-bottom:8px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:13px;line-height:1.6;" onclick="checkDuanju(' + idx + ', ' + i + ', this)">';
+    html += '<span style="display:inline-block;width:22px;height:22px;line-height:22px;text-align:center;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;font-size:12px;margin-right:8px;">' + labels[i] + '</span>';
+    html += htmlesc(ex.options[i]);
+    html += '</label>';
+  }
+  html += '</div>';
+  html += '<div id="duanju-result-' + idx + '" class="mt-12"></div>';
+  html += '</div>';
+  document.getElementById('duanjuContent').innerHTML = html;
+  document.getElementById('duanjuIdx').value = idx;
+  apiCall('POST', '/api/grammar/log', {sentence: ex.sentence.substring(0, 30), example_idx: idx, module: '断句'});
+  apiCall('POST', '/api/training/session', {date: today, module: '断句', duration_min: 5});
+  dbRun("INSERT INTO grammar_log (sentence, example_idx, module) VALUES (?, ?, 'classical')", [ex.sentence.substring(0, 30), idx]);
+  grammarCount = getGrammarCount();
+  checkStreak(); updateHomeStats();
+}
+
+function checkDuanju(idx, selected, el) {
+  var ex = DUANJU_EXAMPLES[idx];
+  var allOpts = document.querySelectorAll('.duanju-options .ex-option');
+  allOpts.forEach(function(o) { o.style.borderColor = 'var(--border)'; o.style.background = ''; });
+  if (selected === ex.answer) {
+    el.style.borderColor = '#27ae60'; el.style.background = '#e8f8e8';
+  } else {
+    el.style.borderColor = '#c0392b'; el.style.background = '#fde8e8';
+    allOpts[ex.answer].style.borderColor = '#27ae60'; allOpts[ex.answer].style.background = '#e8f8e8';
+  }
+  document.getElementById('duanju-result-' + idx).innerHTML = '<div class="ex-answer" style="display:block;border-left:3px solid ' + (selected === ex.answer ? '#27ae60' : '#c0392b') + ';padding:10px 14px;background:#fafafa;border-radius:6px;margin-top:8px;"><p style="font-weight:600;margin-bottom:4px;">' + (selected === ex.answer ? '✅ 正确！' : '❌ 正确答案是 ' + ['A','B','C','D'][ex.answer]) + '</p><pre class="analysis" style="font-family:inherit;font-size:13px;white-space:pre-wrap;">' + ex.analysis + '</pre></div>';
+  if (selected !== ex.answer) {
+    apiCall('POST', '/api/training/log', {module: '断句', exercise_id: idx, question: ex.sentence.substring(0, 30), user_answer: ['A','B','C','D'][selected], correct_answer: ['A','B','C','D'][ex.answer], is_correct: 0});
+  }
+}
+
+function nextDuanju() {
+  var idx = parseInt(document.getElementById('duanjuIdx').value || '0');
+  var next = (idx + 1) % DUANJU_EXAMPLES.length;
+  loadDuanjuExample(next);
+}
 window.applyTemplate = applyTemplate;
 window.analyzeGrammar = analyzeGrammar;
 window.analyzeSyntax = analyzeSyntax;

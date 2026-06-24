@@ -811,7 +811,56 @@ const SYMBOLS = [
   {sentence:"大王来何操？", analysis:"Step1 提主干：大王（S）+操（V）+何（O）→ 现代汉语语序应为「大王操何」\n→ 疑问代词「何」作宾语，前置于动词前 = 宾语前置\n\nStep2 画结构：大王（S）+来（状语）+何（O前置）+操（V）\n规则：疑问句中，疑问代词作宾语必须前置\n\nStep3 现代语序：「大王来操持什么？」"},
   {sentence:"战于长勺", analysis:"Step1 提主干：（省略主语）+战（V）+于长勺（补语）\n→ 现代汉语语序应为「在长勺作战」\n→ 介宾短语「于长勺」后置于动词 = 介宾后置（状语后置）\n\nStep2 规则：古汉语中，「于/以」引导的介宾结构常放在动词之后\n\nStep3 现代语序：「在长勺作战」"},
   {sentence:"马之千里者", analysis:"Step1 提主干：马（中心词）+之（助词）+千里（定语）+者（助词）\n→ 现代语序应为「千里马」或「能行千里的马」\n→ 定语「千里」后置于中心词「马」= 定语后置\n\nStep2 标志：中心词+之+定语+者\n\nStep3 现代语序：「能行千里的马」"},
-];const TRANSLATION_EXAMPLES = [
+];
+const DUANJU_EXAMPLES = [
+  {sentence:"贾生名谊洛阳人也年十八以能诵诗属书闻于郡中吴廷尉为河南守闻其秀才召置门下甚幸爱",
+   options:[
+     "贾生名谊/洛阳人也/年十八/以能诵诗属书闻于郡中吴廷尉/为河南守/闻其秀才召置门下/甚幸爱",
+     "贾生名谊/洛阳人也/年十八/以能诵诗属书闻于郡中/吴廷尉为河南守/闻其秀才/召置/门下甚幸爱",
+     "贾生名谊/洛阳人也/年十八/以能诵诗属书闻于郡中/吴廷尉为河南守/闻其秀才/召置门下/甚幸爱",
+     "贾生名谊/洛阳人也/年十八/以能诵诗属书闻/于郡中吴廷尉为河南守/闻其秀才/召置门下甚幸爱"
+   ],
+   answer:2,
+   analysis:"【第一步】找名词主语：「贾生」「吴廷尉」各领一句\n【第二步】看虚词：「也」后必断\n【第三步】「闻其秀才」动宾完整，不能拆分；「召置门下」是固定搭配\n→ 正确答案：C (2019全国I卷)"},
+  {sentence:"苏轼字子瞻眉州眉山人母程氏亲授以书闻古今成败辄能语其要",
+   options:[
+     "苏轼字子瞻/眉州眉山人/母程氏亲授以书/闻古今成败/辄能语其要",
+     "苏轼字子瞻眉州/眉山人/母程氏亲授以书闻/古今成败辄能语其要",
+     "苏轼字子瞻/眉州眉山人母/程氏亲授以书/闻古今成败辄能语其要",
+     "苏轼字子瞻/眉州眉山人/母程氏亲授/以书闻古今成败/辄能语其要"
+   ],
+   answer:0,
+   analysis:"【第一步】「子瞻」是字，后断\n【第二步】「眉州眉山人」籍贯，独立成句\n【第三步】「母程氏」新主语出现，前断\n→ 正确答案：A"},
+  {sentence:"童幼时精神端审时然后言所继叔父混名知人见而异之谓思曰此儿深中夙敏方成佳器有子如此足矣",
+   options:[
+     "童幼时/精神端审/时然后言/所继叔父混名知人/见而异之/谓思曰/此儿深中夙敏方成/佳器有子如此/足矣",
+     "童幼时/精神端审/时然后言所继叔父/混名知人/见而异之/谓思曰/此儿深中夙敏/方成佳器/有子如此/足矣",
+     "童幼时/精神端审/时然后言所继叔父/混名知人/见而异之/谓思曰/此儿深中夙敏方成/佳器有子如此/足矣",
+     "童幼时/精神端审/时然后言/所继叔父混名知人/见而异之/谓思曰/此儿深中夙敏/方成佳器/有子如此/足矣"
+   ],
+   answer:3,
+   analysis:"【第一步】「童幼时」时间状语独立断\n【第二步】「精神端审」主谓结构完整\n【第三步】「谓思曰」对话标志，前后皆断\n→ 正确答案：D (2017全国I卷)"},
+  {sentence:"三年权知礼部贡举会大雪苦寒士坐庭中噤未能言轼宽其禁约使得尽技巡辅内侍每摧辱举子且持暧昧单词诬以为罪轼尽奏逐之",
+   options:[
+     "三年/权知礼部贡举/会大雪苦寒/士坐庭中/噤未能言/轼宽其禁约/使得尽技/巡辅内侍每摧辱举子/且持暧昧单词/诬以为罪/轼尽奏逐之",
+     "三年/权知礼部贡举/会大雪苦寒/士坐庭中噤/未能言轼/宽其禁约/使得尽技/巡辅内侍/每摧辱举子且持暧昧单词/诬以为罪/轼尽奏逐之",
+     "三年/权知礼部贡举/会大雪苦寒/士坐庭中噤/未能言轼/宽其禁约/使得尽技巡辅内侍/每摧辱举子/且持暧昧单词/诬以为罪/轼尽奏逐之",
+     "三年/权知礼部贡举/会大雪苦寒/士坐庭中/噤未能言/轼宽其禁约/使得尽技巡辅内侍/每摧辱举子/且持暧昧单词/诬以为罪/轼尽奏逐之"
+   ],
+   answer:0,
+   analysis:"【第一步】「三年」时间状语后断\n【第二步】「士坐庭中/噤未能言」两个连续主谓，中间断\n【第三步】「轼」新主语出现前必断\n→ 正确答案：A (2020全国I卷)"},
+  {sentence:"鲁人或曰夫鲁小国而有战胜之名则诸侯图鲁矣且鲁卫兄弟之国也而君用起则是弃卫鲁君疑之谢吴起",
+   options:[
+     "鲁人或曰/夫鲁小国/而有战胜之名/则诸侯图鲁矣/且鲁卫兄弟之国也/而君用起/则是弃卫/鲁君疑之/谢吴起",
+     "鲁人或曰夫/鲁小国而有战胜之名/则诸侯图鲁矣/且鲁卫兄弟之国也/而君用起/则是弃卫/鲁君疑之谢吴起",
+     "鲁人或曰/夫鲁小国/而有战胜之名/则诸侯图鲁矣/且鲁卫兄弟之国也/而君用起则/是弃卫鲁君/疑之谢吴起",
+     "鲁人或曰夫鲁/小国而有战胜之名/则诸侯图鲁矣/且鲁卫兄弟之国也/而君用起/则是弃卫/鲁君疑之/谢吴起"
+   ],
+   answer:0,
+   analysis:"【第一步】「曰」后断——对话标志最高优先级\n【第二步】「夫」句首发语词，后接完整句子\n【第三步】「矣」「也」句末语气词后必断\n→ 正确答案：A"},
+];
+
+const TRANSLATION_EXAMPLES = [
   {sentence:"群臣吏民能面刺寡人之过者，受上赏。",analysis:"📌 【双语字字对齐与采分点】\n\n1️⃣ 【字字落实（对齐）】:\n- 群臣吏民：大小官吏和百姓\n- 能：能够\n- 面：【采分点1】当面（名词作状语，译为「当面」，不能译为「脸面」）\n- 刺：【采分点2】指责/批评\n- 寡人：我（君王自称）\n- 之：的\n- 过：过失/过错\n- 者：……的人（定语后置标志）\n- 受：获得\n- 上赏：上等奖赏\n\n2️⃣ 【句法还原（结构调整）】:\n- 原文「群臣吏民能面刺寡人之过者」属于定语后置句。\n\n3️⃣ 【高考规范译文】:\n大小官吏和百姓，能够当面指责我的过错的，给予上等奖赏。"},
   {sentence:"二虫尽为所吞，余年幼，方出神，不觉呀然惊恐。",analysis:"📌 【双语字字对齐与采分点】\n\n1️⃣ 【字字落实（对齐）】:\n- 二虫：两只虫子\n- 尽：全/都\n- 为所：【采分点1】被（「为……所……」表被动句式）\n- 吞：吞食\n- 余：我\n-年幼：年纪小\n- 方：【采分点2】正/刚刚（古今异义）\n- 出神：看得出神\n- 不觉：不知不觉地\n- 呀然：【采分点3】唉呀一声\n- 惊恐：感到惊恐\n\n2️⃣ 【句法还原（结构调整）】:\n- 原文「二虫尽为所吞」，属于缩略被动。\n\n3️⃣ 【高考规范译文】:\n两只虫子全被吞食了。我当时年纪小，正看得出神，不自觉地唉呀一声，感到十分惊恐。"},
   {sentence:"先帝不以臣卑鄙，猥自枉屈，三顾臣于草庐之中。",analysis:"📌 【双语字字对齐与采分点】\n\n1️⃣ 【字字落实（对齐）】:\n- 先帝：刘备\n- 不以：不因为（以：因为）\n- 臣：我（诸葛亮）\n- 卑鄙：【采分点1】地位卑微，见识浅陋（古今异义，不能译为「品质恶劣」）\n- 猥：【采分点2】委屈（谦词，译为「委屈地」）\n- 自枉屈：亲自降低身份\n- 三：多次/三次\n- 顾：拜访\n- 于草庐之中：【采分点3】在草庐之中（介宾短语后置）\n\n2️⃣ 【句法还原（结构调整）】:\n- 原文「三顾臣于草庐之中」为介宾后置句。\n\n3️⃣ 【高考规范译文】:\n先帝不因为我地位卑微、见识浅陋，委屈地亲自降低身份，三次到草庐之中来拜访我。"}
@@ -1354,6 +1403,55 @@ function analyzeNovel() {
   dbRun("INSERT INTO grammar_log (sentence, example_idx, module) VALUES (?, -1, 'novel')", [input]);
   grammarCount = getGrammarCount();
   checkStreak(); updateHomeStats();
+}
+
+// ====== 断句训练 ======
+function loadDuanjuExample(idx) {
+  const today = new Date().toISOString().slice(0, 10);
+  var ex = DUANJU_EXAMPLES[idx];
+  var html = '<div class="duanju-exercise">';
+  html += '<div class="duanju-passage"><p><strong>原文（无标点）：</strong></p>';
+  html += '<p class="duanju-text" style="font-size:16px;line-height:2;letter-spacing:1px;background:#f8f6f0;padding:12px;border-radius:6px;border:1px solid #e0d8c8;">' + htmlesc(ex.sentence) + '</p></div>';
+  html += '<div class="duanju-options" style="margin-top:10px;">';
+  var labels = ['A', 'B', 'C', 'D'];
+  for (var i = 0; i < ex.options.length; i++) {
+    html += '<label class="ex-option" style="display:block;margin-bottom:8px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:13px;line-height:1.6;" onclick="checkDuanju(' + idx + ', ' + i + ', this)">';
+    html += '<span style="display:inline-block;width:22px;height:22px;line-height:22px;text-align:center;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;font-size:12px;margin-right:8px;">' + labels[i] + '</span>';
+    html += htmlesc(ex.options[i]);
+    html += '</label>';
+  }
+  html += '</div>';
+  html += '<div id="duanju-result-' + idx + '" class="mt-12"></div>';
+  html += '</div>';
+  document.getElementById('duanjuContent').innerHTML = html;
+  document.getElementById('duanjuIdx').value = idx;
+  apiCall('POST', '/api/grammar/log', {sentence: ex.sentence.substring(0, 30), example_idx: idx, module: '断句'});
+  apiCall('POST', '/api/training/session', {date: today, module: '断句', duration_min: 5});
+  dbRun("INSERT INTO grammar_log (sentence, example_idx, module) VALUES (?, ?, 'classical')", [ex.sentence.substring(0, 30), idx]);
+  grammarCount = getGrammarCount();
+  checkStreak(); updateHomeStats();
+}
+
+function checkDuanju(idx, selected, el) {
+  var ex = DUANJU_EXAMPLES[idx];
+  var allOpts = document.querySelectorAll('.duanju-options .ex-option');
+  allOpts.forEach(function(o) { o.style.borderColor = 'var(--border)'; o.style.background = ''; });
+  if (selected === ex.answer) {
+    el.style.borderColor = '#27ae60'; el.style.background = '#e8f8e8';
+  } else {
+    el.style.borderColor = '#c0392b'; el.style.background = '#fde8e8';
+    allOpts[ex.answer].style.borderColor = '#27ae60'; allOpts[ex.answer].style.background = '#e8f8e8';
+  }
+  document.getElementById('duanju-result-' + idx).innerHTML = '<div class="ex-answer" style="display:block;border-left:3px solid ' + (selected === ex.answer ? '#27ae60' : '#c0392b') + ';padding:10px 14px;background:#fafafa;border-radius:6px;margin-top:8px;"><p style="font-weight:600;margin-bottom:4px;">' + (selected === ex.answer ? '✅ 正确！' : '❌ 正确答案是 ' + ['A','B','C','D'][ex.answer]) + '</p><pre class="analysis" style="font-family:inherit;font-size:13px;white-space:pre-wrap;">' + ex.analysis + '</pre></div>';
+  if (selected !== ex.answer) {
+    apiCall('POST', '/api/training/log', {module: '断句', exercise_id: idx, question: ex.sentence.substring(0, 30), user_answer: ['A','B','C','D'][selected], correct_answer: ['A','B','C','D'][ex.answer], is_correct: 0});
+  }
+}
+
+function nextDuanju() {
+  var idx = parseInt(document.getElementById('duanjuIdx').value || '0');
+  var next = (idx + 1) % DUANJU_EXAMPLES.length;
+  loadDuanjuExample(next);
 }
 window.applyTemplate = applyTemplate;
 window.analyzeGrammar = analyzeGrammar;

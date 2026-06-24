@@ -240,3 +240,10 @@ body{font-family:-apple-system,"PingFang SC","Noto Sans SC",sans-serif;backgroun
 .fc-face::-webkit-scrollbar-track {
   background: transparent;
 }
+
+/* 断句训练 */
+.duanju-exercise{font-size:14px}
+.duanju-passage{margin-bottom:12px}
+.duanju-text{font-family:"KaiTi","STKaiti",serif}
+.duanju-options .ex-option{transition:all .2s}
+.duanju-options .ex-option:hover{border-color:var(--accent)!important;background:#f0f4ff!important}

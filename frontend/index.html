@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>语文提高训练</title>
 <script src="/sql-wasm.js"></script>
-<link rel="stylesheet" href="/css/style.css?v=2.3">
+<link rel="stylesheet" href="/css/style.css?v=2.4">
 </head>
 <body>
 
@@ -394,6 +394,24 @@
         <p>A = 宾语前置 | C = 定语后置 | D = 被动句</p>
       </div>
     </div>
+
+  <div class="card mt-8">
+    <h3>✂️ 文言文断句训练</h3>
+    <p class="text-light mb-8">高考断句题（3分）—— 选择正确断句位置，系统自动解析考点。</p>
+    <div class="flex" style="margin-bottom:10px;flex-wrap:wrap;gap:4px;">
+      <span class="badge-sm bg-blue" style="cursor:pointer;" onclick="loadDuanjuExample(0)">2019 I卷 贾生</span>
+      <span class="badge-sm bg-red" style="cursor:pointer;" onclick="loadDuanjuExample(1)">苏轼</span>
+      <span class="badge-sm bg-gold" style="cursor:pointer;" onclick="loadDuanjuExample(2)">2017 I卷 谢弘微</span>
+      <span class="badge-sm bg-blue" style="cursor:pointer;" onclick="loadDuanjuExample(3)">2020 I卷 苏轼传</span>
+      <span class="badge-sm bg-red" style="cursor:pointer;" onclick="loadDuanjuExample(4)">吴起</span>
+    </div>
+    <input type="hidden" id="duanjuIdx" value="0">
+    <div id="duanjuContent">
+      <p style="color:var(--text-light);font-size:13px;">点击上方标签开始练习</p>
+    </div>
+    <button class="btn-primary mt-8" onclick="nextDuanju()" style="font-size:13px;">下一题 →</button>
+  </div>
+
   </div></div>
 
 <!-- ======================== LANGUAGE (20) ======================== -->
