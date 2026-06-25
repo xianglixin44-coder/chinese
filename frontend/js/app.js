@@ -991,6 +991,7 @@ window.removeWrong = removeWrong;
 var _stateVars = ['currentPage','currentDeck','deckIndex','deckQueue','flipped','cardTimer','cardSeconds','streak','lastActive','templateCount','grammarCount','timerSeconds','timerRunning','timerInterval','completedTasks'];
 
 // ================================================================
+// ================================================================
 //  REFERENCE BOOKS — 参考书模块
 // ================================================================
 var refState = { bookId: null, page: 1, size: 300, totalPages: 1 };
@@ -998,7 +999,6 @@ var refState = { bookId: null, page: 1, size: 300, totalPages: 1 };
 async function renderReferenceBooks() {
   var el = document.getElementById('refBookList');
   if (!el) return;
-  // Hide reader, show book list
   var reader = document.getElementById('refReader');
   if (reader) reader.style.display = 'none';
   el.style.display = '';
@@ -1008,11 +1008,13 @@ async function renderReferenceBooks() {
     var resp = await fetch('/api/books');
     var data = await resp.json();
     var books = data.books || [];
-    el.innerHTML = books.map(function(b) {
-      var avail = b.exists ? '' : ' style="opacity:0.4"';
-      var badge = b.exists ? '<span class="tag" style="background:var(--primary);color:#fff">可读</span>'
-                            : '<span class="tag" style="background:var(--text-light)">缺失</span>';
-      return '<div class="book-row"' + avail + ' onclick="openBookReader(\'' + b.id + '\')" style="cursor:pointer;border-bottom:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;gap:14px;transition:background .2s">'
+    var html = '';
+    for (var i = 0; i < books.length; i++) {
+      var b = books[i];
+      var availAttr = b.exists ? '' : ' style="opacity:0.4"';
+      var badgeHtml = b.exists ? '<span class="tag" style="background:var(--primary);color:#fff">可读</span>'
+                               : '<span class="tag" style="background:var(--text-light)">缺失</span>';
+      html += '<div class="book-row"' + availAttr + ' data-book-id="' + b.id + '" style="cursor:pointer;border-bottom:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;gap:14px;transition:background .2s">'
         + '<div style="font-size:32px">' + b.icon + '</div>'
         + '<div style="flex:1;min-width:0">'
         + '<h4 style="margin:0 0 4px 0">' + b.title + '</h4>'
@@ -1020,9 +1022,18 @@ async function renderReferenceBooks() {
         + '<div style="font-size:12px;color:var(--text-light);margin-top:2px">' + b.desc + '</div>'
         + '<div style="font-size:11px;color:var(--text-light)">' + (b.lines ? b.lines.toLocaleString() + ' 行' : 'PDF') + '</div>'
         + '</div>'
-        + badge
+        + badgeHtml
         + '</div>';
-    }).join('');
+    }
+    el.innerHTML = html;
+    // Use event delegation instead of inline onclick for reliability
+    el.onclick = function(e) {
+      var row = e.target.closest('.book-row');
+      if (row) {
+        var bookId = row.getAttribute('data-book-id');
+        if (bookId) openBookReader(bookId);
+      }
+    };
   } catch (e) {
     el.innerHTML = '<div style="padding:20px;color:red">加载失败: ' + e.message + '</div>';
   }
@@ -1037,12 +1048,17 @@ async function openBookReader(bookId) {
   if (listEl) listEl.style.display = 'none';
   if (readerEl) readerEl.style.display = '';
 
-  // Set title
-  var resp = await fetch('/api/books');
-  var data = await resp.json();
-  var book = (data.books || []).find(function(b) { return b.id === bookId; });
   var titleEl = document.getElementById('refReaderTitle');
-  if (titleEl) titleEl.textContent = book ? book.icon + ' ' + book.title + ' — ' + book.author : bookId;
+  if (titleEl) titleEl.textContent = '加载中…';
+
+  try {
+    var resp = await fetch('/api/books');
+    var data = await resp.json();
+    var book = (data.books || []).find(function(b) { return b.id === bookId; });
+    if (titleEl) titleEl.textContent = book ? book.icon + ' ' + book.title + ' — ' + book.author : bookId;
+  } catch (e) {
+    if (titleEl) titleEl.textContent = bookId;
+  }
 
   await loadRefPage();
 }
@@ -1051,20 +1067,21 @@ window.openBookReader = openBookReader;
 async function loadRefPage() {
   if (!refState.bookId) return;
   var size = refState.size;
+  var contentEl = document.getElementById('refReaderContent');
+  if (contentEl) contentEl.textContent = '加载中…';
   try {
     var resp = await fetch('/api/books/' + refState.bookId + '?page=' + refState.page + '&size=' + size);
     var text = await resp.text();
 
-    // Parse header: extract total pages info
     var totalPages = 1;
-    var match = text.match(/第 \d+\/(\d+) 页/);
+    var match = text.match(/第 (\d+)\/(\d+) 页/);
     if (match) totalPages = parseInt(match[1]);
     refState.totalPages = totalPages;
 
-    document.getElementById('refReaderContent').textContent = text;
-    document.getElementById('refPageInfo').textContent = '第 ' + refState.page + ' / ' + totalPages + ' 页';
+    if (contentEl) contentEl.textContent = text;
+    var infoEl = document.getElementById('refPageInfo');
+    if (infoEl) infoEl.textContent = '第 ' + refState.page + ' / ' + totalPages + ' 页';
 
-    // Update jump dropdown
     var jumpEl = document.getElementById('refPageJump');
     if (jumpEl && jumpEl.options.length !== totalPages) {
       jumpEl.innerHTML = '';
@@ -1079,14 +1096,13 @@ async function loadRefPage() {
       jumpEl.value = refState.page;
     }
 
-    // Enable/disable prev/next
     var prevBtn = document.getElementById('refPrevBtn');
     var nextBtn = document.getElementById('refNextBtn');
     if (prevBtn) { prevBtn.disabled = refState.page <= 1; prevBtn.style.opacity = refState.page <= 1 ? '0.4' : '1'; }
     if (nextBtn) { nextBtn.disabled = refState.page >= totalPages; nextBtn.style.opacity = refState.page >= totalPages ? '0.4' : '1'; }
 
   } catch (e) {
-    document.getElementById('refReaderContent').textContent = '加载失败: ' + e.message;
+    if (contentEl) contentEl.textContent = '加载失败: ' + e.message;
   }
 }
 
@@ -1115,7 +1131,6 @@ function closeBookReader() {
   renderReferenceBooks();
 }
 window.closeBookReader = closeBookReader;
-
 _stateVars.forEach(function(k) {
   Object.defineProperty(window, k, {
     get: function() { return S[k]; },
