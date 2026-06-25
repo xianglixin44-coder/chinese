@@ -567,6 +567,8 @@ function checkMoxie(idx) {
 }
 
 window.loadDuanjuExample = loadDuanjuExample;
+window.loadMoxie = loadMoxie;
+window.checkMoxie = checkMoxie;
 window.checkDuanju = checkDuanju;
 window.nextDuanju = nextDuanju;
 window.ensureDuanjuLoaded = ensureDuanjuLoaded;
