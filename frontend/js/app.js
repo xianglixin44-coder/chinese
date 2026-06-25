@@ -1049,6 +1049,9 @@ async function openBookReader(bookId) {
   if (readerEl) readerEl.style.display = '';
 
   var titleEl = document.getElementById('refReaderTitle');
+  var contentEl = document.getElementById('refReaderContent');
+  var pdfFrame = document.getElementById('refPdfFrame');
+  var pageNavs = document.querySelectorAll('#refReader .page-nav-row');
   if (titleEl) titleEl.textContent = '加载中…';
 
   try {
@@ -1056,6 +1059,30 @@ async function openBookReader(bookId) {
     var data = await resp.json();
     var book = (data.books || []).find(function(b) { return b.id === bookId; });
     if (titleEl) titleEl.textContent = book ? book.icon + ' ' + book.title + ' — ' + book.author : bookId;
+
+    // PDF: show iframe, hide text reader + pagination
+    if (book && book.format === 'pdf') {
+      if (contentEl) contentEl.style.display = 'none';
+      if (pdfFrame) {
+        pdfFrame.style.display = '';
+        pdfFrame.src = '/api/books/' + bookId + '/file';
+      }
+      // Hide pagination controls
+      var paginationEls = document.querySelectorAll('#refPageSize, #refPrevBtn, #refNextBtn, #refPageInfo, #refPageJump');
+      for (var i = 0; i < paginationEls.length; i++) {
+        paginationEls[i].style.display = 'none';
+      }
+      return;
+    }
+
+    // Markdown: show text reader
+    if (contentEl) contentEl.style.display = '';
+    if (pdfFrame) { pdfFrame.style.display = 'none'; pdfFrame.src = ''; }
+    // Show pagination controls
+    var paginationEls2 = document.querySelectorAll('#refPageSize, #refPrevBtn, #refNextBtn, #refPageInfo, #refPageJump');
+    for (var j = 0; j < paginationEls2.length; j++) {
+      paginationEls2[j].style.display = '';
+    }
   } catch (e) {
     if (titleEl) titleEl.textContent = bookId;
   }
@@ -1128,6 +1155,13 @@ function changeRefPageSize(newSize) {
 window.changeRefPageSize = changeRefPageSize;
 
 function closeBookReader() {
+  var pdfFrame = document.getElementById('refPdfFrame');
+  if (pdfFrame) { pdfFrame.src = ''; pdfFrame.style.display = 'none'; }
+  // Reset pagination visibility
+  var paginationEls = document.querySelectorAll('#refPageSize, #refPrevBtn, #refNextBtn, #refPageInfo, #refPageJump');
+  for (var i = 0; i < paginationEls.length; i++) {
+    paginationEls[i].style.display = '';
+  }
   renderReferenceBooks();
 }
 window.closeBookReader = closeBookReader;

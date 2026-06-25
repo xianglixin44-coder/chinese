@@ -1,7 +1,7 @@
 """参考书阅读 — 书架 + 分页阅读器（流式跳行，无预扫描）"""
 import os, itertools, json, subprocess
 from fastapi import APIRouter, Query
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, FileResponse
 
 router = APIRouter(prefix="/api/books", tags=["books"])
 
@@ -13,25 +13,25 @@ CACHE_DIR = "/Users/xianglixin/Documents/chinese/.cache"
 BOOKS = [
     {"id": "wangli", "title": "古代汉语", "author": "王力", "icon": "📗",
      "path": os.path.join(EPUB2_DIR, "古代汉语_王力.md"),
-     "lines": 40873, "desc": "大学经典教材 · 文选+常用词+通论"},
+     "lines": 40873, "format": "md", "desc": "大学经典教材 · 文选+常用词+通论"},
     {"id": "24shi", "title": "二十四史全集", "author": "司马迁等", "icon": "📚",
      "path": os.path.join(EPUB_DIR, "二十四史（全集）.md"),
-     "lines": 485011, "desc": "史记·汉书·后汉书·三国志…"},
+     "lines": 485011, "format": "md", "desc": "史记·汉书·后汉书·三国志…"},
     {"id": "bx1", "title": "语文 必修上册", "author": "统编教材", "icon": "📕",
      "path": os.path.join(PDF_DIR, "【人教版】高中必修 上册语文电子课本.pdf"),
-     "lines": 0, "desc": "劝学·师说·赤壁赋·登泰山记·诗词"},
+     "lines": 0, "format": "pdf", "desc": "劝学·师说·赤壁赋·登泰山记·诗词"},
     {"id": "bx2", "title": "语文 必修下册", "author": "统编教材", "icon": "📕",
      "path": os.path.join(PDF_DIR, "【人教版】高中必修 下册语文电子课本.pdf"),
-     "lines": 0, "desc": "论语·孟子·庄子·左传·史记·阿房宫赋"},
+     "lines": 0, "format": "pdf", "desc": "论语·孟子·庄子·左传·史记·阿房宫赋"},
     {"id": "xx1", "title": "语文 选择性必修上册", "author": "统编教材", "icon": "📙",
      "path": os.path.join(PDF_DIR, "【人教版】高中选择性必修 上册语文电子课本.pdf"),
-     "lines": 0, "desc": "论语十二章·大学·老子·庄子·墨子"},
+     "lines": 0, "format": "pdf", "desc": "论语十二章·大学·老子·庄子·墨子"},
     {"id": "xx2", "title": "语文 选择性必修中册", "author": "统编教材", "icon": "📙",
      "path": os.path.join(PDF_DIR, "【人教版】高中选择性必修 中册语文电子课本.pdf"),
-     "lines": 0, "desc": "屈原·苏武·过秦论·五代史伶官传序"},
+     "lines": 0, "format": "pdf", "desc": "屈原·苏武·过秦论·五代史伶官传序"},
     {"id": "xx3", "title": "语文 选择性必修下册", "author": "统编教材", "icon": "📙",
      "path": os.path.join(PDF_DIR, "【人教版】高中选择性必修 下册语文电子课本.pdf"),
-     "lines": 0, "desc": "氓·离骚·蜀道难·陈情表·兰亭集序"},
+     "lines": 0, "format": "pdf", "desc": "氓·离骚·蜀道难·陈情表·兰亭集序"},
 ]
 
 # ── 磁盘缓存：总行数（服务器重启不丢失） ──
@@ -95,9 +95,21 @@ def list_books():
         result.append({
             "id": b["id"], "title": b["title"], "author": b["author"],
             "icon": b["icon"], "desc": b["desc"],
-            "lines": b["lines"], "exists": exists
+            "lines": b["lines"], "format": b.get("format","md"), "exists": exists
         })
     return {"books": result}
+
+@router.get("/{book_id}/file")
+def serve_book_file(book_id: str):
+    """直接返回书本原始文件（PDF 等）"""
+    book = next((b for b in BOOKS if b["id"] == book_id), None)
+    if not book:
+        return PlainTextResponse("书未找到", status_code=404)
+    path = book["path"]
+    if not os.path.exists(path):
+        return PlainTextResponse("文件不存在", status_code=404)
+    media_type = "application/pdf" if path.endswith(".pdf") else "text/plain; charset=utf-8"
+    return FileResponse(path, media_type=media_type, filename=os.path.basename(path))
 
 @router.get("/{book_id}", response_class=PlainTextResponse)
 def read_book(
