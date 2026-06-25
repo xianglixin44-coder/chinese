@@ -939,3 +939,57 @@ function checkTrainingStatus() {
   });
 }
 window.checkTrainingStatus = checkTrainingStatus;
+
+// ====== 方法掌握度面板 ======
+function renderMethodStats() {
+  apiCall('GET', '/api/daily/method-stats').then(function(data) {
+    if (!data || !data.methods) {
+      document.getElementById('methodsList').innerHTML = '<p style="color:var(--text-light);">暂无训练数据，开始每日训练后这里会显示方法掌握度。</p>';
+      return;
+    }
+
+    // Overall
+    var ov = data.overall;
+    var ovHtml = '<div class="card" style="text-align:center;padding:20px;">';
+    ovHtml += '<p style="font-size:40px;margin-bottom:4px;">' + (ov.accuracy >= 80 ? '🎉' : ov.accuracy >= 60 ? '👍' : '💪') + '</p>';
+    ovHtml += '<p style="font-size:28px;font-weight:700;color:var(--primary);">' + ov.accuracy + '%</p>';
+    ovHtml += '<p style="color:var(--text-light);font-size:12px;">总正确率 · ' + ov.correct + '/' + ov.total + ' 题</p>';
+    ovHtml += '</div>';
+    document.getElementById('methodsOverall').innerHTML = ovHtml;
+
+    // Method list
+    var statusLabels = {mastered:'🟢 已掌握', learning:'🟡 学习中', weak:'🔴 薄弱', new:'⚪ 新接触'};
+    var html = '';
+    data.methods.forEach(function(m) {
+      var barColor = m.accuracy >= 80 ? '#27ae60' : m.accuracy >= 60 ? '#f39c12' : '#e74c3c';
+      var barBg = m.total < 3 ? '#ddd' : '';
+      html += '<div class="card" style="padding:14px 18px;margin-bottom:10px;">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">';
+      html += '<div>';
+      html += '<strong style="font-size:14px;">' + htmlesc(m.method) + '</strong>';
+      html += '<span style="font-size:11px;color:var(--text-light);margin-left:8px;">' + htmlesc(m.type) + '</span>';
+      html += '</div>';
+      html += '<span style="font-size:12px;">' + (statusLabels[m.status] || m.status) + '</span>';
+      html += '</div>';
+      // Progress bar
+      html += '<div style="height:6px;background:#eee;border-radius:3px;overflow:hidden;margin-bottom:4px;">';
+      html += '<div style="height:100%;background:' + barColor + ';border-radius:3px;width:' + m.accuracy + '%;transition:width .5s;"></div>';
+      html += '</div>';
+      html += '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-light);">';
+      html += '<span>' + m.accuracy + '% (' + m.correct + '/' + m.total + ')</span>';
+      if (m.status === 'weak') html += '<span style="color:#e74c3c;">⚠️ 需加强训练</span>';
+      else if (m.status === 'new') html += '<span style="color:#999;">需要更多练习数据</span>';
+      else if (m.status === 'mastered') html += '<span style="color:#27ae60;">✅ 已内化</span>';
+      else html += '<span style="color:#f39c12;">接近掌握</span>';
+      html += '</div></div>';
+    });
+
+    if (!data.methods.length) {
+      html = '<p style="color:var(--text-light);">暂无训练数据，开始每日训练后这里会显示方法掌握度。</p>';
+    }
+
+    document.getElementById('methodsList').innerHTML = html;
+  });
+}
+
+window.renderMethodStats = renderMethodStats;

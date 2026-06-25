@@ -60,6 +60,7 @@
   <!-- 底部：每日进度概览 -->
   <div class="nav-item active" data-page="overview" onclick="navigate('overview')" style="margin-top:8px;border-top:1px solid var(--border);padding-top:12px;">🏠 首页概览</div>
       <div class="nav-item sub" data-page="training" onclick="navigate('training')" style="font-weight:600;color:var(--primary);">🎯 每日训练</div>
+      <div class="nav-item sub" data-page="methods" onclick="navigate('methods')">📊 方法掌握度</div>
 </nav>
 
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -859,6 +860,23 @@
 </div>
 
 <!-- ======================== IMPORT ======================== -->
+<!-- ======================== METHODS MASTERY ======================== -->
+<div class="page" id="page-methods">
+  <div class="page-header">
+    <div class="page-nav">
+      <span class="back-btn" onclick="navigate('training', true)">← 每日训练</span>
+      <h2>📊 方法掌握度</h2>
+    </div>
+    <p class="sub">各解题方法的正确率与掌握状态</p>
+  </div>
+
+  <div id="methodsOverall" style="margin-bottom:16px;"></div>
+  <div id="methodsList"></div>
+  <p style="color:var(--text-light);font-size:11px;margin-top:12px;">
+    🟢 已掌握(≥80%,≥6题) · 🟡 学习中(≥60%) · 🔴 薄弱(<60%) · ⚪ 新接触(<3题)
+  </p>
+</div>
+
 <div class="page" id="page-import">
   <div class="page-header">
     <h2>📥 数据维护</h2>
@@ -962,7 +980,7 @@
 <script src="/js/data.js"></script>
 <script src="/js/api.js?v=4.0"></script>
 <script src="/js/flashcard.js"></script>
-<script src="/js/exercises.js?v=7.2"></script>
+<script src="/js/exercises.js?v=7.3"></script>
 <script src="/js/app.js?v=1782175626"></script>
 </body>
 </html>

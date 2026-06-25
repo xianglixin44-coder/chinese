@@ -314,3 +314,62 @@ def get_daily(
 
 
 
+
+
+@router.get("/method-stats")
+def get_method_stats():
+    """方法掌握度统计 — 按method聚合正确率"""
+    import json
+    conn = get_db()
+    try:
+        rows = conn.execute("""
+            SELECT e.type, e.extra_json, da.is_correct
+            FROM daily_assignments da
+            JOIN exercises e ON e.id = da.exercise_id
+            WHERE da.is_correct >= 0
+        """).fetchall()
+
+        methods = {}  # key: method_name → {type, correct, total}
+        for r in rows:
+            try:
+                extra = json.loads(r["extra_json"] or "{}")
+            except:
+                extra = {}
+            method = extra.get("method", "")
+            if not method:
+                continue
+            key = method
+            if key not in methods:
+                methods[key] = {"method": method, "type": r["type"], "correct": 0, "total": 0}
+            methods[key]["total"] += 1
+            if r["is_correct"] == 1:
+                methods[key]["correct"] += 1
+
+        result = []
+        for m in methods.values():
+            acc = round(m["correct"] / m["total"] * 100, 1) if m["total"] > 0 else 0
+            if acc >= 80 and m["total"] >= 6:
+                status = "mastered"
+            elif acc >= 60:
+                status = "learning"
+            elif m["total"] < 3:
+                status = "new"
+            else:
+                status = "weak"
+            result.append({**m, "accuracy": acc, "status": status})
+
+        result.sort(key=lambda x: -x["accuracy"])
+
+        total_correct = sum(m["correct"] for m in result)
+        total_all = sum(m["total"] for m in result)
+
+        return {
+            "methods": result,
+            "overall": {
+                "correct": total_correct,
+                "total": total_all,
+                "accuracy": round(total_correct / total_all * 100, 1) if total_all > 0 else 0
+            }
+        }
+    finally:
+        conn.close()
