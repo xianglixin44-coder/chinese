@@ -651,24 +651,58 @@ function renderTrainingQuestion(idx) {
   html += '<span style="font-size:11px;color:var(--text-light);">题 ' + (idx+1) + '/' + _trainingSession.total + '</span>';
   html += '</div>';
   
-  // Question
-  var q = item.question || item.content || '';
-  html += '<p style="font-size:14px;line-height:1.7;margin-bottom:12px;">' + htmlesc(q) + '</p>';
+  // Render based on type
+  if (item.type === 'duanju') {
+    // 断句：显示原文 + 4个选项
+    var raw = item.content || '';
+    html += '<div style="background:#f0f4f8;padding:12px 16px;border-radius:6px;margin-bottom:10px;font-size:16px;line-height:1.8;font-family:serif;letter-spacing:1px;">' + htmlesc(raw) + '</div>';
+    html += '<p style="font-size:13px;color:var(--text-light);margin-bottom:10px;">下列断句正确的一项是：</p>';
+  } else if (item.type === 'translation') {
+    // 翻译：显示原句 + 操作提示
+    var raw = item.content || '';
+    if (raw) {
+      html += '<div style="background:#fef9e7;padding:10px 14px;border-radius:6px;margin-bottom:8px;font-size:15px;line-height:1.7;font-family:serif;border-left:3px solid #f1c40f;">' + htmlesc(raw) + '</div>';
+    }
+    html += '<p style="font-size:13px;color:var(--text-light);margin-bottom:10px;">' + htmlesc(item.question || '请翻译') + '</p>';
+  } else if (item.type === 'moxie') {
+    // 默写：显示情境描述
+    html += '<p style="font-size:14px;line-height:1.7;margin-bottom:12px;">' + htmlesc(item.question || item.content || '') + '</p>';
+  } else {
+    // 文化常识/内容概括：显示题目
+    html += '<p style="font-size:14px;line-height:1.7;margin-bottom:12px;">' + htmlesc(item.question || item.content || '') + '</p>';
+  }
   
-  // Options (for choice-type questions like wenhua/neirong)
+  // Options (for choice-type questions)
   var opts = [];
   try { opts = JSON.parse(item.options_json || '[]'); } catch(e) {}
   
   if (opts.length > 0) {
     var labels = ['A','B','C','D'];
     opts.forEach(function(o, oi) {
-      html += '<label class="ex-option" style="display:block;margin-bottom:6px;padding:8px 12px;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:13px;" onclick="checkTrainingAnswer(' + idx + ',' + oi + ',this)">';
-      html += '<strong>' + labels[oi] + '.</strong> ' + htmlesc(o);
+      var text = o;
+      // If option already starts with label prefix (e.g. "A. ..."), don't add again
+      var alreadyPrefixed = false;
+      for (var li = 0; li < labels.length; li++) {
+        if (text.indexOf(labels[li] + '.') === 0 || text.indexOf(labels[li] + ' ') === 0 || text.indexOf(labels[li] + '、') === 0) {
+          alreadyPrefixed = true;
+          break;
+        }
+      }
+      // For duanju: format with / spacing
+      if (item.type === 'duanju') {
+        text = text.replace(/\//g, ' / ');
+      }
+      html += '<label class="ex-option" style="display:block;margin-bottom:6px;padding:8px 12px;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:13px;line-height:1.6;" onclick="checkTrainingAnswer(' + idx + ',' + oi + ',this)">';
+      if (alreadyPrefixed) {
+        html += htmlesc(text);
+      } else {
+        html += '<strong>' + labels[oi] + '.</strong> ' + htmlesc(text);
+      }
       html += '</label>';
     });
   } else {
-    // Text input
-    html += '<textarea id="train-input-' + idx + '" class="gram-input" rows="3" style="font-size:13px;width:100%;" placeholder="输入答案…"></textarea>';
+    // Text input for moxie/translation
+    html += '<textarea id="train-input-' + idx + '" class="gram-input" rows="3" style="font-size:14px;width:100%;" placeholder="输入答案…"></textarea>';
     html += '<button class="btn-small" onclick="checkTrainingAnswer(' + idx + ',-1)" style="margin-top:8px;font-size:13px;">核对</button>';
   }
   
