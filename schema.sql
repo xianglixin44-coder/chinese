@@ -72,11 +72,15 @@ CREATE TABLE IF NOT EXISTS daily_tasks (
 );
 
 CREATE TABLE IF NOT EXISTS daily_assignments (
-    date TEXT,
-    module TEXT,
-    exercise_id INTEGER,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date TEXT NOT NULL,
+    module TEXT NOT NULL,
+    exercise_id INTEGER NOT NULL,
     completed INTEGER DEFAULT 0,
-    PRIMARY KEY(date, module)
+    score INTEGER,
+    session_id TEXT DEFAULT ''",
+    is_correct INTEGER DEFAULT -1,
+    position INTEGER DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS methods (

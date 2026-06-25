@@ -592,3 +592,251 @@ window.renderReadingTabs = renderReadingTabs;
 window.renderTemplates = renderTemplates;
 window.loadDailyExercise = loadDailyExercise;
 window.renderDailyExercise = renderDailyExercise;
+// ====== 每日训练页面 ======
+var _trainingSession = null;
+var _trainingIdx = 0;
+
+function startDailyTraining() {
+  document.getElementById('trainingStart').style.display = 'none';
+  document.getElementById('trainingProgress').style.display = 'block';
+  document.getElementById('trainingQuiz').style.display = 'block';
+  document.getElementById('trainingResult').style.display = 'none';
+  
+  apiCall('GET', '/api/daily/session?count=10').then(function(r) {
+    if (!r || !r.items || !r.items.length) {
+      document.getElementById('trainingQuiz').innerHTML = '<div class="card" style="text-align:center;padding:24px;"><p>📭 题库暂无题目，请先导入数据。</p></div>';
+      return;
+    }
+    _trainingSession = r;
+    _trainingIdx = 0;
+    updateTrainingProgress();
+    renderTrainingQuestion(0);
+    document.getElementById('trainingDate').textContent = '📅 ' + (r.date || '');
+  });
+}
+
+function updateTrainingProgress() {
+  if (!_trainingSession) return;
+  var total = _trainingSession.total;
+  var done = _trainingSession.items.filter(function(it) { return it.is_correct >= 0; }).length;
+  // Include current if already answered
+  document.getElementById('trainingCount').textContent = done + '/' + total + ' 题';
+  document.getElementById('trainingBar').style.width = Math.round(done / total * 100) + '%';
+  var dots = '';
+  for (var i = 0; i < total; i++) {
+    var it = _trainingSession.items[i];
+    if (it.is_correct === 1) dots += '🟢';
+    else if (it.is_correct === 0) dots += '🔴';
+    else if (i === _trainingIdx) dots += '⚪';
+    else dots += '○';
+  }
+  document.getElementById('trainingDots').textContent = dots;
+}
+
+function renderTrainingQuestion(idx) {
+  if (!_trainingSession || idx >= _trainingSession.total) {
+    finishTraining();
+    return;
+  }
+  _trainingIdx = idx;
+  updateTrainingProgress();
+  
+  var item = _trainingSession.items[idx];
+  var typeNames = {duanju:'断句', wenhua:'文化常识', moxie:'默写', translation:'翻译', neirong:'内容概括'};
+  var typeName = typeNames[item.type] || item.type;
+  
+  var html = '';
+  html += '<div style="margin-bottom:10px;display:flex;align-items:center;gap:8px;">';
+  html += '<span style="background:var(--primary);color:#fff;font-size:11px;padding:2px 8px;border-radius:10px;">' + typeName + '</span>';
+  html += '<span style="font-size:11px;color:var(--text-light);">题 ' + (idx+1) + '/' + _trainingSession.total + '</span>';
+  html += '</div>';
+  
+  // Question
+  var q = item.question || item.content || '';
+  html += '<p style="font-size:14px;line-height:1.7;margin-bottom:12px;">' + htmlesc(q) + '</p>';
+  
+  // Options (for choice-type questions like wenhua/neirong)
+  var opts = [];
+  try { opts = JSON.parse(item.options_json || '[]'); } catch(e) {}
+  
+  if (opts.length > 0) {
+    var labels = ['A','B','C','D'];
+    opts.forEach(function(o, oi) {
+      html += '<label class="ex-option" style="display:block;margin-bottom:6px;padding:8px 12px;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:13px;" onclick="checkTrainingAnswer(' + idx + ',' + oi + ',this)">';
+      html += '<strong>' + labels[oi] + '.</strong> ' + htmlesc(o);
+      html += '</label>';
+    });
+  } else {
+    // Text input
+    html += '<textarea id="train-input-' + idx + '" class="gram-input" rows="3" style="font-size:13px;width:100%;" placeholder="输入答案…"></textarea>';
+    html += '<button class="btn-small" onclick="checkTrainingAnswer(' + idx + ',-1)" style="margin-top:8px;font-size:13px;">核对</button>';
+  }
+  
+  html += '<div id="train-result-' + idx + '" style="margin-top:10px;"></div>';
+  
+  document.getElementById('trainingQuestion').innerHTML = html;
+  document.getElementById('trainingQuestion').scrollIntoView({behavior:'smooth'});
+}
+
+function checkTrainingAnswer(idx, choiceIdx, el) {
+  if (!_trainingSession || idx >= _trainingSession.total) return;
+  var item = _trainingSession.items[idx];
+  if (item.is_correct >= 0) return; // already answered
+  
+  var isCorrect = false;
+  var userAnswer = '';
+  
+  if (choiceIdx >= 0) {
+    // Multiple choice
+    userAnswer = String.fromCharCode(65 + choiceIdx);
+    isCorrect = (item.answer === userAnswer);
+    
+    // Highlight
+    var parent = el.parentElement;
+    if (parent) {
+      parent.querySelectorAll('.ex-option').forEach(function(opt) {
+        opt.style.pointerEvents = 'none';
+      });
+    }
+    el.style.borderColor = isCorrect ? '#27ae60' : '#e67e22';
+    el.style.background = isCorrect ? '#e8f5e9' : '#fff3e0';
+    
+    // Show correct if wrong
+    if (!isCorrect && item.answer) {
+      var labels = ['A','B','C','D'];
+      var correctIdx = labels.indexOf(item.answer);
+      if (correctIdx >= 0) {
+        var opts = parent.querySelectorAll('.ex-option');
+        if (opts[correctIdx]) {
+          opts[correctIdx].style.borderColor = '#27ae60';
+          opts[correctIdx].style.background = '#e8f5e9';
+        }
+      }
+    }
+  } else {
+    // Text input
+    var input = document.getElementById('train-input-' + idx);
+    if (!input) return;
+    userAnswer = input.value.trim();
+    var cleanUser = userAnswer.replace(/[，。；""''「」\s]/g, '');
+    var cleanAns = (item.answer || '').replace(/[，。；""''「」\s]/g, '');
+    isCorrect = cleanUser === cleanAns;
+  }
+  
+  // Record
+  item.is_correct = isCorrect ? 1 : 0;
+  apiCall('POST', '/api/daily/answer', {exercise_id: item.exercise_id, session_id: _trainingSession.session_id, is_correct: isCorrect});
+  
+  // Show result
+  var resultEl = document.getElementById('train-result-' + idx);
+  if (resultEl) {
+    resultEl.innerHTML = '<div class="ex-answer" style="display:block;border-left:3px solid ' + (isCorrect?'#27ae60':'#e67e22') + ';padding:8px 12px;background:#fafafa;border-radius:4px;margin-top:4px;font-size:13px;">' +
+      '<p style="margin-bottom:4px;">' + (isCorrect ? '✅ 正确！' : '❌ 正确答案：' + htmlesc(item.answer || '')) + '</p>' +
+      '<p style="color:#555;font-size:12px;">' + htmlesc(item.explanation || '') + '</p>' +
+      '</div>';
+  }
+  
+  updateTrainingProgress();
+  
+  // Auto-advance after delay
+  setTimeout(function() {
+    if (_trainingIdx === idx) {
+      renderTrainingQuestion(idx + 1);
+    }
+  }, 1200);
+}
+
+function finishTraining() {
+  document.getElementById('trainingQuiz').style.display = 'none';
+  document.getElementById('trainingResult').style.display = 'block';
+  
+  if (!_trainingSession) return;
+  
+  var total = _trainingSession.total;
+  var correct = _trainingSession.items.filter(function(it) { return it.is_correct === 1; }).length;
+  var accuracy = Math.round(correct / total * 100);
+  
+  // Complete session
+  apiCall('POST', '/api/daily/complete', {session_id: _trainingSession.session_id});
+  
+  var emoji = accuracy >= 80 ? '🎉' : accuracy >= 60 ? '👍' : '💪';
+  var msg = accuracy >= 80 ? '太棒了！继续保持！' : accuracy >= 60 ? '不错！再接再厉！' : '继续加油！查漏补缺！';
+  
+  var html = '<p style="font-size:48px;margin-bottom:8px;">' + emoji + '</p>';
+  html += '<h3 style="margin-bottom:6px;">训练完成</h3>';
+  html += '<p style="font-size:32px;font-weight:700;color:var(--primary);margin-bottom:4px;">' + correct + '/' + total + '</p>';
+  html += '<p style="color:var(--text-light);font-size:13px;margin-bottom:12px;">正确率 ' + accuracy + '% · ' + msg + '</p>';
+  html += '<button class="btn-small" onclick="reviewTraining()" style="font-size:12px;">📋 查看错题</button>';
+  html += ' <button class="btn-small" onclick="resetTraining()" style="font-size:12px;">🔄 重新开始</button>';
+  
+  document.getElementById('trainingScore').innerHTML = html;
+  document.getElementById('trainingDate').textContent = '📅 ' + (_trainingSession.date || '') + ' ✅ 已完成';
+  
+  // Update streak
+  if (typeof checkStreak === 'function') checkStreak();
+  if (typeof updateHomeStats === 'function') updateHomeStats();
+}
+
+function reviewTraining() {
+  if (!_trainingSession) return;
+  var wrong = _trainingSession.items.filter(function(it) { return it.is_correct === 0; });
+  if (!wrong.length) {
+    document.getElementById('trainingReview').innerHTML = '<div class="card" style="text-align:center;padding:16px;"><p>🎉 全对！没有错题。</p></div>';
+    return;
+  }
+  var html = '<h4 style="margin-bottom:10px;">📝 错题回顾（' + wrong.length + '题）</h4>';
+  wrong.forEach(function(item, i) {
+    var q = item.question || item.content || '';
+    html += '<div class="exercise-item" style="margin-bottom:10px;padding:10px 14px;">';
+    html += '<p style="font-size:13px;margin-bottom:4px;"><strong>' + (i+1) + '.</strong> ' + htmlesc(q) + '</p>';
+    html += '<p style="color:#e67e22;font-size:12px;">✏️ 答案：' + htmlesc(item.answer || '') + '</p>';
+    html += '<p style="color:#555;font-size:11px;">' + htmlesc(item.explanation || '') + '</p>';
+    html += '</div>';
+  });
+  document.getElementById('trainingReview').innerHTML = html;
+}
+
+function resetTraining() {
+  _trainingSession = null;
+  _trainingIdx = 0;
+  document.getElementById('trainingStart').style.display = 'block';
+  document.getElementById('trainingProgress').style.display = 'none';
+  document.getElementById('trainingQuiz').style.display = 'none';
+  document.getElementById('trainingResult').style.display = 'none';
+}
+
+window.startDailyTraining = startDailyTraining;
+window.checkTrainingAnswer = checkTrainingAnswer;
+window.reviewTraining = reviewTraining;
+window.resetTraining = resetTraining;
+
+function checkTrainingStatus() {
+  var today = new Date().toISOString().slice(0, 10);
+  apiCall('GET', '/api/daily/session?count=1').then(function(r) {
+    if (!r || !r.items) return;
+    // Check if all items are completed
+    var allDone = r.items.every(function(it) { return it.is_correct >= 0; });
+    if (allDone && r.items.length > 0) {
+      document.getElementById('trainingAlreadyDone').style.display = 'block';
+      document.getElementById('trainingDate').textContent = '📅 ' + today + ' ✅ 已完成';
+    } else if (r.items.some(function(it) { return it.is_correct >= 0; })) {
+      // Partially done - resume
+      document.getElementById('trainingStart').style.display = 'none';
+      document.getElementById('trainingProgress').style.display = 'block';
+      document.getElementById('trainingQuiz').style.display = 'block';
+      _trainingSession = r;
+      _trainingIdx = r.items.findIndex(function(it) { return it.is_correct < 0; });
+      if (_trainingIdx < 0) _trainingIdx = r.total;
+      if (_trainingIdx >= r.total) {
+        finishTraining();
+      } else {
+        updateTrainingProgress();
+        renderTrainingQuestion(_trainingIdx);
+      }
+      document.getElementById('trainingDate').textContent = '📅 ' + today;
+    }
+  }).catch(function() {
+    // No existing session - show start button
+  });
+}
+window.checkTrainingStatus = checkTrainingStatus;
