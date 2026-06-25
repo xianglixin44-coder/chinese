@@ -604,7 +604,35 @@ function getMethodLabel(item) {
 }
 
 
+
+// 方法介绍文案
+var METHOD_INTROS = {
+  '虚词标志法': '文言断句以虚词为标志。「也」「者」「矣」「焉」「乎」「耳」「哉」等句末语气词<strong>后必断</strong>；「曰」「云」「言」等对话标志<strong>前后皆断</strong>；「夫」「盖」「且夫」等发语词在句首时<strong>前面断开</strong>。',
+  '主语识别法': '文言断句以主语为核心。遇到<strong>新人名、新事物作主语</strong>，其前断开；<strong>动宾结构完整</strong>不能从中切开；<strong>主语转换</strong>（话题改变）处断开。',
+  '结构切分法': '文言断句以结构为单位。<strong>时间状语</strong>（如「三年」「童幼时」）独立断开；<strong>表字、籍贯、官职</strong>等信息各自成句；<strong>对偶、排比</strong>句式参照对称结构断开。',
+  '综合运用法': '综合运用虚词标志、主语识别、结构切分三种方法。先找虚词，再定主语，最后用对偶排比验证。',
+  '古今异义': '文言翻译先辨古今异义。「痛恨」=痛心遗憾（非仇恨）、「交通」=交错相通（非运输）、「妻子」=妻子儿女（非配偶）。<strong>切忌以今义解古义</strong>。',
+  '词类活用': '文言翻译注意词类活用。<strong>名词作状语</strong>（「手」→亲手）、<strong>形容词作动词</strong>、<strong>使动/意动用法</strong>。先识别活用类型，再用「活用词+本义」翻译。',
+  '虚词翻译': '文言虚词翻译要灵活。「盖」=大概/发语词（句首可不译）、「夫」=发语词（不译）、「之」根据位置判断（主谓间取独/宾语代词/定语标志）。',
+  '字字落实': '文言翻译三步法：①<strong>字字落实</strong>每个实词对应现代汉语；②<strong>句法还原</strong>调整语序为现代语序；③<strong>规范译文</strong>补充省略成分，连贯通顺。',
+  '通假字识别': '文言翻译先辨通假字。根据<strong>上下文语义</strong>和<strong>字音相似</strong>推断本字。常见通假如「说」通「悦」、「见」通「现」、「反」通「返」。',
+  '情境默写': '根据题干描述的情境，从必背篇目中提取对应名句。<strong>先定位篇目</strong>→<strong>再锁定段落</strong>→<strong>最后回忆原句</strong>。注意不写错别字。'
+};
+var _lastMethod = '';
+
+function showMethodIntro(method) {
+  if (!method || method === _lastMethod) return '';
+  _lastMethod = method;
+  var intro = METHOD_INTROS[method];
+  if (!intro) return '';
+  return '<div style="background:linear-gradient(135deg,#e8f0fe,#f0f4ff);padding:12px 16px;border-radius:8px;margin-bottom:12px;border-left:4px solid #1a73e8;">' +
+    '<p style="font-size:12px;color:#1a73e8;margin-bottom:6px;"><strong>📐 ' + htmlesc(method) + '</strong></p>' +
+    '<p style="font-size:12px;color:#444;line-height:1.8;margin:0;">' + intro + '</p>' +
+    '</div>';
+}
+
 function startDailyTraining() {
+  _lastMethod = '';
   document.getElementById('trainingStart').style.display = 'none';
   document.getElementById('trainingProgress').style.display = 'block';
   document.getElementById('trainingQuiz').style.display = 'block';
@@ -659,10 +687,10 @@ function renderTrainingQuestion(idx) {
   html += '<span style="font-size:11px;color:var(--text-light);">题 ' + (idx+1) + '/' + _trainingSession.total + '</span>';
   html += '</div>';
   
-  // Method label
+  // Method intro + label (show intro when method changes)
   var method = getMethodLabel(item);
   if (method) {
-    html += '<div style="margin-bottom:8px;"><span style="background:#e8f0fe;color:#1a73e8;font-size:11px;padding:2px 8px;border-radius:8px;">📐 ' + htmlesc(method) + '</span></div>';
+    html += showMethodIntro(method);
   }
 
   // Render based on type
