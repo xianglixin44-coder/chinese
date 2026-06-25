@@ -76,7 +76,7 @@ function renderDailyExercise(container, ex, isNew) {
         try {
           var opts = JSON.parse(ex.options_json);
           opts.forEach(function(o, i) {
-            html += '<label class="ex-option"><input type="radio" name="dailyQ" value="' + i + '" onchange="checkDailyAnswer(\'' + ex.module + '\',' + i + ',\'' + ex.answer + '\')"> ' + htmlesc(o) + '</label>';
+            html += '<div class="ex-option"><input type="radio" name="dailyQ" value="' + i + '" onchange="checkDailyAnswer(\'' + ex.module + '\',' + i + ',\'' + ex.answer + '\')"> ' + htmlesc(o) + '</label>';
           });
         } catch(e) {}
       }
@@ -91,7 +91,7 @@ function renderDailyExercise(container, ex, isNew) {
     if (ex.options_json && ex.options_json !== '[]') {
       try {
         JSON.parse(ex.options_json).forEach(function(o, i) {
-          html += '<label class="ex-option"><input type="radio" name="dailyQ" value="' + i + '" onchange="checkDailyAnswer(\'' + ex.module + '\',' + i + ',\'' + ex.answer + '\')"> ' + htmlesc(o) + '</label>';
+          html += '<div class="ex-option"><input type="radio" name="dailyQ" value="' + i + '" onchange="checkDailyAnswer(\'' + ex.module + '\',' + i + ',\'' + ex.answer + '\')"> ' + htmlesc(o) + '</label>';
         });
       } catch(e) {}
     } else {
@@ -315,10 +315,10 @@ async function loadDuanjuExample(idx) {
   html += '<div class="duanju-options" style="margin-top:10px;">';
   var labels = ['A', 'B', 'C', 'D'];
   for (var i = 0; i < ex.options.length; i++) {
-    html += '<label class="ex-option" style="display:block;margin-bottom:8px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:13px;line-height:1.6;" onclick="checkDuanju(' + idx + ', ' + i + ', this)">';
+    html += '<div class="ex-option" style="display:block;margin-bottom:8px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:13px;line-height:1.6;" onclick="checkDuanju(' + idx + ', ' + i + ', this)">';
     html += '<span style="display:inline-block;width:22px;height:22px;line-height:22px;text-align:center;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;font-size:12px;margin-right:8px;">' + labels[i] + '</span>';
     html += htmlesc(ex.options[i]);
-    html += '</label>';
+    html += '</div>';
   }
   html += '</div>';
   html += '<div id="duanju-result-' + idx + '" class="mt-12"></div>';
@@ -419,9 +419,9 @@ function loadWenhua() {
       var opts = JSON.parse(ex.options_json || '[]');
       var labels = ['A','B','C','D'];
       opts.forEach(function(o, oi) {
-        html += '<label class="ex-option" style="display:block;margin-bottom:4px;padding:6px 10px;border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:12px;" onclick="checkWenhua(' + idx + ',' + oi + ',this)">';
+        html += '<div class="ex-option" style="display:block;margin-bottom:4px;padding:6px 10px;border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:12px;" onclick="checkWenhua(' + idx + ',' + oi + ',this)">';
         html += '<strong>' + labels[oi] + '.</strong> ' + htmlesc(o);
-        html += '</label>';
+        html += '</div>';
       });
       html += '<div id="wenhua-result-' + idx + '" class="mt-4"></div>';
       html += '</div>';
@@ -463,7 +463,7 @@ function loadNeirong() {
       var opts = JSON.parse(ex.options_json || '[]');
       var labels = ['A','B','C','D'];
       opts.forEach(function(o, oi) {
-        html += '<label class="ex-option" style="display:block;margin-bottom:4px;padding:6px 10px;border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:12px;" onclick="checkNeirong(' + idx + ',' + oi + ',this)">';
+        html += '<div class="ex-option" style="display:block;margin-bottom:4px;padding:6px 10px;border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:12px;" onclick="checkNeirong(' + idx + ',' + oi + ',this)">';
         html += '<strong>' + labels[oi] + '.</strong> ' + htmlesc(o) + '</label>';
       });
       html += '<div id="neirong-result-' + idx + '" class="mt-4"></div></div>';
@@ -506,7 +506,7 @@ function loadPoem() {
       var opts = JSON.parse(ex.options_json || '[]');
       var labels = ['A','B','C','D'];
       opts.forEach(function(o, oi) {
-        html += '<label class="ex-option" style="display:block;margin-bottom:4px;padding:6px 10px;border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:12px;" onclick="checkPoem(' + idx + ',' + oi + ',this)">';
+        html += '<div class="ex-option" style="display:block;margin-bottom:4px;padding:6px 10px;border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:12px;" onclick="checkPoem(' + idx + ',' + oi + ',this)">';
         html += '<strong>' + labels[oi] + '.</strong> ' + htmlesc(o) + '</label>';
       });
       html += '<div id="poem-result-' + idx + '" class="mt-4"></div></div>';
@@ -734,13 +734,13 @@ function renderTrainingQuestion(idx) {
       if (item.type === 'duanju') {
         text = text.replace(/\//g, ' / ');
       }
-      html += '<label class="ex-option" style="display:block;margin-bottom:6px;padding:8px 12px;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:13px;line-height:1.6;" onclick="checkTrainingAnswer(' + idx + ',' + oi + ',this)">';
+      html += '<div class="ex-option" style="display:block;margin-bottom:6px;padding:8px 12px;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:13px;line-height:1.6;" onclick="checkTrainingAnswer(' + idx + ',' + oi + ',this)">';
       if (alreadyPrefixed) {
         html += htmlesc(text);
       } else {
         html += '<strong>' + labels[oi] + '.</strong> ' + htmlesc(text);
       }
-      html += '</label>';
+      html += '</div>';
     });
   } else {
     // Text input for moxie/translation
