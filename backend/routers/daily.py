@@ -373,3 +373,39 @@ def get_method_stats():
         }
     finally:
         conn.close()
+
+
+@router.get("/history")
+def get_daily_history(limit: int = Query(30, ge=1, le=90)):
+    """每日训练记录 — 按天汇总session"""
+    conn = get_db()
+    try:
+        rows = conn.execute("""
+            SELECT date, session_id,
+                   COUNT(*) as total,
+                   SUM(CASE WHEN is_correct=1 THEN 1 ELSE 0 END) as correct,
+                   SUM(CASE WHEN is_correct=0 THEN 1 ELSE 0 END) as wrong,
+                   MAX(completed) as completed
+            FROM daily_assignments
+            WHERE session_id != ''
+            GROUP BY session_id
+            ORDER BY date DESC, session_id DESC
+            LIMIT ?
+        """, [limit]).fetchall()
+
+        result = []
+        for r in rows:
+            total = r["total"] or 0
+            correct = r["correct"] or 0
+            result.append({
+                "date": r["date"],
+                "session_id": r["session_id"],
+                "total": total,
+                "correct": correct,
+                "wrong": r["wrong"] or 0,
+                "accuracy": round(correct / total * 100, 1) if total > 0 else 0,
+                "completed": bool(r["completed"])
+            })
+        return {"sessions": result}
+    finally:
+        conn.close()

@@ -993,3 +993,42 @@ function renderMethodStats() {
 }
 
 window.renderMethodStats = renderMethodStats;
+
+// ====== 每日训练记录 ======
+function renderTrainingSessions() {
+  apiCall('GET', '/api/daily/history?limit=14').then(function(data) {
+    var container = document.getElementById('trainingSessions');
+    if (!container) return;
+    if (!data || !data.sessions || !data.sessions.length) {
+      container.innerHTML = '<p style="color:var(--text-light);font-size:12px;">暂无训练记录</p>';
+      return;
+    }
+
+    var html = '<h4 style="margin-bottom:10px;">📋 最近训练</h4>';
+    html += '<div style="overflow-x:auto;">';
+    html += '<table style="width:100%;font-size:12px;border-collapse:collapse;">';
+    html += '<thead><tr style="border-bottom:1px solid var(--border);color:var(--text-light);">';
+    html += '<th style="padding:6px 8px;text-align:left;">日期</th>';
+    html += '<th style="padding:6px 8px;text-align:center;">题数</th>';
+    html += '<th style="padding:6px 8px;text-align:center;">正确</th>';
+    html += '<th style="padding:6px 8px;text-align:center;">正确率</th>';
+    html += '<th style="padding:6px 8px;text-align:center;">状态</th>';
+    html += '</tr></thead><tbody>';
+
+    data.sessions.forEach(function(s) {
+      var accColor = s.accuracy >= 80 ? '#27ae60' : s.accuracy >= 60 ? '#f39c12' : '#e74c3c';
+      html += '<tr style="border-bottom:1px solid #f0f0f0;">';
+      html += '<td style="padding:6px 8px;">' + htmlesc(s.date) + '</td>';
+      html += '<td style="padding:6px 8px;text-align:center;">' + s.total + '</td>';
+      html += '<td style="padding:6px 8px;text-align:center;">' + s.correct + '</td>';
+      html += '<td style="padding:6px 8px;text-align:center;color:' + accColor + ';font-weight:600;">' + s.accuracy + '%</td>';
+      html += '<td style="padding:6px 8px;text-align:center;">' + (s.completed ? '✅' : '⏳') + '</td>';
+      html += '</tr>';
+    });
+
+    html += '</tbody></table></div>';
+    container.innerHTML = html;
+  });
+}
+
+window.renderTrainingSessions = renderTrainingSessions;

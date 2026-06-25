@@ -96,7 +96,7 @@ function navigate(page, keepNav, anchor) {
   if (page === 'method') { renderMethodPage(); }
   if (page === 'wrong') { renderWrongPage(); }
   if (page === 'training') { checkTrainingStatus(); }
-  if (page === 'methods') { renderMethodStats(); }
+  if (page === 'methods') { renderMethodStats(); renderTrainingSessions(); }
   if (page === 'history') { renderTrainingHistory(); }
   // 锚点跳转（如闪卡区域）
   if (anchor) {
