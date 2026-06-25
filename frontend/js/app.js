@@ -1051,7 +1051,6 @@ async function openBookReader(bookId) {
   var titleEl = document.getElementById('refReaderTitle');
   var contentEl = document.getElementById('refReaderContent');
   var pdfFrame = document.getElementById('refPdfFrame');
-  var pageNavs = document.querySelectorAll('#refReader .page-nav-row');
   if (titleEl) titleEl.textContent = '加载中…';
 
   try {
@@ -1102,7 +1101,7 @@ async function loadRefPage() {
 
     var totalPages = 1;
     var match = text.match(/第 (\d+)\/(\d+) 页/);
-    if (match) totalPages = parseInt(match[1]);
+    if (match) totalPages = parseInt(match[2]);
     refState.totalPages = totalPages;
 
     if (contentEl) contentEl.textContent = text;
