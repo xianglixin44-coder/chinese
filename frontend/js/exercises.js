@@ -596,6 +596,14 @@ window.renderDailyExercise = renderDailyExercise;
 var _trainingSession = null;
 var _trainingIdx = 0;
 
+function getMethodLabel(item) {
+  try {
+    var extra = JSON.parse(item.extra_json || '{}');
+    return extra.method || '';
+  } catch(e) { return ''; }
+}
+
+
 function startDailyTraining() {
   document.getElementById('trainingStart').style.display = 'none';
   document.getElementById('trainingProgress').style.display = 'block';
@@ -651,6 +659,12 @@ function renderTrainingQuestion(idx) {
   html += '<span style="font-size:11px;color:var(--text-light);">题 ' + (idx+1) + '/' + _trainingSession.total + '</span>';
   html += '</div>';
   
+  // Method label
+  var method = getMethodLabel(item);
+  if (method) {
+    html += '<div style="margin-bottom:8px;"><span style="background:#e8f0fe;color:#1a73e8;font-size:11px;padding:2px 8px;border-radius:8px;">📐 ' + htmlesc(method) + '</span></div>';
+  }
+
   // Render based on type
   if (item.type === 'duanju') {
     // 断句：显示原文 + 4个选项
@@ -761,13 +775,35 @@ function checkTrainingAnswer(idx, choiceIdx, el) {
   item.is_correct = isCorrect ? 1 : 0;
   apiCall('POST', '/api/daily/answer', {exercise_id: item.exercise_id, session_id: _trainingSession.session_id, is_correct: isCorrect});
   
-  // Show result
+  // Show result with method highlighted
   var resultEl = document.getElementById('train-result-' + idx);
   if (resultEl) {
-    resultEl.innerHTML = '<div class="ex-answer" style="display:block;border-left:3px solid ' + (isCorrect?'#27ae60':'#e67e22') + ';padding:8px 12px;background:#fafafa;border-radius:4px;margin-top:4px;font-size:13px;">' +
-      '<p style="margin-bottom:4px;">' + (isCorrect ? '✅ 正确！' : '❌ 正确答案：' + htmlesc(item.answer || '')) + '</p>' +
-      '<p style="color:#555;font-size:12px;">' + htmlesc(item.explanation || '') + '</p>' +
-      '</div>';
+    var method = getMethodLabel(item);
+    var feedbackHtml = '<div class="ex-answer" style="display:block;border-left:3px solid ' + (isCorrect?'#27ae60':'#e67e22') + ';padding:12px 14px;background:#fafafa;border-radius:6px;margin-top:6px;font-size:13px;">';
+    
+    // Method highlight
+    if (method) {
+      feedbackHtml += '<div style="background:#e8f0fe;padding:6px 10px;border-radius:6px;margin-bottom:8px;font-size:12px;">';
+      feedbackHtml += '<strong>📐 ' + htmlesc(method) + '</strong>';
+      if (item.type === 'duanju') {
+        feedbackHtml += '<span style="color:#666;margin-left:6px;">— 掌握此方法可应对所有同类断句题</span>';
+      } else if (item.type === 'translation') {
+        feedbackHtml += '<span style="color:#666;margin-left:6px;">— 此类翻译题的通用解法</span>';
+      }
+      feedbackHtml += '</div>';
+    }
+    
+    // Answer
+    feedbackHtml += '<p style="margin-bottom:6px;">' + (isCorrect ? '✅ 正确！' : '❌ 正确答案：<strong>' + htmlesc(item.answer || '') + '</strong>') + '</p>';
+    
+    // Explanation / method steps
+    var expl = item.explanation || '';
+    if (expl) {
+      feedbackHtml += '<div style="color:#555;font-size:12px;line-height:1.7;border-top:1px solid #e0e0e0;padding-top:6px;margin-top:4px;">' + htmlesc(expl).replace(/【/g, '<br>【') + '</div>';
+    }
+    
+    feedbackHtml += '</div>';
+    resultEl.innerHTML = feedbackHtml;
   }
   
   updateTrainingProgress();

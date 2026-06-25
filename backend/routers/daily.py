@@ -19,21 +19,48 @@ TOTAL_PER_DAY = sum(p[2] for p in DAILY_PLAN)
 
 
 def _pick_for_type(conn, module: str, etype: str, n: int, today: str, exclude_ids: list):
-    """按间隔重复优先级从一个题型中选n道题"""
-    # 优先从未练过的题、间隔最久的题中选
+    """按间隔重复 + 同方法集中 选题。优先同方法的题连续出。"""
+    import json
     rows = conn.execute(
         """SELECT * FROM exercises
            WHERE module=? AND type=? AND status='active'
            ORDER BY practice_count ASC, last_practiced_at ASC
            LIMIT ?""",
-        [module, etype, n * 3]  # 多取一些做候选
+        [module, etype, n * 5]
     ).fetchall()
 
-    # 过滤掉 exclude_ids
     candidates = [dict(r) for r in rows if r["id"] not in exclude_ids]
-
-    # 排序：从未练过优先，然后间隔最久
     candidates.sort(key=lambda x: (x["practice_count"] or 0, x["last_practiced_at"] or ""))
+
+    if n <= 1 or len(candidates) <= 1:
+        return candidates[:n]
+
+    # 找出最主要的method，优先同方法题目
+    method_counts = {}
+    for c in candidates:
+        try:
+            extra = json.loads(c.get("extra_json", "{}") or "{}")
+            m = extra.get("method", "")
+        except:
+            m = ""
+        if m:
+            method_counts[m] = method_counts.get(m, 0) + 1
+
+    # 选题目最多的方法，从中取n道
+    if method_counts:
+        best_method = max(method_counts, key=method_counts.get)
+        same_method = [c for c in candidates if best_method in (c.get("extra_json", "") or "{}")]
+        if len(same_method) >= n:
+            # 从同方法中选
+            same_method.sort(key=lambda x: (x["practice_count"] or 0, x["last_practiced_at"] or ""))
+            return same_method[:n]
+        else:
+            # 同方法不够 → 同方法在前，剩余从其他补
+            result = list(same_method)
+            others = [c for c in candidates if c not in same_method]
+            others.sort(key=lambda x: (x["practice_count"] or 0, x["last_practiced_at"] or ""))
+            result.extend(others[:n - len(result)])
+            return result[:n]
 
     return candidates[:n]
 
@@ -57,7 +84,7 @@ def get_daily_session(
             # 返回已有session
             sid = existing["session_id"]
             items = conn.execute(
-                """SELECT da.*, e.question, e.content, e.answer, e.explanation, e.options_json, e.module, e.type
+                """SELECT da.*, e.question, e.content, e.answer, e.explanation, e.options_json, e.extra_json, e.module, e.type
                    FROM daily_assignments da
                    JOIN exercises e ON e.id = da.exercise_id
                    WHERE da.session_id=? ORDER BY da.position""",
@@ -119,7 +146,7 @@ def get_daily_session(
 
         # 返回
         items = conn.execute(
-            """SELECT da.*, e.question, e.content, e.answer, e.explanation, e.options_json, e.module, e.type
+            """SELECT da.*, e.question, e.content, e.answer, e.explanation, e.options_json, e.extra_json, e.module, e.type
                FROM daily_assignments da
                JOIN exercises e ON e.id = da.exercise_id
                WHERE da.session_id=? ORDER BY da.position""",
