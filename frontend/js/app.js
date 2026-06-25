@@ -1046,6 +1046,7 @@ async function openBookReader(bookId) {
 
   await loadRefPage();
 }
+window.openBookReader = openBookReader;
 
 async function loadRefPage() {
   if (!refState.bookId) return;
