@@ -57,7 +57,7 @@ def get_daily_session(
             # 返回已有session
             sid = existing["session_id"]
             items = conn.execute(
-                """SELECT da.*, e.question, e.answer, e.explanation, e.options_json, e.module, e.type
+                """SELECT da.*, e.question, e.content, e.answer, e.explanation, e.options_json, e.module, e.type
                    FROM daily_assignments da
                    JOIN exercises e ON e.id = da.exercise_id
                    WHERE da.session_id=? ORDER BY da.position""",
@@ -119,7 +119,7 @@ def get_daily_session(
 
         # 返回
         items = conn.execute(
-            """SELECT da.*, e.question, e.answer, e.explanation, e.options_json, e.module, e.type
+            """SELECT da.*, e.question, e.content, e.answer, e.explanation, e.options_json, e.module, e.type
                FROM daily_assignments da
                JOIN exercises e ON e.id = da.exercise_id
                WHERE da.session_id=? ORDER BY da.position""",
@@ -163,21 +163,33 @@ def answer_daily(body: dict):
         conn.close()
 
 
+
+
 @router.post("/complete")
-def complete_daily_session(body: dict):
-    """完成整个session"""
+def complete_daily_endpoint(body: dict = None):
+    """完成标记 — 支持新旧两种格式"""
     conn = get_db()
     try:
-        conn.execute(
-            "UPDATE daily_assignments SET completed=1 WHERE session_id=?",
-            [body.get("session_id", "")]
-        )
-        conn.commit()
-
-        # 统计
-        total = conn.execute("SELECT COUNT(*) FROM daily_assignments WHERE session_id=?", [body.get("session_id", "")]).fetchone()[0]
-        correct = conn.execute("SELECT COUNT(*) FROM daily_assignments WHERE session_id=? AND is_correct=1", [body.get("session_id", "")]).fetchone()[0]
-        return {"ok": True, "total": total, "correct": correct, "accuracy": round(correct / total * 100, 1) if total > 0 else 0}
+        sid = body.get("session_id", "") if body else ""
+        if sid:
+            # 新格式：session-based
+            conn.execute(
+                "UPDATE daily_assignments SET completed=1 WHERE session_id=?",
+                [sid]
+            )
+            conn.commit()
+            total = conn.execute("SELECT COUNT(*) FROM daily_assignments WHERE session_id=?", [sid]).fetchone()[0]
+            correct = conn.execute("SELECT COUNT(*) FROM daily_assignments WHERE session_id=? AND is_correct=1", [sid]).fetchone()[0]
+            return {"ok": True, "total": total, "correct": correct, "accuracy": round(correct / total * 100, 1) if total > 0 else 0}
+        else:
+            # 旧格式：DailyAssign
+            today = body.get("date") or date.today().isoformat()
+            conn.execute(
+                "UPDATE daily_assignments SET completed=1, score=? WHERE date=? AND module=? AND session_id=''",
+                [body.get("score"), today, body.get("module", "")]
+            )
+            conn.commit()
+            return {"ok": True}
     finally:
         conn.close()
 
@@ -274,17 +286,4 @@ def get_daily(
         conn.close()
 
 
-@router.post("/complete")
-def complete_daily(body: DailyAssign):
-    """旧版单题完成标记（兼容）"""
-    today = body.date or date.today().isoformat()
-    conn = get_db()
-    try:
-        conn.execute(
-            "UPDATE daily_assignments SET completed=1, score=? WHERE date=? AND module=? AND session_id=''",
-            [body.score, today, body.module],
-        )
-        conn.commit()
-        return {"ok": True}
-    finally:
-        conn.close()
+
