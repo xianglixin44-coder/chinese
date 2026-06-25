@@ -802,6 +802,23 @@ function checkTrainingAnswer(idx, choiceIdx, el) {
   // Record
   item.is_correct = isCorrect ? 1 : 0;
   apiCall('POST', '/api/daily/answer', {exercise_id: item.exercise_id, session_id: _trainingSession.session_id, is_correct: isCorrect});
+
+  // 错题自动录入
+  if (!isCorrect) {
+    var wrongQ = item.question || item.content || '';
+    apiCall('POST', '/api/wrong', {
+      exercise_id: item.exercise_id || 0,
+      module: 'classical_reading',
+      question_type: item.type || '',
+      question: wrongQ,
+      user_answer: userAnswer,
+      correct_answer: item.answer || '',
+      explanation: item.explanation || ''
+    });
+    if (typeof recordTrainingLog === 'function') {
+      recordTrainingLog('classical_reading', wrongQ, userAnswer, item.answer || '', 0);
+    }
+  }
   
   // Show result with method highlighted
   var resultEl = document.getElementById('train-result-' + idx);

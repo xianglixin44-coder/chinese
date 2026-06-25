@@ -71,3 +71,66 @@ def mark_reviewed(item_id: int):
         return {"ok": True}
     finally:
         conn.close()
+
+
+@router.get("/wrong/analysis")
+def wrong_analysis():
+    """错题分析 — 按日期、方法、类型聚合"""
+    import json
+    conn = get_db()
+    try:
+        # 按日期统计
+        by_date = conn.execute("""
+            SELECT DATE(wrong_at) as date, COUNT(*) as count
+            FROM wrong_items
+            GROUP BY DATE(wrong_at)
+            ORDER BY date DESC
+            LIMIT 30
+        """).fetchall()
+
+        # 按类型统计
+        by_type = conn.execute("""
+            SELECT question_type, COUNT(*) as count
+            FROM wrong_items
+            WHERE question_type != ''
+            GROUP BY question_type
+            ORDER BY count DESC
+        """).fetchall()
+
+        # 按方法统计（从exercises关联）
+        by_method_rows = conn.execute("""
+            SELECT e.extra_json, COUNT(*) as count
+            FROM wrong_items w
+            JOIN exercises e ON e.id = w.exercise_id
+            WHERE w.exercise_id > 0
+            GROUP BY e.extra_json
+            ORDER BY count DESC
+        """).fetchall()
+
+        by_method = []
+        for r in by_method_rows:
+            try:
+                extra = json.loads(r["extra_json"] or "{}")
+                method = extra.get("method", "")
+                if method:
+                    by_method.append({"method": method, "count": r["count"]})
+            except:
+                pass
+
+        # 总览
+        total = conn.execute("SELECT COUNT(*) FROM wrong_items").fetchone()[0]
+        unreviewed = conn.execute("SELECT COUNT(*) FROM wrong_items WHERE reviewed=0").fetchone()[0]
+        today_count = conn.execute(
+            "SELECT COUNT(*) FROM wrong_items WHERE DATE(wrong_at)=DATE('now','localtime')"
+        ).fetchone()[0]
+
+        return {
+            "total": total,
+            "unreviewed": unreviewed,
+            "today": today_count,
+            "by_date": [{"date": r["date"], "count": r["count"]} for r in by_date],
+            "by_type": [{"type": r["question_type"], "count": r["count"]} for r in by_type],
+            "by_method": by_method
+        }
+    finally:
+        conn.close()

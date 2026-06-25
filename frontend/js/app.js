@@ -936,7 +936,33 @@ async function renderWrongPage() {
     el.innerHTML = '<div class="card" style="text-align:center;padding:40px;"><p style="font-size:18px;">🎉 暂无错题</p><p style="color:var(--text-light);">继续练习，答错的题目会自动收录到这里。</p></div>';
     return;
   }
-  var html = '<div class="card"><h3>📋 错题列表 (' + items.length + '题)</h3></div>';
+
+  // Load analysis
+  var analysisHtml = '';
+  apiCall('GET', '/api/wrong/analysis').then(function(a) {
+    if (a) {
+      analysisHtml = '<div class="card" style="background:linear-gradient(135deg,#fef9e7,#fdf2f2);padding:16px;">';
+      analysisHtml += '<h3 style="margin-bottom:10px;">📊 错题分析</h3>';
+      analysisHtml += '<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px;">';
+      analysisHtml += '<div><span style="font-size:24px;font-weight:700;color:#e74c3c;">' + (a.total||0) + '</span><span style="font-size:11px;color:var(--text-light);"> 总错题</span></div>';
+      analysisHtml += '<div><span style="font-size:24px;font-weight:700;color:#f39c12;">' + (a.unreviewed||0) + '</span><span style="font-size:11px;color:var(--text-light);"> 待复习</span></div>';
+      analysisHtml += '<div><span style="font-size:24px;font-weight:700;color:var(--primary);">' + (a.today||0) + '</span><span style="font-size:11px;color:var(--text-light);"> 今日新增</span></div>';
+      analysisHtml += '</div>';
+      // By method
+      if (a.by_method && a.by_method.length) {
+        analysisHtml += '<div style="margin-top:8px;"><strong style="font-size:12px;">薄弱方法：</strong>';
+        a.by_method.slice(0,5).forEach(function(m) {
+          analysisHtml += '<span style="display:inline-block;background:#fde8e8;color:#c0392b;font-size:11px;padding:2px 8px;border-radius:8px;margin:2px 4px;">' + htmlesc(m.method) + ' ×' + m.count + '</span>';
+        });
+        analysisHtml += '</div>';
+      }
+      analysisHtml += '</div>';
+      document.getElementById('wrongAnalysis').innerHTML = analysisHtml;
+    }
+  });
+
+  var html = '<div id="wrongAnalysis"></div>';
+  html += '<div class="card"><h3>📋 错题列表 (' + items.length + '题)</h3></div>';
   items.forEach(function(item, i) {
     html += '<div class="card" id="wrong-' + item.id + '" style="margin-top:8px;">';
     html += '<div style="display:flex;justify-content:space-between;align-items:start;">';
@@ -944,6 +970,7 @@ async function renderWrongPage() {
     html += '<p style="font-size:14px;margin-bottom:6px;"><strong>' + htmlesc(item.question) + '</strong></p>';
     html += '<p style="font-size:12px;margin-bottom:2px;"><span style="color:#e74c3c;">❌ 你的答案：' + htmlesc(item.user_answer||'') + '</span></p>';
     html += '<p style="font-size:12px;color:#27ae60;">✅ 正确答案：' + htmlesc(item.correct_answer||'') + '</p>';
+    if (item.explanation) html += '<p style="font-size:11px;color:var(--text-light);margin-top:4px;">💡 ' + htmlesc(item.explanation) + '</p>';
     html += '</div>';
     html += '<button class="btn-small" onclick="removeWrong(' + item.id + ')" style="background:#27ae60;color:#fff;white-space:nowrap;">✅ 已掌握</button>';
     html += '</div></div>';
