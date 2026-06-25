@@ -41,6 +41,7 @@
     <div class="nav-group-title" onclick="toggleGroup('resource')">📚 资源 <span class="arrow">▸</span></div>
     <div class="nav-group-body collapsed" id="group-resource">
       <div class="nav-item sub" data-page="books" onclick="navigate('books')">📖 推荐书单</div>
+      <div class="nav-item sub" data-page="reference" onclick="navigate('reference')">📚 参考书</div>
       <div class="nav-item sub" data-page="plan" onclick="navigate('plan')">📅 训练计划</div>
     </div>
   </div>
@@ -972,6 +973,43 @@
     <div class="page-datetime" id="dt-history"></div>
   </div>
   <div id="trainingHistoryContent" style="min-height:200px;"></div>
+</div>
+
+
+<!-- ======================== REFERENCE BOOKS ======================== -->
+<div class="page" id="page-reference">
+  <div class="page-header">
+    <h2>📚 参考书</h2>
+    <p class="sub">王力《古代汉语》· 二十四史 · 统编教材（必修+选择性必修），点击书名开始阅读。</p>
+  </div>
+  <div class="card" id="refBookList" style="overflow:hidden"></div>
+  <!-- Reader view (hidden until book selected) -->
+  <div class="card" id="refReader" style="display:none;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div>
+        <button class="btn btn-outline" onclick="closeBookReader()" style="padding:6px 14px;font-size:13px">← 返回书架</button>
+        <span id="refReaderTitle" style="font-weight:700;font-size:18px;margin-left:12px"></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <select id="refPageSize" onchange="changeRefPageSize(this.value)" style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px">
+          <option value="200">200行/页</option>
+          <option value="300" selected>300行/页</option>
+          <option value="500">500行/页</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px">
+      <button class="btn btn-outline" id="refPrevBtn" onclick="flipRefPage(-1)" style="padding:6px 14px">← 上一页</button>
+      <span id="refPageInfo" style="font-size:13px;color:var(--text-light)"></span>
+      <button class="btn btn-outline" id="refNextBtn" onclick="flipRefPage(1)" style="padding:6px 14px">下一页 →</button>
+    </div>
+    <pre id="refReaderContent" style="background:var(--bg);padding:16px;border-radius:8px;font-size:13px;line-height:1.8;max-height:60vh;overflow-y:auto;white-space:pre-wrap;word-break:break-word;font-family:'PingFang SC','Noto Sans SC',sans-serif;border:1px solid var(--border)"></pre>
+    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:12px">
+      <button class="btn btn-outline" onclick="flipRefPage(-1)" style="padding:6px 14px">← 上一页</button>
+      <select id="refPageJump" onchange="jumpRefPage(this.value)" style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;min-width:80px"></select>
+      <button class="btn btn-outline" onclick="flipRefPage(1)" style="padding:6px 14px">下一页 →</button>
+    </div>
+  </div>
 </div>
 
 </div><!-- /main -->
