@@ -250,6 +250,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 //  ④ PAGES: 各页面渲染函数 (书籍/计划/评估/选项卡/统计)
 // ================================================================
 function renderBooks() {
+  var l = document.getElementById('bookList');
+  if (!l) return;
   l.innerHTML = BOOKS.map(b => `<div class="book-row"><div class="rank">${b.rank}</div><div><h4>${b.title}</h4><div class="author">${b.author}</div><div class="desc">${b.desc}</div><span class="tag ${b.tagClass}">${b.tag}</span></div></div>`).join('');
 }
 

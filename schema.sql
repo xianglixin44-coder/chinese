@@ -107,7 +107,7 @@ CREATE TABLE IF NOT EXISTS exercises (
     options_json TEXT DEFAULT '[]',
     answer TEXT DEFAULT '',
     explanation TEXT DEFAULT '',
-    meta_json TEXT DEFAULT '{}',
+    extra_json TEXT DEFAULT '{}',
     created_at TEXT DEFAULT (datetime('now','localtime'))
 );
 
