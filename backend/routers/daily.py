@@ -40,6 +40,7 @@ def _pick_for_type(conn, module: str, etype: str, n: int, today: str, exclude_id
 
 @router.get("/session")
 def get_daily_session(
+    check_only: int = Query(0, description="仅检查不创建"),
     count: int = Query(TOTAL_PER_DAY, description="每日题量，默认10"),
 ):
     """获取或创建今日训练session — 返回题目列表 + session_id"""
@@ -70,6 +71,10 @@ def get_daily_session(
                 "completed_count": sum(1 for r in items if r["is_correct"] >= 0),
                 "is_new": False,
             }
+
+        # check_only 模式：已有session则返回，无则返回空（不创建）
+        if check_only:
+            return {"session_id": "", "date": today, "items": [], "total": 0, "completed_count": 0, "is_new": False}
 
         # 新建session
         sid = f"{today}-{uuid.uuid4().hex[:6]}"

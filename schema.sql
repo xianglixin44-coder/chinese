@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS daily_assignments (
     exercise_id INTEGER NOT NULL,
     completed INTEGER DEFAULT 0,
     score INTEGER,
-    session_id TEXT DEFAULT ''",
+    session_id TEXT DEFAULT '',
     is_correct INTEGER DEFAULT -1,
     position INTEGER DEFAULT 0
 );

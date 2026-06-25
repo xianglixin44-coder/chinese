@@ -811,8 +811,9 @@ window.reviewTraining = reviewTraining;
 window.resetTraining = resetTraining;
 
 function checkTrainingStatus() {
+  // 仅检查是否存在未完成session，不创建新session
   var today = new Date().toISOString().slice(0, 10);
-  apiCall('GET', '/api/daily/session?count=1').then(function(r) {
+  apiCall('GET', '/api/daily/session?check_only=1').then(function(r) {
     if (!r || !r.items) return;
     // Check if all items are completed
     var allDone = r.items.every(function(it) { return it.is_correct >= 0; });
