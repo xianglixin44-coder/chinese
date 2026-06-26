@@ -157,3 +157,36 @@ window.rateCard = rateCard;
 window.initDeck = initDeck;
 
 document.addEventListener('click', e => { const btn = e.target.closest('.deck-btn'); if (btn) initDeck(btn.dataset.deck); });
+// ================================================================
+//  Mac / iPad 键盘快捷键（空格翻卡，数字键评分）
+// ================================================================
+document.addEventListener('keydown', function(e) {
+  if (typeof S === 'undefined' || !S.currentPage || S.currentPage !== 'classical') return;
+  if (typeof deckQueue === 'undefined' || deckQueue.length === 0) return;
+  var tag = document.activeElement ? document.activeElement.tagName : '';
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+  switch (e.code) {
+    case 'Space':
+      e.preventDefault();
+      flipCard();
+      break;
+    case 'Digit1': case 'Numpad1':
+      if (S.flipped) rateCard('again');
+      break;
+    case 'Digit2': case 'Numpad2':
+      if (S.flipped) rateCard('hard');
+      break;
+    case 'Digit3': case 'Numpad3':
+      if (S.flipped) rateCard('easy');
+      break;
+    case 'ArrowRight':
+      e.preventDefault();
+      if (!S.flipped) flipCard();
+      break;
+    case 'ArrowLeft':
+      e.preventDefault();
+      if (S.flipped) rateCard('again');
+      break;
+  }
+});
