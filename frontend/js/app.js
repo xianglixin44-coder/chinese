@@ -1068,7 +1068,7 @@ async function openBookReader(bookId) {
 
   // Reset visibility defaults
   if (contentEl) contentEl.style.display = '';
-  if (pdfFrame) { pdfFrame.style.display = 'none'; pdfFrame.src = ''; }
+  if (pdfFrame) { pdfFrame.style.display = 'none'; pdfFrame.removeAttribute('src'); }
   var paginationEls = document.querySelectorAll('#refPageSize, #refPrevBtn, #refNextBtn, #refPageInfo, #refPageJump');
   for (var j = 0; j < paginationEls.length; j++) { paginationEls[j].style.display = ''; }
 
@@ -1084,7 +1084,7 @@ async function openBookReader(bookId) {
       if (contentEl) contentEl.style.display = 'none';
       if (pdfFrame) {
         pdfFrame.style.display = '';
-        pdfFrame.src = '/api/books/' + bookId + '/file';
+        pdfFrame.setAttribute('src', '/api/books/' + bookId + '/file');
       }
       for (var k = 0; k < paginationEls.length; k++) { paginationEls[k].style.display = 'none'; }
       return;
@@ -1165,7 +1165,7 @@ window.changeRefPageSize = changeRefPageSize;
 
 function closeBookReader() {
   var pdfFrame = document.getElementById('refPdfFrame');
-  if (pdfFrame) { pdfFrame.src = ''; pdfFrame.style.display = 'none'; }
+  if (pdfFrame) { pdfFrame.removeAttribute('src'); pdfFrame.style.display = 'none'; }
   var paginationEls = document.querySelectorAll('#refPageSize, #refPrevBtn, #refNextBtn, #refPageInfo, #refPageJump');
   for (var i = 0; i < paginationEls.length; i++) { paginationEls[i].style.display = ''; }
   renderReferenceBooks();
