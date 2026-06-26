@@ -109,8 +109,10 @@ def serve_book_file(book_id: str):
     if not os.path.exists(path):
         return PlainTextResponse("文件不存在", status_code=404)
     media_type = "application/pdf" if path.endswith(".pdf") else "text/plain; charset=utf-8"
-    filename = os.path.basename(path) if path.endswith(".pdf") else None
-    return FileResponse(path, media_type=media_type, filename=filename)
+    resp = FileResponse(path, media_type=media_type)
+    if path.endswith(".pdf"):
+        resp.headers["Content-Disposition"] = "inline"
+    return resp
 
 @router.get("/{book_id}", response_class=PlainTextResponse)
 def read_book(
