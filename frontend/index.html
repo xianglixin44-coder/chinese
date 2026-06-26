@@ -16,19 +16,24 @@
 </header>
 
 <nav class="sidebar" id="sidebar">
-  <!-- 训练分组 — 默认展开 -->
+  <!-- 1. 学习主页 -->
+  <div class="nav-item active" data-page="overview" onclick="navigate('overview')">🏠 学习主页</div>
+  <!-- 2. 每日主线 — 最醒目的行动入口 -->
+  <div class="nav-item" data-page="training" onclick="navigate('training')" style="font-weight:700;color:var(--primary);font-size:14px;background:linear-gradient(135deg,#f0f4ff,#e8f0fe);margin:4px 8px;border-radius:8px;border:1px solid var(--accent2)">🎯 开始今日训练</div>
+
+  <!-- 3. 专项突破与工具箱 -->
   <div class="nav-group">
-    <div class="nav-group-title" onclick="toggleGroup('train')">📋 训练 <span class="arrow">▸</span></div>
+    <div class="nav-group-title" onclick="toggleGroup('train')">🛠️ 专项突破与工具箱 <span class="arrow">▸</span></div>
     <div class="nav-group-body collapsed" id="group-train">
-      <div class="nav-item sub" data-page="classical" data-anchor="flashcard" onclick="navigate('classical', true, 'flashcard')">🃏 闪卡</div>
-      <div class="nav-item sub" data-page="reading" onclick="navigate('reading', false)">📖 现代文阅读</div>
-      <div class="nav-item sub" data-page="classical" onclick="navigate('classical', false)">🏛️ 古诗文阅读</div>
-      <div class="nav-item sub" data-page="language" onclick="navigate('language', false)">✍️ 语言文字运用</div>
-      <div class="nav-item sub" data-page="writing" onclick="navigate('writing', false)">📝 写作表达</div>
+      <div class="nav-item sub" data-page="classical" data-anchor="flashcard" onclick="navigate('classical', true, 'flashcard')">🃏 费曼闪卡</div>
+      <div class="nav-item sub" data-page="reading" onclick="navigate('reading', false)">📖 现代文·标记法</div>
+      <div class="nav-item sub" data-page="classical" onclick="navigate('classical', false)">🏛️ 古诗文·翻译器</div>
+      <div class="nav-item sub" data-page="language" onclick="navigate('language', false)">✍️ 语用·病句诊断</div>
+      <div class="nav-item sub" data-page="writing" onclick="navigate('writing', false)">📝 写作·段落拼装</div>
     </div>
   </div>
 
-  <!-- 方法分组 — 默认折叠 -->
+  <!-- 4. 方法 -->
   <div class="nav-group">
     <div class="nav-group-title" onclick="toggleGroup('method');navigate('method')">🧠 方法 <span class="arrow">▸</span></div>
     <div class="nav-group-body collapsed" id="group-method">
@@ -36,7 +41,7 @@
     </div>
   </div>
 
-  <!-- 资源分组 — 默认折叠 -->
+  <!-- 5. 资源 -->
   <div class="nav-group">
     <div class="nav-group-title" onclick="toggleGroup('resource')">📚 资源 <span class="arrow">▸</span></div>
     <div class="nav-group-body collapsed" id="group-resource">
@@ -46,7 +51,7 @@
     </div>
   </div>
 
-  <!-- 工具分组 — 默认折叠 -->
+  <!-- 6. 工具 -->
   <div class="nav-group">
     <div class="nav-group-title" onclick="toggleGroup('tool')">🔧 工具 <span class="arrow">▸</span></div>
     <div class="nav-group-body collapsed" id="group-tool">
@@ -58,10 +63,8 @@
     </div>
   </div>
 
-  <!-- 底部：每日进度概览 -->
-  <div class="nav-item active" data-page="overview" onclick="navigate('overview')" style="margin-top:8px;border-top:1px solid var(--border);padding-top:12px;">🏠 首页概览</div>
-      <div class="nav-item sub" data-page="training" onclick="navigate('training')" style="font-weight:600;color:var(--primary);">🎯 每日训练</div>
-      <div class="nav-item sub" data-page="methods" onclick="navigate('methods')">📊 方法掌握度</div>
+  <!-- 7. 方法掌握度 -->
+  <div class="nav-item" data-page="methods" onclick="navigate('methods')" style="border-top:1px solid var(--border);margin-top:4px;padding-top:10px">📊 方法掌握度</div>
 </nav>
 
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>

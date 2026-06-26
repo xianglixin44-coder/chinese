@@ -217,10 +217,15 @@ function renderDailyChecklist() {
   }
 }
 function startTask(page) {
-  if (page === 'flashcard') navigate('classical', true);
-  else navigate(page, true);
-  // Task completion is tracked by actual activity (rateCard, applyTemplate, etc.)
-  // which call markTaskDone() when the user genuinely completes an exercise.
+  // Route all daily tasks to the unified daily training flow
+  navigate('training');
+  // Auto-launch training if not yet started
+  setTimeout(function() {
+    var startBtn = document.getElementById('trainingStart');
+    if (startBtn && startBtn.style.display !== 'none') {
+      if (typeof startDailyTraining === 'function') startDailyTraining();
+    }
+  }, 600);
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
