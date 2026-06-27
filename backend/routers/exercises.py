@@ -10,7 +10,7 @@ router = APIRouter(prefix="/api/exercises", tags=["exercises"])
 def list_exercises(
     module: str = Query("", description="题型模块: flashcard | modern_reading | classical_reading | writing | grammar"),
     type: str = Query("", description="模块内子类型: shici/xuci/wenxue 等"),
-    limit: int = Query(100, ge=1, le=500),
+    limit: int = Query(100, ge=1, le=2000),
     offset: int = Query(0, ge=0),
 ):
     """通用列表接口 — 按 module 和可选的 type 过滤。"""

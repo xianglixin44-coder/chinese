@@ -7,39 +7,28 @@ from backend.models import DailyAssign
 
 router = APIRouter(prefix="/api/daily", tags=["daily"])
 
-TOTAL_PER_DAY = 13  # 每日默认题量（全部模块合计）
+TOTAL_PER_DAY = 16  # 每日默认题量（全部模块合计）
 
 # 每日各题型题量配置
 DAILY_PLAN = [
-    ("modern_reading", "discourse", 2),
-    ("modern_reading", "literary", 1),
-    ("modern_reading", "practical", 1),
-    ("classical_reading", "duanju", 1),
-    ("classical_reading", "wenhua", 1),
+    ("modern_reading", "discourse", 3),
+    ("modern_reading", "literary", 3),
+    ("classical_reading", "duanju", 2),
+    ("classical_reading", "wenhua", 2),
     ("classical_reading", "moxie", 2),
-    ("classical_reading", "translation", 1),
-    ("classical_reading", "neirong", 1),
-    ("grammar", "bingju", 2),
-    ("writing", "essay", 1),
+    ("classical_reading", "translation", 2),
+    ("classical_reading", "neirong", 2),
 ]
 
 # 各模块独立训练配置
 MODULE_CONFIG = {
     "modern_reading": {
-        "label": "现代文阅读", "icon": "📖", "total": 4,
-        "plan": [("modern_reading", "discourse", 2), ("modern_reading", "literary", 1), ("modern_reading", "practical", 1)],
+        "label": "现代文阅读", "icon": "📖", "total": 6,
+        "plan": [("modern_reading", "discourse", 3), ("modern_reading", "literary", 3)],
     },
     "classical_reading": {
-        "label": "古诗文阅读", "icon": "🏛️", "total": 6,
-        "plan": [("classical_reading", "duanju", 1), ("classical_reading", "wenhua", 1), ("classical_reading", "moxie", 2), ("classical_reading", "translation", 1), ("classical_reading", "neirong", 1)],
-    },
-    "grammar": {
-        "label": "语法训练", "icon": "✍️", "total": 2,
-        "plan": [("grammar", "bingju", 2)],
-    },
-    "writing": {
-        "label": "写作训练", "icon": "📝", "total": 1,
-        "plan": [("writing", "essay", 1)],
+        "label": "古诗文阅读", "icon": "🏛️", "total": 10,
+        "plan": [("classical_reading", "duanju", 2), ("classical_reading", "wenhua", 2), ("classical_reading", "moxie", 2), ("classical_reading", "translation", 2), ("classical_reading", "neirong", 2)],
     },
 }
 
@@ -93,7 +82,7 @@ def _pick_for_type(conn, module: str, etype: str, n: int, today: str, exclude_id
 @router.get("/session")
 def get_daily_session(
     check_only: int = Query(0, description="仅检查不创建"),
-    count: int = Query(TOTAL_PER_DAY, description="每日题量，默认13"),
+    count: int = Query(TOTAL_PER_DAY, description="每日题量，默认14"),
     module: str = Query("", description="限定模块: modern_reading|classical_reading|grammar|writing，空=全部"),
 ):
     """获取或创建今日训练session — 返回题目列表 + session_id。

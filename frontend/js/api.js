@@ -239,7 +239,7 @@ async function fetchExercises(module, type) {
   var params = new URLSearchParams();
   if (module) params.set('module', module);
   if (type) params.set('type', type);
-  params.set('limit', '200');
+  params.set('limit', '2000');
   var qs = params.toString();
   return await apiCall('GET', '/api/exercises' + (qs ? '?' + qs : ''));
 }
