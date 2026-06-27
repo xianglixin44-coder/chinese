@@ -463,15 +463,9 @@
   </div>
 
   <div id="trainingStart">
-    <div class="card" style="text-align:center;padding:32px 20px;">
-      <p style="font-size:40px;margin-bottom:12px;">🎯</p>
-      <h3 style="margin-bottom:8px;">今日古诗文训练</h3>
-      <p style="color:var(--text-light);font-size:13px;margin-bottom:16px;">
-        断句2题 · 文化常识2题 · 默写3题 · 翻译2题 · 内容概括1题
-      </p>
-      <p style="color:var(--text-light);font-size:12px;margin-bottom:20px;">共 <strong>10</strong> 题，预计 15 分钟</p>
-      <button class="btn" onclick="startDailyTraining()" style="font-size:15px;padding:10px 36px;">开始训练</button>
-      <p id="trainingAlreadyDone" style="color:var(--accent);font-size:12px;margin-top:12px;display:none;">✅ 今日训练已完成！</p>
+    <h3 style="margin-bottom:16px;">选择今日训练模块</h3>
+    <div id="trainingModules" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;">
+      <!-- 动态渲染，见 exercises.js renderTrainingModules() -->
     </div>
   </div>
 
@@ -1023,7 +1017,7 @@
 <script src="/js/data.js"></script>
 <script src="/js/api.js?v=4.0"></script>
 <script src="/js/flashcard.js"></script>
-<script src="/js/exercises.js?v=7.5"></script>
+<script src="/js/exercises.js?v=7.6"></script>
 <script src="/js/app.js?v=1782428674"></script>
 </body>
 </html>

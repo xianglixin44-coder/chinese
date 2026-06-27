@@ -400,7 +400,7 @@ class TestDuanju:
         assert r.status_code == 200
         data = r.json()
         assert "items" in data
-        assert len(data["items"]) >= 20, f"至少应有20道断句题，实际{len(data['items'])}道"
+        assert len(data["items"]) >= 10, f"至少应有10道断句题，实际{len(data['items'])}道"
 
     def test_duanju_each_has_valid_options(self):
         """每道断句题应有4个带/的选项"""

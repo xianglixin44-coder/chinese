@@ -124,26 +124,35 @@ exercises = [
     }
 ]
 
-# Insert into database
-conn = sqlite3.connect('/Users/xianglixin/Documents/chinese/trainer.db')
-cur = conn.cursor()
+def seed_duanju(conn):
+    """仅在 duanju 数据为空时导入。"""
+    existing = conn.execute(
+        "SELECT COUNT(*) FROM exercises WHERE module='classical_reading' AND type='duanju'"
+    ).fetchone()
+    if existing and existing[0] > 0:
+        return
 
-count = 0
-for ex in exercises:
-    cur.execute(
-        "INSERT INTO exercises (module, type, content, question, options_json, answer, explanation, extra_json, source) VALUES (?,?,?,?,?,?,?,?,?)",
-        [
-            'classical_reading', 'duanju', ex['content'], '',
-            json.dumps(ex['options'], ensure_ascii=False),
-            ex['answer'], ex['explanation'],
-            json.dumps({"source": ex['source']}, ensure_ascii=False), 'seed'
-        ]
-    )
-    count += 1
+    cur = conn.cursor()
+    count = 0
+    for ex in exercises:
+        cur.execute(
+            "INSERT INTO exercises (module, type, content, question, options_json, answer, explanation, extra_json, source) VALUES (?,?,?,?,?,?,?,?,?)",
+            [
+                'classical_reading', 'duanju', ex['content'], '',
+                json.dumps(ex['options'], ensure_ascii=False),
+                ex['answer'], ex['explanation'],
+                json.dumps({"source": ex['source']}, ensure_ascii=False), 'seed'
+            ]
+        )
+        count += 1
+    conn.commit()
+    print(f"  ✅ seed_duanju: 导入 {count} 道断句题（王力《古代汉语》）")
 
-conn.commit()
-cur.execute("SELECT COUNT(*) FROM exercises WHERE module='classical_reading' AND type='duanju'")
-total = cur.fetchone()[0]
-conn.close()
-print(f"Added {count} new duanju exercises from Wang Li Gu Dai Han Yu")
-print(f"Total duanju exercises in DB: {total}")
+
+if __name__ == "__main__":
+    import sqlite3 as _sqlite3
+    from pathlib import Path
+    DB = Path(__file__).parent.parent / "trainer.db"
+    _conn = _sqlite3.connect(str(DB))
+    seed_duanju(_conn)
+    _conn.close()

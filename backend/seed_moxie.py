@@ -205,13 +205,15 @@ exercises = [
     {"question": "陆游《临安春雨初霁》中以春景反衬内心郁闷的句子是：", "answer": "小楼一夜听春雨，深巷明朝卖杏花", "explanation": "《临安春雨初霁》：表面清新实则愤懑。"},
 ]
 
-def seed():
-    conn = sqlite3.connect(DB)
+def seed_moxie(conn):
+    """仅在 moxie 数据为空时导入。"""
+    existing = conn.execute(
+        "SELECT COUNT(*) FROM exercises WHERE type='moxie'"
+    ).fetchone()
+    if existing and existing[0] > 0:
+        return
+
     cur = conn.cursor()
-    
-    # Delete old empty moxie entries
-    cur.execute("DELETE FROM exercises WHERE type='moxie'")
-    
     count = 0
     for ex in exercises:
         cur.execute(
@@ -219,16 +221,11 @@ def seed():
             ["classical_reading", "moxie", "名篇默写", ex["question"], ex["answer"], ex["explanation"], "", "seed_moxie"]
         )
         count += 1
-    
     conn.commit()
-    print(f"✅ 已录入 {count} 道情境式默写题")
-    
-    # Verify
-    cur.execute("SELECT COUNT(*) FROM exercises WHERE type='moxie'")
-    total = cur.fetchone()[0]
-    print(f"数据库中默写题总计: {total}")
-    
-    conn.close()
+    print(f"  ✅ seed_moxie: 导入 {count} 道情境式默写题")
 
 if __name__ == "__main__":
-    seed()
+    import sqlite3 as _sqlite3
+    _conn = _sqlite3.connect(DB)
+    seed_moxie(_conn)
+    _conn.close()

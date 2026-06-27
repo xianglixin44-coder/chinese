@@ -5,10 +5,10 @@ from fastapi.responses import PlainTextResponse, FileResponse
 
 router = APIRouter(prefix="/api/books", tags=["books"])
 
-EPUB_DIR = "/Users/xianglixin/Documents/epub/markdown_output"
-EPUB2_DIR = "/Users/xianglixin/Documents/epub"
-PDF_DIR = "/Users/xianglixin/Documents/所有PDF备份"
-CACHE_DIR = "/Users/xianglixin/Documents/chinese/.cache"
+EPUB_DIR = os.environ.get("TRAINER_EPUB_DIR", os.path.expanduser("~/Documents/epub/markdown_output"))
+EPUB2_DIR = os.environ.get("TRAINER_EPUB2_DIR", os.path.expanduser("~/Documents/epub"))
+PDF_DIR = os.environ.get("TRAINER_PDF_DIR", os.path.expanduser("~/Documents/所有PDF备份"))
+CACHE_DIR = os.environ.get("TRAINER_CACHE_DIR", os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../.cache"))
 
 BOOKS = [
     {"id": "wangli", "title": "古代汉语", "author": "王力", "icon": "📗",

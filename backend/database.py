@@ -25,4 +25,23 @@ def init_db():
     conn.execute("INSERT OR IGNORE INTO modules VALUES ('grammar','语言文字运用','✍️',4)")
     conn.execute("INSERT OR IGNORE INTO modules VALUES ('writing','写作表达','📝',5)")
     conn.commit()
+
+    # 种子数据（仅在表为空时填充）
+    from backend.seed_data import seed_flashcard_items, seed_methods, seed_wenhua
+    from backend.seed_grammar_writing import seed_grammar_writing
+    from backend.seed_modern_reading import seed_modern_reading
+    from backend.seed_moxie import seed_moxie
+    from backend.seed_translation import seed_translation
+    from backend.seed_neirong_supplement import seed_neirong
+    from backend.seed_duanju_wangli import seed_duanju
+    seed_flashcard_items(conn)
+    seed_methods(conn)
+    seed_wenhua(conn)
+    seed_grammar_writing(conn)
+    seed_modern_reading(conn)
+    seed_moxie(conn)
+    seed_translation(conn)
+    seed_neirong(conn)
+    seed_duanju(conn)
+    conn.commit()
     conn.close()

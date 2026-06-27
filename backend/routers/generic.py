@@ -12,18 +12,22 @@ async def run_safe(body: dict):
     params = body.get("params", [])
     upper = sql.upper()
 
+    # Whitelist: only INSERT or UPDATE on specific tables
+    allowed_tables = ["DAILY_TASKS", "CARD_SRS"]
     allowed = False
     if upper.startswith("INSERT") or upper.startswith("UPDATE"):
-        if "DAILY_TASKS" in upper:
-            allowed = True
-        elif "CARD_SRS" in upper:
-            allowed = True
+        for table in allowed_tables:
+            if table in upper:
+                allowed = True
+                break
+
+    # Reject destructive keywords (case-insensitive, checked on uppered SQL)
+    destructive = ['DROP', 'ALTER', 'CREATE', 'TRUNCATE', 'DELETE']
+    if any(kw in upper for kw in destructive):
+        return {"ok": False, "error": "Destructive operations not allowed"}
 
     if not allowed:
         return {"ok": False, "error": "This endpoint only accepts daily_tasks and card_srs operations"}
-
-    if any(kw in upper for kw in ['DROP', 'ALTER', 'CREATE', 'TRUNCATE', 'DELETE']):
-        return {"ok": False, "error": "Destructive operations not allowed"}
 
     conn = get_db()
     try:

@@ -631,23 +631,85 @@ function showMethodIntro(method) {
     '</div>';
 }
 
-function startDailyTraining() {
+// ====== 训练模块配置 ======
+var TRAINING_MODULES = [
+  {id:'classical_reading', icon:'🏛️', title:'古诗文阅读', desc:'断句·文化常识·默写·翻译·内容概括', count:6, time:'10分钟'},
+  {id:'modern_reading', icon:'📖', title:'现代文阅读', desc:'论述类·文学类·实用类', count:4, time:'8分钟'},
+  {id:'grammar', icon:'✍️', title:'语法训练', desc:'病句辨析', count:2, time:'3分钟'},
+  {id:'writing', icon:'📝', title:'写作训练', desc:'审题立意·结构搭建', count:1, time:'5分钟'}
+];
+
+function renderTrainingModules() {
+  var container = document.getElementById('trainingModules');
+  if (!container) return;
+  var today = new Date().toISOString().slice(0, 10);
+
+  var html = '';
+  TRAINING_MODULES.forEach(function(mod) {
+    html += '<div class="card" style="padding:20px;cursor:default;" id="mod-card-' + mod.id + '">';
+    html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">';
+    html += '<span style="font-size:28px;">' + mod.icon + '</span>';
+    html += '<div><h4 style="margin:0;font-size:15px;">' + mod.title + '</h4>';
+    html += '<p style="font-size:11px;color:var(--text-light);margin:2px 0 0;">' + mod.desc + '</p></div>';
+    html += '</div>';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;">';
+    html += '<span style="font-size:12px;color:var(--text-light);">' + mod.count + '题 · ' + mod.time + '</span>';
+    html += '<button class="btn-small" onclick="startDailyTraining(\'' + mod.id + '\')" style="font-size:13px;padding:6px 16px;" id="btn-' + mod.id + '">开始训练</button>';
+    html += '</div>';
+    html += '<p id="mod-status-' + mod.id + '" style="font-size:11px;margin-top:8px;display:none;"></p>';
+    html += '</div>';
+  });
+  container.innerHTML = html;
+
+  // Check status for each module
+  TRAINING_MODULES.forEach(function(mod) {
+    checkModuleStatus(mod.id);
+  });
+}
+
+function checkModuleStatus(moduleId) {
+  apiCall('GET', '/api/daily/session?module=' + moduleId + '&check_only=1').then(function(r) {
+    var statusEl = document.getElementById('mod-status-' + moduleId);
+    var btnEl = document.getElementById('btn-' + moduleId);
+    if (!r || !r.items) return;
+    var allDone = r.total > 0 && r.items.every(function(it) { return it.is_correct >= 0; });
+    var inProgress = r.total > 0 && r.items.some(function(it) { return it.is_correct >= 0; }) && !allDone;
+    if (allDone) {
+      if (statusEl) { statusEl.style.display = 'block'; statusEl.style.color = '#27ae60'; statusEl.textContent = '✅ 今日已完成'; }
+      if (btnEl) { btnEl.textContent = '重新训练'; btnEl.style.background = '#e8f5e9'; btnEl.style.color = '#27ae60'; }
+    } else if (inProgress) {
+      if (statusEl) { statusEl.style.display = 'block'; statusEl.style.color = '#f39c12'; statusEl.textContent = '⏳ 进行中，点击继续'; }
+      if (btnEl) { btnEl.textContent = '继续训练'; btnEl.style.background = '#fff3e0'; btnEl.style.color = '#e67e22'; }
+    }
+  }).catch(function() {});
+}
+
+function startDailyTraining(moduleName) {
   _lastMethod = '';
+  _currentModule = moduleName || '';
   document.getElementById('trainingStart').style.display = 'none';
   document.getElementById('trainingProgress').style.display = 'block';
   document.getElementById('trainingQuiz').style.display = 'block';
   document.getElementById('trainingResult').style.display = 'none';
   
-  apiCall('GET', '/api/daily/session?count=10').then(function(r) {
+  var url = '/api/daily/session';
+  if (moduleName) {
+    url += '?module=' + encodeURIComponent(moduleName);
+  }
+  // 显示模块名称
+  var modLabel = '';
+  TRAINING_MODULES.forEach(function(m) { if (m.id === moduleName) modLabel = m.icon + ' ' + m.title; });
+  document.getElementById('trainingDate').textContent = modLabel || '📅 综合训练';
+  
+  apiCall('GET', url).then(function(r) {
     if (!r || !r.items || !r.items.length) {
-      document.getElementById('trainingQuiz').innerHTML = '<div class="card" style="text-align:center;padding:24px;"><p>📭 题库暂无题目，请先导入数据。</p></div>';
+      document.getElementById('trainingQuiz').innerHTML = '<div class="card" style="text-align:center;padding:24px;"><p>📭 该模块暂无可用题目，请先导入数据。</p><button class="btn-small" onclick="resetTraining()" style="margin-top:12px;">← 返回模块列表</button></div>';
       return;
     }
     _trainingSession = r;
     _trainingIdx = 0;
     updateTrainingProgress();
     renderTrainingQuestion(0);
-    document.getElementById('trainingDate').textContent = '📅 ' + (r.date || '');
   });
 }
 
@@ -678,7 +740,7 @@ function renderTrainingQuestion(idx) {
   updateTrainingProgress();
   
   var item = _trainingSession.items[idx];
-  var typeNames = {duanju:'断句', wenhua:'文化常识', moxie:'默写', translation:'翻译', neirong:'内容概括'};
+  var typeNames = {discourse:"论述类",literary:"文学类",practical:"实用类",duanju:'断句', wenhua:'文化常识', moxie:'默写', translation:'翻译', neirong:'内容概括', bingju:'病句辨析', essay:'写作审题', scaffold:'写作脚手架', semi_open:'半开放写作'};
   var typeName = typeNames[item.type] || item.type;
   
   var html = '';
@@ -709,6 +771,40 @@ function renderTrainingQuestion(idx) {
   } else if (item.type === 'moxie') {
     // 默写：显示情境描述
     html += '<p style="font-size:14px;line-height:1.7;margin-bottom:12px;">' + htmlesc(item.question || item.content || '') + '</p>';
+  } else if (item.type === 'discourse' || item.type === 'literary' || item.type === 'practical') {
+    // 现代文阅读：显示原文 + 题目
+    var raw = item.content || '';
+    if (raw) {
+      html += '<div style="background:#fafafa;padding:14px 18px;border-radius:6px;margin-bottom:10px;font-size:14px;line-height:2;border-left:3px solid var(--primary);max-height:300px;overflow-y:auto;">' + htmlesc(raw) + '</div>';
+    }
+    html += '<p style="font-size:14px;line-height:1.7;margin-bottom:12px;">' + htmlesc(item.question || '') + '</p>';
+  } else if (item.type === 'bingju') {
+    // 病句辨析：显示句子 + 问题
+    var raw = item.content || '';
+    if (raw) {
+      html += '<div style="background:#fff8f0;padding:12px 16px;border-radius:6px;margin-bottom:8px;font-size:15px;line-height:1.8;border-left:3px solid #e67e22;">' + htmlesc(raw) + '</div>';
+    }
+    html += '<p style="font-size:13px;color:var(--text-light);margin-bottom:10px;">' + htmlesc(item.question || '请判断此句是否有语病') + '</p>';
+  } else if (item.type === 'essay' || item.type === 'scaffold' || item.type === 'semi_open') {
+    // 写作表达：显示话题 + 要求 + 可选提示
+    var raw = item.content || '';
+    if (raw) {
+      html += '<div style="background:#f0f4ff;padding:14px 18px;border-radius:8px;margin-bottom:10px;border-left:3px solid #1a73e8;">';
+      html += '<p style="font-size:15px;font-weight:600;margin-bottom:6px;">' + htmlesc(raw) + '</p>';
+      if (item.question) {
+        html += '<p style="font-size:13px;color:var(--text-light);">' + htmlesc(item.question) + '</p>';
+      }
+      html += '</div>';
+    }
+    // Show explanation as hint (collapsed)
+    if (item.explanation) {
+      html += '<details style="margin-bottom:10px;font-size:12px;"><summary style="cursor:pointer;color:var(--accent);">💡 查看写作指导</summary>';
+      html += '<div style="background:#fafafa;padding:10px;border-radius:6px;margin-top:6px;line-height:1.8;">' + htmlesc(item.explanation).replace(/\n/g,'<br>') + '</div>';
+      html += '</details>';
+    }
+    // Text area for free-form writing
+    html += '<textarea id="train-input-' + idx + '" class="gram-input" rows="5" style="font-size:14px;width:100%;" placeholder="在此写作…"></textarea>';
+    html += '<button class="btn-small" onclick="checkTrainingAnswer(' + idx + ',-1)" style="margin-top:8px;font-size:13px;">提交</button>';
   } else {
     // 文化常识/内容概括：显示题目
     html += '<p style="font-size:14px;line-height:1.7;margin-bottom:12px;">' + htmlesc(item.question || item.content || '') + '</p>';
@@ -808,7 +904,7 @@ function checkTrainingAnswer(idx, choiceIdx, el) {
     var wrongQ = item.question || item.content || '';
     apiCall('POST', '/api/wrong', {
       exercise_id: item.exercise_id || 0,
-      module: 'classical_reading',
+      module: item.module || 'classical_reading',
       question_type: item.type || '',
       question: wrongQ,
       user_answer: userAnswer,
@@ -816,8 +912,15 @@ function checkTrainingAnswer(idx, choiceIdx, el) {
       explanation: item.explanation || ''
     });
     if (typeof recordTrainingLog === 'function') {
-      recordTrainingLog('classical_reading', wrongQ, userAnswer, item.answer || '', 0);
+      recordTrainingLog(item.module || 'classical_reading', wrongQ, userAnswer, item.answer || '', 0);
     }
+  }
+
+  // 写作类题目：提交即视作完成（无标准答案）
+  var isWriting = item.type === 'essay' || item.type === 'scaffold' || item.type === 'semi_open';
+  if (isWriting && userAnswer) {
+    item.is_correct = 1;  // 写作题提交即算完成
+    isCorrect = true;
   }
   
   // Show result with method highlighted
@@ -914,10 +1017,14 @@ function reviewTraining() {
 function resetTraining() {
   _trainingSession = null;
   _trainingIdx = 0;
+  _currentModule = '';
   document.getElementById('trainingStart').style.display = 'block';
   document.getElementById('trainingProgress').style.display = 'none';
   document.getElementById('trainingQuiz').style.display = 'none';
   document.getElementById('trainingResult').style.display = 'none';
+  document.getElementById('trainingDate').textContent = '';
+  // 刷新模块状态
+  renderTrainingModules();
 }
 
 window.startDailyTraining = startDailyTraining;
@@ -926,36 +1033,14 @@ window.reviewTraining = reviewTraining;
 window.resetTraining = resetTraining;
 
 function checkTrainingStatus() {
-  // 仅检查是否存在未完成session，不创建新session
-  var today = new Date().toISOString().slice(0, 10);
-  apiCall('GET', '/api/daily/session?check_only=1').then(function(r) {
-    if (!r || !r.items) return;
-    // Check if all items are completed
-    var allDone = r.items.every(function(it) { return it.is_correct >= 0; });
-    if (allDone && r.items.length > 0) {
-      document.getElementById('trainingAlreadyDone').style.display = 'block';
-      document.getElementById('trainingDate').textContent = '📅 ' + today + ' ✅ 已完成';
-    } else if (r.items.some(function(it) { return it.is_correct >= 0; })) {
-      // Partially done - resume
-      document.getElementById('trainingStart').style.display = 'none';
-      document.getElementById('trainingProgress').style.display = 'block';
-      document.getElementById('trainingQuiz').style.display = 'block';
-      _trainingSession = r;
-      _trainingIdx = r.items.findIndex(function(it) { return it.is_correct < 0; });
-      if (_trainingIdx < 0) _trainingIdx = r.total;
-      if (_trainingIdx >= r.total) {
-        finishTraining();
-      } else {
-        updateTrainingProgress();
-        renderTrainingQuestion(_trainingIdx);
-      }
-      document.getElementById('trainingDate').textContent = '📅 ' + today;
-    }
-  }).catch(function() {
-    // No existing session - show start button
-  });
+  // 渲染模块卡片 + 检查各模块状态
+  renderTrainingModules();
 }
 window.checkTrainingStatus = checkTrainingStatus;
+window.renderTrainingModules = renderTrainingModules;
+window.startDailyTraining = startDailyTraining;
+
+var _currentModule = '';
 
 // ====== 方法掌握度面板 ======
 function renderMethodStats() {

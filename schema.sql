@@ -100,14 +100,18 @@ CREATE TABLE IF NOT EXISTS methods (
 CREATE TABLE IF NOT EXISTS exercises (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     module TEXT NOT NULL REFERENCES modules(id),
-    category TEXT DEFAULT '',
-    question_type TEXT DEFAULT '',
+    type TEXT DEFAULT '',
     title TEXT DEFAULT '',
     content TEXT NOT NULL,
+    question TEXT DEFAULT '',
     options_json TEXT DEFAULT '[]',
     answer TEXT DEFAULT '',
     explanation TEXT DEFAULT '',
     extra_json TEXT DEFAULT '{}',
+    status TEXT DEFAULT 'active',
+    last_practiced_at TEXT,
+    practice_count INTEGER DEFAULT 0,
+    source TEXT DEFAULT '',
     created_at TEXT DEFAULT (datetime('now','localtime'))
 );
 

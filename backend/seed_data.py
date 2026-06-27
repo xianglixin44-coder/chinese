@@ -128,6 +128,34 @@ METHODS_SEED = [
 ]
 
 
+def seed_wenhua(conn):
+    """将文学常识闪卡数据同步为古诗文阅读的 wenhua 题型。"""
+    existing = conn.execute(
+        "SELECT COUNT(*) FROM exercises WHERE module='classical_reading' AND type='wenhua'"
+    ).fetchone()
+    if existing and existing[0] > 0:
+        return
+
+    import json
+    count = 0
+    for front, hl, word, meaning, analogy in WENXUE_SEED:
+        extra = json.dumps({
+            "source": "文学常识", "answer": word, "detail": meaning
+        }, ensure_ascii=False)
+        conn.execute(
+            "INSERT INTO exercises (module, type, content, question, answer, explanation, extra_json) "
+            "VALUES (?,?,?,?,?,?,?)",
+            ["classical_reading", "wenhua", front,
+             "请选出正确答案",
+             word,
+             meaning + (" — " + analogy if analogy else ""),
+             extra],
+        )
+        count += 1
+    conn.commit()
+    print(f"  ✅ seed_wenhua: 导入 {count} 道文化常识题")
+
+
 def seed_methods(conn):
     """仅在 methods 表为空时插入种子数据。"""
     existing = conn.execute("SELECT COUNT(*) FROM methods").fetchone()

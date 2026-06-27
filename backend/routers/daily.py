@@ -7,16 +7,41 @@ from backend.models import DailyAssign
 
 router = APIRouter(prefix="/api/daily", tags=["daily"])
 
+TOTAL_PER_DAY = 13  # 每日默认题量（全部模块合计）
+
 # 每日各题型题量配置
 DAILY_PLAN = [
-    ("classical_reading", "duanju", 2),
-    ("classical_reading", "wenhua", 2),
-    ("classical_reading", "moxie", 3),
-    ("classical_reading", "translation", 2),
+    ("modern_reading", "discourse", 2),
+    ("modern_reading", "literary", 1),
+    ("modern_reading", "practical", 1),
+    ("classical_reading", "duanju", 1),
+    ("classical_reading", "wenhua", 1),
+    ("classical_reading", "moxie", 2),
+    ("classical_reading", "translation", 1),
     ("classical_reading", "neirong", 1),
+    ("grammar", "bingju", 2),
+    ("writing", "essay", 1),
 ]
-TOTAL_PER_DAY = sum(p[2] for p in DAILY_PLAN)
 
+# 各模块独立训练配置
+MODULE_CONFIG = {
+    "modern_reading": {
+        "label": "现代文阅读", "icon": "📖", "total": 4,
+        "plan": [("modern_reading", "discourse", 2), ("modern_reading", "literary", 1), ("modern_reading", "practical", 1)],
+    },
+    "classical_reading": {
+        "label": "古诗文阅读", "icon": "🏛️", "total": 6,
+        "plan": [("classical_reading", "duanju", 1), ("classical_reading", "wenhua", 1), ("classical_reading", "moxie", 2), ("classical_reading", "translation", 1), ("classical_reading", "neirong", 1)],
+    },
+    "grammar": {
+        "label": "语法训练", "icon": "✍️", "total": 2,
+        "plan": [("grammar", "bingju", 2)],
+    },
+    "writing": {
+        "label": "写作训练", "icon": "📝", "total": 1,
+        "plan": [("writing", "essay", 1)],
+    },
+}
 
 def _pick_for_type(conn, module: str, etype: str, n: int, today: str, exclude_ids: list):
     """按间隔重复 + 同方法集中 选题。优先同方法的题连续出。"""
@@ -68,16 +93,31 @@ def _pick_for_type(conn, module: str, etype: str, n: int, today: str, exclude_id
 @router.get("/session")
 def get_daily_session(
     check_only: int = Query(0, description="仅检查不创建"),
-    count: int = Query(TOTAL_PER_DAY, description="每日题量，默认10"),
+    count: int = Query(TOTAL_PER_DAY, description="每日题量，默认13"),
+    module: str = Query("", description="限定模块: modern_reading|classical_reading|grammar|writing，空=全部"),
 ):
-    """获取或创建今日训练session — 返回题目列表 + session_id"""
+    """获取或创建今日训练session — 返回题目列表 + session_id。
+    
+    当 module 指定时，仅从该模块选题，count 自动使用模块默认值。
+    """
     today = date.today().isoformat()
     conn = get_db()
+
+    # 按模块筛选 plan
+    if module and module in MODULE_CONFIG:
+        cfg = MODULE_CONFIG[module]
+        plan = cfg["plan"]
+        count = cfg["total"]
+        session_prefix = module
+    else:
+        plan = DAILY_PLAN
+        session_prefix = "all"
+
     try:
-        # 今天是否已有未完成的session？
+        # 今天是否已有未完成的session？(按模块前缀匹配)
         existing = conn.execute(
-            "SELECT DISTINCT session_id FROM daily_assignments WHERE date=? AND session_id!='' AND completed=0",
-            [today]
+            "SELECT DISTINCT session_id FROM daily_assignments WHERE date=? AND session_id LIKE ? AND completed=0",
+            [today, session_prefix + "-%"]
         ).fetchone()
 
         if existing:
@@ -104,29 +144,15 @@ def get_daily_session(
             return {"session_id": "", "date": today, "items": [], "total": 0, "completed_count": 0, "is_new": False}
 
         # 新建session
-        sid = f"{today}-{uuid.uuid4().hex[:6]}"
+        sid = f"{today}-{session_prefix}-{uuid.uuid4().hex[:6]}"
         all_picked = []
         exclude_ids = set()
 
-        for module, etype, n in DAILY_PLAN[:]:
+        for mod_name, etype, n in plan:
             if n <= 0:
                 continue
-            picked = _pick_for_type(conn, module, etype, n, today, list(exclude_ids))
-            if len(picked) < n:
-                # 不够 → 从其他题型补
-                extra = conn.execute(
-                    """SELECT * FROM exercises WHERE status='active' AND id NOT IN ({})
-                       ORDER BY practice_count ASC, last_practiced_at ASC LIMIT ?""".format(
-                        ",".join("?" * len(exclude_ids)) if exclude_ids else "1"
-                    ),
-                    list(exclude_ids) if exclude_ids else [0] + [n - len(picked)]
-                ).fetchall()
-                for e in extra:
-                    if e["id"] not in exclude_ids:
-                        picked.append(dict(e))
-                        exclude_ids.add(e["id"])
-                        if len(picked) >= n:
-                            break
+            picked = _pick_for_type(conn, mod_name, etype, n, today, list(exclude_ids))
+            # 不填补缺失题型 — 维持原始各题型配比
 
             for e in picked:
                 exclude_ids.add(e["id"])
