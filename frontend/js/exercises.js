@@ -691,9 +691,8 @@ function startDailyTraining(moduleName) {
   document.getElementById('trainingProgress').style.display = 'block';
   document.getElementById('trainingQuiz').style.display = 'block';
   document.getElementById('trainingResult').style.display = 'none';
-  // 滚动到训练页顶部，防止页面高度变化后 header 被遮挡
-  var trainingPage = document.getElementById('page-training');
-  if (trainingPage) trainingPage.scrollIntoView({behavior:'smooth',block:'start'});
+  // 防止页面高度骤缩后 header 滚出视野：先重置滚动位置
+  window.scrollTo({top: 0, behavior: 'instant'});
   
   var url = '/api/daily/session';
   if (moduleName) {
@@ -982,8 +981,7 @@ function checkTrainingAnswer(idx, choiceIdx, el) {
 }
 
 function finishTraining() {
-  var trainingPage = document.getElementById('page-training');
-  if (trainingPage) trainingPage.scrollIntoView({behavior:'smooth',block:'start'});
+  window.scrollTo({top: 0, behavior: 'instant'});
   document.getElementById('trainingQuiz').style.display = 'none';
   document.getElementById('trainingResult').style.display = 'block';
   
@@ -1043,8 +1041,7 @@ function resetTraining() {
   document.getElementById('trainingResult').style.display = 'none';
   document.getElementById('trainingDate').textContent = '';
   // 滚回顶部 + 刷新模块状态
-  var trainingPage = document.getElementById('page-training');
-  if (trainingPage) trainingPage.scrollIntoView({behavior:'smooth',block:'start'});
+  window.scrollTo({top: 0, behavior: 'instant'});
   renderTrainingModules();
 }
 
