@@ -144,7 +144,7 @@ S.timerSeconds = 25 * 60; S.timerRunning = false; S.timerInterval = null;
 // ================================================================
 //  ③ DAILY: 每日任务清单 + 进度条 + 庆祝页
 // ================================================================
-const DAILY_TASKS = ['flashcard', 'reading', 'classical', 'language', 'writing'];
+const DAILY_TASKS = ['flashcard', 'modern_reading', 'classical_reading'];
 S.completedTasks = {};
 async function loadCompletedTasks() {
   const today = new Date().toISOString().slice(0, 10);
@@ -179,13 +179,33 @@ function saveQuota(el) {
   try { localStorage.setItem('quota_'+key, el.value); } catch(e) {}
   updateTaskCounts();
 }
-function updateTaskCounts() {
-  var counts = {flashcard:193, reading:9, classical:50, language:9, writing:9};
-  for (var t in counts) {
+var _taskCounts = null;
+async function fetchTaskCounts() {
+  if (_taskCounts) return _taskCounts;
+  try {
+    var r = await fetch(API_BASE + '/api/exercises/counts');
+    var data = await r.json();
+    _taskCounts = data.counts || {};
+  } catch(e) { _taskCounts = {}; }
+  return _taskCounts;
+}
+async function updateTaskCounts() {
+  var counts = await fetchTaskCounts();
+  var modMap = {
+    flashcard: 'flashcard', modern_reading: 'modern_reading',
+    classical_reading: 'classical_reading'
+  };
+  // Map frontend task IDs to backend module names
+  var taskTotals = {
+    flashcard: (counts.flashcard||0),
+    modern_reading: (counts.modern_reading||0),
+    classical_reading: (counts.classical_reading||0)
+  };
+  for (var t in taskTotals) {
     var el = document.getElementById('taskCnt-'+t);
     var inp = document.getElementById('quota-'+t);
     var d = inp ? parseInt(inp.value)||1 : (App.DAILY_COUNTS[t]||1);
-    if (el) { el.textContent = ' · ' + d + '/' + counts[t] + '题'; }
+    if (el) { el.textContent = ' · ' + d + '/' + taskTotals[t] + '题'; }
   }
 }
 function renderDailyChecklist() {
@@ -217,6 +237,15 @@ function renderDailyChecklist() {
   }
 }
 function startTask(page) {
+  // Map legacy names to training
+  var trainingPage = 'training';
+  if (page === 'reading') { page = 'modern_reading'; }
+  if (page === 'classical') { page = 'classical_reading'; }
+  // All daily tasks go to unified training
+  navigate('training');
+  if (document.getElementById('trainingStart').style.display !== 'none') {
+    startDailyTraining();
+  }
   // Route all daily tasks to the unified daily training flow
   navigate('training');
   // Auto-launch training if not yet started

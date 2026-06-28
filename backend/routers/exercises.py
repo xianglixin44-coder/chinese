@@ -28,6 +28,23 @@ def list_exercises(
     finally:
         conn.close()
 
+@router.get("/counts")
+def exercise_counts():
+    """返回各模块+类型的题目总数。"""
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            "SELECT module, type, COUNT(*) as cnt FROM exercises WHERE status='active' GROUP BY module, type ORDER BY module, type"
+        ).fetchall()
+        by_module = {}
+        for r in rows:
+            m = r["module"]
+            by_module[m] = by_module.get(m, 0) + r["cnt"]
+        return {"by_type": [{"module": r["module"], "type": r["type"], "count": r["cnt"]} for r in rows],
+                "counts": by_module}
+    finally:
+        conn.close()
+
 
 @router.post("")
 def add_exercise(body: ExerciseItem):

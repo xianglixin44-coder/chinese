@@ -106,10 +106,9 @@
   </div>
   <div class="daily-quotas hidden" style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;padding:8px 10px;margin-bottom:8px;background:var(--surface);border-radius:8px;font-size:11px;">
     <span>🃏 闪卡:</span><input type="number" id="quota-flashcard" min="1" max="50" value="20" style="width:50px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;text-align:center;" onchange="saveQuota(this)">
-    <span>📖 现代文:</span><input type="number" id="quota-reading" min="1" max="20" value="3" style="width:50px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;text-align:center;" onchange="saveQuota(this)">
-    <span>🏛️ 古诗文:</span><input type="number" id="quota-classical" min="1" max="30" value="5" style="width:50px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;text-align:center;" onchange="saveQuota(this)">
-    <span>✍️ 语法:</span><input type="number" id="quota-language" min="1" max="20" value="3" style="width:50px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;text-align:center;" onchange="saveQuota(this)">
-    <span>📝 写作:</span><input type="number" id="quota-writing" min="1" max="10" value="1" style="width:50px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;text-align:center;" onchange="saveQuota(this)">
+    <span>📖 现代文:</span><input type="number" id="quota-modern_reading" min="1" max="20" value="6" style="width:50px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;text-align:center;" onchange="saveQuota(this)">
+    <span>🏛️ 古诗文:</span><input type="number" id="quota-classical_reading" min="1" max="30" value="10" style="width:50px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;text-align:center;" onchange="saveQuota(this)">
+    
   </div>
 
     <div class="daily-task" data-task="flashcard" onclick="startTask('flashcard')">
@@ -121,41 +120,27 @@
       <span class="task-badge bg-blue">5分钟</span><span class="task-count" id="taskCnt-flashcard"></span>
     </div>
 
-    <div class="daily-task" data-task="reading" onclick="startTask('reading')">
+    <div class="daily-task" data-task="modern_reading" onclick="startTask('reading')">
       <div class="task-check">2</div>
       <div class="task-info">
         <div class="task-title">📖 现代文阅读训练</div>
         <div class="task-desc">主动标记阅读法 + 小说叙事拆解 · 10分钟</div>
       </div>
-      <span class="task-badge bg-blue">10分钟</span><span class="task-count" id="taskCnt-reading"></span>
+      <span class="task-badge bg-blue">18分钟</span><span class="task-count" id="taskCnt-modern_reading"></span>
     </div>
 
-    <div class="daily-task" data-task="classical" onclick="startTask('classical')">
+    <div class="daily-task" data-task="classical_reading" onclick="startTask('classical')">
       <div class="task-check">3</div>
       <div class="task-info">
         <div class="task-title">🏛️ 古诗文阅读训练</div>
         <div class="task-desc">文言句式 + 双语对齐翻译 · 10分钟</div>
       </div>
-      <span class="task-badge bg-red">10分钟</span><span class="task-count" id="taskCnt-classical"></span>
+      <span class="task-badge bg-red">20分钟</span><span class="task-count" id="taskCnt-classical_reading"></span>
     </div>
 
-    <div class="daily-task" data-task="language" onclick="startTask('language')">
-      <div class="task-check">4</div>
-      <div class="task-info">
-        <div class="task-title">✍️ 语言文字运用</div>
-        <div class="task-desc">病句诊断 + 修辞效果分析 · 5分钟</div>
-      </div>
-      <span class="task-badge bg-gold">5分钟</span><span class="task-count" id="taskCnt-language"></span>
-    </div>
 
-    <div class="daily-task" data-task="writing" onclick="startTask('writing')">
-      <div class="task-check">5</div>
-      <div class="task-info">
-        <div class="task-title">📝 写作表达训练</div>
-        <div class="task-desc">「他们说/我说」模板段落练习 · 5分钟</div>
-      </div>
-      <span class="task-badge bg-green">5分钟</span><span class="task-count" id="taskCnt-writing"></span>
-    </div>
+
+
 
   </div>
 
