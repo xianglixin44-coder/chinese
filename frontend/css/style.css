@@ -253,6 +253,10 @@ body{font-family:-apple-system,"PingFang SC","Noto Sans SC",sans-serif;backgroun
    Mac / iPad 宽屏优化 (>1024px)
    ================================================================ */
 @media (min-width: 1024px) {
+  html {
+    overflow: hidden;
+    height: 100vh;
+  }
   body {
     overflow: hidden;
     height: 100vh;
