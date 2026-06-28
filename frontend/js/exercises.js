@@ -633,8 +633,8 @@ function showMethodIntro(method) {
 
 // ====== 训练模块配置 ======
 var TRAINING_MODULES = [
-  {id:'classical_reading', icon:'🏛️', title:'古诗文阅读', desc:'断句·文化常识·默写·翻译·内容概括', count:6, time:'10分钟'},
-  {id:'modern_reading', icon:'📖', title:'现代文阅读', desc:'论述类·文学类·实用类', count:4, time:'8分钟'},
+  {id:'classical_reading', icon:'🏛️', title:'古诗文阅读', desc:'断句·文化常识·默写·翻译·内容概括', count:10, time:'20分钟'},
+  {id:'modern_reading', icon:'📖', title:'现代文阅读', desc:'论述类·文学类·高考真题', count:6, time:'18分钟'},
   {id:'grammar', icon:'✍️', title:'语法训练', desc:'病句辨析', count:2, time:'3分钟'},
   {id:'writing', icon:'📝', title:'写作训练', desc:'审题立意·结构搭建', count:1, time:'5分钟'}
 ];
@@ -805,8 +805,22 @@ function renderTrainingQuestion(idx) {
     // Text area for free-form writing
     html += '<textarea id="train-input-' + idx + '" class="gram-input" rows="5" style="font-size:14px;width:100%;" placeholder="在此写作…"></textarea>';
     html += '<button class="btn-small" onclick="checkTrainingAnswer(' + idx + ',-1)" style="margin-top:8px;font-size:13px;">提交</button>';
+  } else if (item.type === 'neirong') {
+    // 内容概括：显示原文 + 问题
+    var raw = item.content || '';
+    if (raw) {
+      html += '<div style="background:#f0f4f0;padding:14px 18px;border-radius:6px;margin-bottom:10px;font-size:14px;line-height:2;font-family:serif;border-left:3px solid #27ae60;max-height:260px;overflow-y:auto;">' + htmlesc(raw) + '</div>';
+    }
+    html += '<p style="font-size:14px;line-height:1.7;margin-bottom:12px;">' + htmlesc(item.question || '下列对文章内容的概括和分析，不正确的一项是') + '</p>';
+  } else if (item.type === 'wenhua') {
+    // 文化常识：显示问题（通常没有长文content）
+    var raw = item.content || '';
+    if (raw) {
+      html += '<div style="background:#fff8e1;padding:10px 14px;border-radius:6px;margin-bottom:8px;font-size:14px;line-height:1.8;border-left:3px solid #f1c40f;">' + htmlesc(raw) + '</div>';
+    }
+    html += '<p style="font-size:14px;line-height:1.7;margin-bottom:12px;">' + htmlesc(item.question || '') + '</p>';
   } else {
-    // 文化常识/内容概括：显示题目
+    // 其他类型：显示题目
     html += '<p style="font-size:14px;line-height:1.7;margin-bottom:12px;">' + htmlesc(item.question || item.content || '') + '</p>';
   }
   
