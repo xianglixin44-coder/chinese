@@ -31,7 +31,7 @@ body{font-family:-apple-system,"PingFang SC","Noto Sans SC",sans-serif;backgroun
 .sidebar .nav-item.active{background:#e8e4de;color:var(--primary);font-weight:600;border-left-color:var(--accent)}
 .sidebar .nav-item .score{font-size:11px;margin-left:auto;color:var(--text-light);font-weight:400}
 
-.main{margin-left:210px;padding:20px 28px;max-width:1000px}
+.main{margin-left:210px;padding:24px 28px 20px;max-width:1000px}
 .page{display:none;animation:fadeIn .3s ease}
 .page.active{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
