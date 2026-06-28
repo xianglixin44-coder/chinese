@@ -299,6 +299,16 @@ body{font-family:-apple-system,"PingFang SC","Noto Sans SC",sans-serif;backgroun
     gap: 16px;
   }
   #page-overview .score-node { padding: 14px 16px; }
+
+  #refReaderContent {
+    font-size: 15px !important;
+    line-height: 2 !important;
+    max-height: 70vh !important;
+    padding: 24px 28px !important;
+  }
+  #refPdfFrame {
+    height: 80vh !important;
+  }
 }
 
 /* ================================================================
@@ -356,14 +366,4 @@ body{font-family:-apple-system,"PingFang SC","Noto Sans SC",sans-serif;backgroun
 /* ================================================================
    参考书阅读器宽屏：加大字号与间距
    ================================================================ */
-@media (min-width: 1024px) {
-  #refReaderContent {
-    font-size: 15px !important;
-    line-height: 2 !important;
-    max-height: 70vh !important;
-    padding: 24px 28px !important;
-  }
-  #refPdfFrame {
-    height: 80vh !important;
-  }
-}
+
