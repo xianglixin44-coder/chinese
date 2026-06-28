@@ -687,12 +687,12 @@ function checkModuleStatus(moduleId) {
 function startDailyTraining(moduleName) {
   _lastMethod = '';
   _currentModule = moduleName || '';
-  // 隐藏卡片但保留容器高度，防止页面跳动导致 header 遮挡
   var wrap = document.getElementById('trainingStartWrap');
   var start = document.getElementById('trainingStart');
   if (wrap && start) {
-    wrap.style.minHeight = start.offsetHeight + 'px';
     start.style.display = 'none';
+    // 隐藏模块选择区，收缩 wrapper 以免撑开巨大间隙
+    wrap.style.display = 'none';
   }
   document.getElementById('trainingProgress').style.display = 'block';
   document.getElementById('trainingQuiz').style.display = 'block';
@@ -1039,9 +1039,8 @@ function resetTraining() {
   _trainingSession = null;
   _trainingIdx = 0;
   _currentModule = '';
-  // 恢复卡片容器
   var wrap = document.getElementById('trainingStartWrap');
-  if (wrap) wrap.style.minHeight = '';
+  if (wrap) wrap.style.display = '';
   document.getElementById('trainingStart').style.display = 'block';
   document.getElementById('trainingProgress').style.display = 'none';
   document.getElementById('trainingQuiz').style.display = 'none';
