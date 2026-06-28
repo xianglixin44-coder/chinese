@@ -687,6 +687,7 @@ function checkModuleStatus(moduleId) {
 function startDailyTraining(moduleName) {
   _lastMethod = '';
   _currentModule = moduleName || '';
+  var mc = document.getElementById("mainContent"); if (mc) mc.scrollTop = 0;
   document.getElementById('trainingStart').style.display = 'none';
   document.getElementById('trainingProgress').style.display = 'block';
   document.getElementById('trainingQuiz').style.display = 'block';
@@ -979,6 +980,7 @@ function checkTrainingAnswer(idx, choiceIdx, el) {
 }
 
 function finishTraining() {
+  var mc = document.getElementById("mainContent"); if (mc) mc.scrollTop = 0;
   document.getElementById('trainingQuiz').style.display = 'none';
   document.getElementById('trainingResult').style.display = 'block';
   
@@ -1029,6 +1031,7 @@ function reviewTraining() {
 }
 
 function resetTraining() {
+  var mc = document.getElementById("mainContent"); if (mc) mc.scrollTop = 0;
   _trainingSession = null;
   _trainingIdx = 0;
   _currentModule = '';

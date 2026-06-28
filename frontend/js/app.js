@@ -90,6 +90,9 @@ function navigate(page, keepNav, anchor) {
   }
   S.currentPage = page;
   document.getElementById('sidebar').classList.remove('open');
+  // 切换页面时重置滚动位置，防止内容被"遮挡"
+  var mc = document.getElementById('mainContent');
+  if (mc) mc.scrollTop = 0;
   if (page === 'calendar') { renderCalendar(); }
   if (page === 'records') { renderRecords(); }
   if (page === 'classical' && deckQueue && deckQueue.length > 0) { showCard(); }
