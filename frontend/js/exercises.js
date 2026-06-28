@@ -691,17 +691,16 @@ function startDailyTraining(moduleName) {
   document.getElementById('trainingProgress').style.display = 'block';
   document.getElementById('trainingQuiz').style.display = 'block';
   document.getElementById('trainingResult').style.display = 'none';
-  // 防止页面高度骤缩后 header 滚出视野：先重置滚动位置
-  window.scrollTo({top: 0, behavior: 'instant'});
   
   var url = '/api/daily/session';
   if (moduleName) {
     url += '?module=' + encodeURIComponent(moduleName);
   }
-  // 显示模块名称
+  // 模块名称显示在进度条内，不动 header
   var modLabel = '';
   TRAINING_MODULES.forEach(function(m) { if (m.id === moduleName) modLabel = m.icon + ' ' + m.title; });
-  document.getElementById('trainingDate').textContent = modLabel || '📅 综合训练';
+  var labelEl = document.getElementById('trainingModLabel');
+  if (labelEl) labelEl.textContent = modLabel || '📅 综合训练';
   
   apiCall('GET', url).then(function(r) {
     if (!r || !r.items || !r.items.length) {
@@ -981,7 +980,6 @@ function checkTrainingAnswer(idx, choiceIdx, el) {
 }
 
 function finishTraining() {
-  window.scrollTo({top: 0, behavior: 'instant'});
   document.getElementById('trainingQuiz').style.display = 'none';
   document.getElementById('trainingResult').style.display = 'block';
   
@@ -1040,8 +1038,7 @@ function resetTraining() {
   document.getElementById('trainingQuiz').style.display = 'none';
   document.getElementById('trainingResult').style.display = 'none';
   document.getElementById('trainingDate').textContent = '';
-  // 滚回顶部 + 刷新模块状态
-  window.scrollTo({top: 0, behavior: 'instant'});
+  document.getElementById('trainingModLabel').textContent = '';
   renderTrainingModules();
 }
 
