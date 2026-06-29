@@ -1,0 +1,10 @@
+services:
+  trainer:
+    build: .
+    ports:
+      - "3200:3200"
+    environment:
+      - TRAINER_TOKEN=chinese-trainer-2026
+    volumes:
+      - ./trainer.db:/app/trainer.db
+    restart: unless-stopped
