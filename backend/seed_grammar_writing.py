@@ -18,11 +18,15 @@ SEEDS = [
 def seed_grammar_writing(conn):
     """仅在对应模块无题目时导入。"""
     for filename, module in SEEDS:
+        # 清理空内容试题（测试污染），再检查是否需要导入
+        conn.execute(
+            "DELETE FROM exercises WHERE module = ? AND (content = '' OR content IS NULL)", [module]
+        )
         existing = conn.execute(
-            "SELECT COUNT(*) FROM exercises WHERE module = ?", [module]
+            "SELECT COUNT(*) FROM exercises WHERE module = ? AND content != ''", [module]
         ).fetchone()
         if existing and existing[0] > 0:
-            continue  # 已有数据，跳过
+            continue  # 已有有效数据，跳过
 
         csv_path = CSV_DIR / filename
         if not csv_path.exists():
