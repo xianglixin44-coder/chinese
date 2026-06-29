@@ -99,14 +99,21 @@ function renderDailyExercise(container, ex, isNew) {
     }
     html += '<div class="ex-answer" id="dailyQ-result" style="display:none;margin-top:8px;"></div>';
   } else if (ex.module === 'grammar') {
-    html += '<p style="font-size:15px;margin-bottom:8px;"><strong>句子：</strong>' + htmlesc(ex.content) + '</p>';
-    if (ex.question) html += '<p>' + htmlesc(ex.question) + '</p>';
-    html += '<input class="gram-input" id="dailyInput" placeholder="输入你的分析或答案…"><button class="btn-primary" onclick="checkDailyText(\'' + ex.module + '\')">提交</button>';
+    html += '<p style="font-size:15px;margin-bottom:8px;"><strong>材料：</strong>' + htmlesc(ex.content) + '</p>';
+    if (ex.question) html += '<p><strong>' + htmlesc(ex.question) + '</strong></p>';
+    if (ex.options_json && ex.options_json !== '[]') {
+      try {
+        JSON.parse(ex.options_json).forEach(function(o, i) {
+          html += '<div class="ex-option"><input type="radio" name="dailyQ" value="' + i + '" onchange="checkDailyAnswer(\'grammar\',' + i + ',\'' + ex.answer + '\')"> ' + htmlesc(o) + '</label>';
+        });
+      } catch(e) {}
+    } else {
+      html += '<input class="gram-input" id="dailyInput" placeholder="输入你的答案…"><button class="btn-primary" onclick="checkDailyText(\'grammar\')">提交</button>';
+    }
     html += '<div class="ex-answer" id="dailyQ-result" style="display:none;margin-top:8px;"></div>';
     if (ex.explanation) {
       html += '<div id="dailyQ-explanation" style="display:none;margin-top:8px;background:#faf8f5;padding:10px;border-radius:6px;font-size:13px;">' + htmlesc(ex.explanation).replace(/\n/g,'<br>') + '</div>';
     }
-  } else if (ex.module === 'writing') {
     html += '<p style="font-size:15px;margin-bottom:8px;"><strong>🎯 今日话题：</strong>' + htmlesc(ex.content) + '</p>';
     try {
       var extra = JSON.parse(ex.extra_json || '{}');
@@ -179,7 +186,7 @@ function loadGrammarExample(idx) {
   document.getElementById('grammarInput').value = GRAMMAR_EXAMPLES[idx].sentence;
   document.getElementById('grammarResult').innerHTML = `<div class="gram-step"><h4>🔍 诊断结果</h4><pre class="analysis">${GRAMMAR_EXAMPLES[idx].analysis}</pre></div>`;
   apiCall('POST', '/api/grammar/log', {sentence: GRAMMAR_EXAMPLES[idx].sentence, example_idx: idx, module: '语言运用'});
-  apiCall('POST', '/api/training/session', {date: today, module: '语法', duration_min: 5});
+  apiCall('POST', '/api/training/session', {date: today, module: '语言文字运用', duration_min: 5});
   dbRun("INSERT INTO grammar_log (sentence, example_idx, module) VALUES (?, ?, 'language')", [GRAMMAR_EXAMPLES[idx].sentence, idx]);
   grammarCount = getGrammarCount();
   checkStreak(); updateHomeStats();
@@ -191,7 +198,7 @@ function analyzeGrammar() {
   if (!input) { alert('请输入句子'); return; }
   document.getElementById('grammarResult').innerHTML = `<div class="gram-step"><h4>🔍 你的句子</h4><p style="font-size:13px;margin-bottom:6px"><strong>原文：</strong>${htmlesc(input)}</p><pre class="analysis">请按三步手动拆解：\n\n1️⃣ 提主干：找出 S+V+O\n  主语：___  谓语：___  宾语：___\n\n2️⃣ 配逻辑：\n  □搭配不当 □成分残缺 □句式杂糅 □语序不当\n\n3️⃣ 画结构：还原完整修饰关系</pre></div>`;
   apiCall('POST', '/api/grammar/log', {sentence: input, example_idx: -1, module: '语言运用'});
-  apiCall('POST', '/api/training/session', {date: today, module: '语法', duration_min: 5});
+  apiCall('POST', '/api/training/session', {date: today, module: '语言文字运用', duration_min: 5});
   dbRun("INSERT INTO grammar_log (sentence, example_idx, module) VALUES (?, -1, 'language')", [input]);
   grammarCount = getGrammarCount();
   checkStreak(); updateHomeStats();
@@ -201,7 +208,7 @@ function loadSyntaxExample(idx) {
   document.getElementById('syntaxInput').value = SYNTAX_EXAMPLES[idx].sentence;
   document.getElementById('syntaxResult').innerHTML = `<div class="gram-step"><h4>🧩 拆解结果</h4><pre class="analysis">${SYNTAX_EXAMPLES[idx].analysis}</pre></div>`;
   apiCall('POST', '/api/grammar/log', {sentence: SYNTAX_EXAMPLES[idx].sentence, example_idx: idx, module: '古诗文'});
-  apiCall('POST', '/api/training/session', {date: today, module: '语法', duration_min: 5});
+  apiCall('POST', '/api/training/session', {date: today, module: '语言文字运用', duration_min: 5});
   dbRun("INSERT INTO grammar_log (sentence, example_idx, module) VALUES (?, ?, 'classical')", [SYNTAX_EXAMPLES[idx].sentence, idx]);
   grammarCount = getGrammarCount();
   checkStreak(); updateHomeStats();
@@ -212,7 +219,7 @@ function analyzeSyntax() {
   if (!input) { alert('请输入文言句子'); return; }
   document.getElementById('syntaxResult').innerHTML = `<div class="gram-step"><h4>🧩 你的句子</h4><p><strong>原文：</strong>${htmlesc(input)}</p><pre class="analysis">请按三步拆解：\n\n1️⃣ 提主干：找出 S+V+O\n2️⃣ 识别句式：□宾语前置 □介宾后置 □定语后置 □被动句 □省略句\n3️⃣ 还原现代汉语语序</pre></div>`;
   apiCall('POST', '/api/grammar/log', {sentence: input, example_idx: -1, module: '古诗文'});
-  apiCall('POST', '/api/training/session', {date: today, module: '语法', duration_min: 5});
+  apiCall('POST', '/api/training/session', {date: today, module: '语言文字运用', duration_min: 5});
   dbRun("INSERT INTO grammar_log (sentence, example_idx, module) VALUES (?, -1, 'classical')", [input]);
   grammarCount = getGrammarCount();
   checkStreak(); updateHomeStats();
@@ -634,8 +641,8 @@ function showMethodIntro(method) {
 // ====== 训练模块配置 ======
 var TRAINING_MODULES = [
   {id:'classical_reading', icon:'🏛️', title:'古诗文阅读', desc:'断句·文化常识·默写·翻译·内容概括', count:10, time:'20分钟'},
-  {id:'modern_reading', icon:'📖', title:'现代文阅读', desc:'论述类·文学类·高考真题', count:6, time:'18分钟'},
-  {id:'grammar', icon:'✍️', title:'语法训练', desc:'病句辨析', count:2, time:'3分钟'},
+  {id:'modern_reading', icon:'📖', title:'现代文阅读', desc:'论述类文本', count:3, time:'10分钟'},
+  {id:'grammar', icon:'✍️', title:'语言文字运用', desc:'语用辨析', count:5, time:'8分钟'},
   {id:'writing', icon:'📝', title:'写作训练', desc:'审题立意·结构搭建', count:1, time:'5分钟'}
 ];
 
@@ -747,7 +754,7 @@ function renderTrainingQuestion(idx) {
   updateTrainingProgress();
   
   var item = _trainingSession.items[idx];
-  var typeNames = {discourse:"论述类",literary:"文学类",practical:"实用类",duanju:'断句', wenhua:'文化常识', moxie:'默写', translation:'翻译', neirong:'内容概括', bingju:'病句辨析', essay:'写作审题', scaffold:'写作脚手架', semi_open:'半开放写作'};
+  var typeNames = {discourse:"论述类",literary:"文学类",practical:"实用类",duanju:'断句', wenhua:'文化常识', moxie:'默写', translation:'翻译', neirong:'内容概括', bingju:'病句辨析', chengyu:'成语辨析', biaodian:'标点符号', buxie:'补写句子', yasuo:'语段压缩', essay:'写作审题', scaffold:'写作脚手架', semi_open:'半开放写作'};
   var typeName = typeNames[item.type] || item.type;
   
   var html = '';
@@ -778,11 +785,12 @@ function renderTrainingQuestion(idx) {
   } else if (item.type === 'moxie') {
     // 默写：显示情境描述
     html += '<p style="font-size:14px;line-height:1.7;margin-bottom:12px;">' + htmlesc(item.question || item.content || '') + '</p>';
-  } else if (item.type === 'discourse' || item.type === 'literary' || item.type === 'practical') {
-    // 现代文阅读：显示原文 + 题目
+  } else if (item.type === 'discourse' || item.type === 'literary' || item.type === 'practical' || item.type === 'chengyu' || item.type === 'biaodian' || item.type === 'buxie' || item.type === 'yasuo') {
+    // 现代文/语言运用：显示原文 + 题目
     var raw = item.content || '';
+    var isGrammar = item.module === 'grammar';
     if (raw) {
-      html += '<div style="background:#fafafa;padding:14px 18px;border-radius:6px;margin-bottom:10px;font-size:14px;line-height:2;border-left:3px solid var(--primary);max-height:300px;overflow-y:auto;">' + htmlesc(raw) + '</div>';
+      html += '<div style="background:#fafafa;padding:14px 18px;border-radius:6px;margin-bottom:10px;font-size:14px;line-height:2;border-left:3px solid var(--primary);' + (isGrammar ? '' : 'max-height:300px;overflow-y:auto;') + '">' + htmlesc(raw) + '</div>';
     }
     html += '<p style="font-size:14px;line-height:1.7;margin-bottom:12px;">' + htmlesc(item.question || '') + '</p>';
   } else if (item.type === 'bingju') {

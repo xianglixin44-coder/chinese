@@ -7,12 +7,12 @@ from backend.models import DailyAssign
 
 router = APIRouter(prefix="/api/daily", tags=["daily"])
 
-TOTAL_PER_DAY = 16  # 每日默认题量（全部模块合计）
+TOTAL_PER_DAY = 18  # 每日默认题量（全部模块合计）
 
 # 每日各题型题量配置
 DAILY_PLAN = [
     ("modern_reading", "discourse", 3),
-    ("modern_reading", "literary", 3),
+    ("grammar", "", 5),
     ("classical_reading", "duanju", 2),
     ("classical_reading", "wenhua", 2),
     ("classical_reading", "moxie", 2),
@@ -23,25 +23,38 @@ DAILY_PLAN = [
 # 各模块独立训练配置
 MODULE_CONFIG = {
     "modern_reading": {
-        "label": "现代文阅读", "icon": "📖", "total": 6,
-        "plan": [("modern_reading", "discourse", 3), ("modern_reading", "literary", 3)],
+        "label": "现代文阅读", "icon": "📖", "total": 3,
+        "plan": [("modern_reading", "discourse", 3)],
     },
     "classical_reading": {
         "label": "古诗文阅读", "icon": "🏛️", "total": 10,
         "plan": [("classical_reading", "duanju", 2), ("classical_reading", "wenhua", 2), ("classical_reading", "moxie", 2), ("classical_reading", "translation", 2), ("classical_reading", "neirong", 2)],
     },
+    "grammar": {
+        "label": "语言文字运用", "icon": "✍️", "total": 5,
+        "plan": [("grammar", "", 5)],
+    },
 }
 
 def _pick_for_type(conn, module: str, etype: str, n: int, today: str, exclude_ids: list):
-    """按间隔重复 + 同方法集中 选题。优先同方法的题连续出。"""
+    """按间隔重复 + 同方法集中 选题。优先同方法的题连续出。etype为空时匹配所有子类型。"""
     import json
-    rows = conn.execute(
-        """SELECT * FROM exercises
-           WHERE module=? AND type=? AND status='active'
-           ORDER BY practice_count ASC, last_practiced_at ASC
-           LIMIT ?""",
-        [module, etype, n * 5]
-    ).fetchall()
+    if etype:
+        rows = conn.execute(
+            """SELECT * FROM exercises
+               WHERE module=? AND type=? AND status='active'
+               ORDER BY practice_count ASC, last_practiced_at ASC
+               LIMIT ?""",
+            [module, etype, n * 5]
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            """SELECT * FROM exercises
+               WHERE module=? AND status='active'
+               ORDER BY practice_count ASC, last_practiced_at ASC
+               LIMIT ?""",
+            [module, n * 5]
+        ).fetchall()
 
     candidates = [dict(r) for r in rows if r["id"] not in exclude_ids]
     candidates.sort(key=lambda x: (x["practice_count"] or 0, x["last_practiced_at"] or ""))

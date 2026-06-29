@@ -307,7 +307,7 @@ function renderPlan() {
 async function renderSelfAssessment() {
   const el = document.getElementById('selfAssessment'); if (!el) return;
   let h = '<div style="overflow-x:auto"><table class="plan-table"><thead><tr><th>评估项</th><th>W1</th><th>W2</th><th>W3</th><th>W4</th></tr></thead><tbody>';
-  ['每天坚持闪卡？', '阅读主动标记？', '作文用上模板？', '语法拆解越来越快？'].forEach((item) => {
+  ['每天坚持闪卡？', '阅读主动标记？', '作文用上模板？', '语言运用越来越快？'].forEach((item) => {
     h += `<tr><td>${item}</td>`;
     for (let w = 1; w <= 4; w++) {
       const r = dbGet("SELECT score FROM assessments WHERE item=? AND week=?", [item, w]);
@@ -376,7 +376,7 @@ async function renderMethodPage() {
     items = [
       {id:1,sort_order:1,icon:'🏷️',title:'主动标记阅读法',source:'《如何阅读一本书》分析阅读法',description:'8种符号+批注三层法+三遍阅读流程',target_page:'现代文阅读页',extra_json:'{"steps":["通读5min","细读15min","整合5min"]}'},
       {id:2,sort_order:2,icon:'🃏',title:'费曼闪卡法',source:'间隔重复+费曼学习法',description:'1→2→4→8→16→32→64→128天',target_page:'古诗文阅读页',extra_json:'{"tips":["每日新卡上限20张","答对升级答错重置","间隔≥32天=已掌握"]}'},
-      {id:3,sort_order:3,icon:'🧩',title:'语法成分解构图',source:'结构主义语法',description:'三步法:提主干→配逻辑→画结构',target_page:'语言文字运用页',extra_json:'{}'},
+      {id:3,sort_order:3,icon:'🧩',title:'语言成分解构图',source:'结构主义语言学',description:'三步法:提主干→配逻辑→画结构',target_page:'语言文字运用页',extra_json:'{}'},
       {id:4,sort_order:4,icon:'🗣️',title:'他们说/我说模板',source:'《They Say / I Say》',description:'A引入对立+B推进己方+C升华收束',target_page:'写作表达页',extra_json:'{}'},
       {id:5,sort_order:5,icon:'🕵️\u200d♂️',title:'小说叙事密码拆解',source:'热奈特叙事学',description:'三维度:叙事视角+时空结构+核心物象',target_page:'现代文阅读页',extra_json:'{"steps":["判视角","析时空","解物象"]}'},
       {id:6,sort_order:6,icon:'🎭',title:'修辞效果三步拆解法',source:'高考阅卷标准',description:'明手法(1分)→析具体(2分)→阐效果(2分)',target_page:'语言文字运用页',extra_json:'{"formula":"手法(1分)+具体分析(2分)+效果情感(2分)=5分"}'},
@@ -472,7 +472,7 @@ async function renderRecords() {
   if (!el) return;
 
   var MOD_ICON = { modern_reading: '📖', classical_reading: '🏛️', grammar: '✍️', writing: '📝' };
-  var MOD_LABEL = { modern_reading: '现代文', classical_reading: '古诗文', grammar: '语言运用', writing: '写作' };
+  var MOD_LABEL = { modern_reading: '现代文', classical_reading: '古诗文', grammar: '语言文字运用', writing: '写作' };
 
   if (apiAvailable) {
     try {
@@ -519,7 +519,7 @@ async function renderRecords() {
       (data.grammar || []).forEach(function(g) {
         allItems.push({
           date: (g.created_at || '').slice(0,10),
-          icon: '✍️', label: '语法 · ' + (g.sentence||'').substring(0,30),
+          icon: '✍️', label: '语言运用 · ' + (g.sentence||'').substring(0,30),
           result: '📝', detail: g.module || ''
         });
       });
@@ -558,7 +558,7 @@ async function renderRecords() {
       allLocal.push({ date: (r[0]||'').slice(0,10), icon: '🃏', label: '闪卡·'+r[1], result: r[2]==='easy'?'✅':'🔄' });
     });
     grRows.forEach(function(r) {
-      allLocal.push({ date: (r[0]||'').slice(0,10), icon: '✍️', label: '语法·'+(r[1]||'').substring(0,25), result: '📝' });
+      allLocal.push({ date: (r[0]||'').slice(0,10), icon: '✍️', label: '语言运用·'+(r[1]||'').substring(0,25), result: '📝' });
     });
     tpRows.forEach(function(r) {
       allLocal.push({ date: (r[0]||'').slice(0,10), icon: '📝', label: '模板·'+(r[1]||'').substring(0,20), result: '📝' });
@@ -746,7 +746,7 @@ async function executeImport() {
       });
       if (r && r.ok) count++;
     }
-  // 语法练习题库 — CSV 列: question_type, sentence, options_json, answer, explanation, points
+  // 语言运用题库 — CSV 列: question_type, sentence, options_json, answer, explanation, points
   } else if (deck === 'grammar') {
     for (const row of importData) {
       if (row.length < 4) continue;
