@@ -646,7 +646,35 @@ var TRAINING_MODULES = [
   {id:'writing', icon:'📝', title:'写作训练', desc:'审题立意·结构搭建', count:1, time:'5分钟'}
 ];
 
+function updateGreeting() {
+  var now = new Date();
+  var weekdays = ['日','一','二','三','四','五','六'];
+  var wd = '星期' + weekdays[now.getDay()];
+  var dateStr = now.getFullYear() + '年' + (now.getMonth()+1) + '月' + now.getDate() + '日';
+  var timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+  var hour = now.getHours();
+  var msgs = [
+    '🌅 一日之计在于晨，开始今天的训练吧！',
+    '☀️ 上午好！保持专注，每天进步一点点。',
+    '🌤 下午好！坚持就是胜利。',
+    '🌙 晚上好！利用碎片时间，查漏补缺。'
+  ];
+  var msg = msgs[0];
+  if (hour >= 6 && hour < 11) msg = msgs[0];
+  else if (hour >= 11 && hour < 13) msg = msgs[1];
+  else if (hour >= 13 && hour < 18) msg = msgs[2];
+  else msg = msgs[3];
+
+  var elD = document.getElementById('greetingDate');
+  var elT = document.getElementById('greetingTime');
+  var elM = document.getElementById('greetingMsg');
+  if (elD) elD.textContent = dateStr + ' ' + wd;
+  if (elT) elT.textContent = '🕐 ' + timeStr;
+  if (elM) elM.textContent = msg;
+}
+
 function renderTrainingModules() {
+  updateGreeting();
   var container = document.getElementById('trainingModules');
   if (!container) return;
   var today = new Date().toISOString().slice(0, 10);

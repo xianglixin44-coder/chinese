@@ -434,7 +434,11 @@
       <h2>🎯 每日训练</h2>
       <span class="back-btn" onclick="navigate("language", true)">语言文字运用 →</span>
     </div>
-    <p class="sub" id="trainingDate"></p>
+    <div class="greeting-bar" style="display:flex;align-items:center;gap:14px;padding:10px 16px;background:linear-gradient(135deg,#f0f4ff,#e8f0fe);border-radius:8px;margin-bottom:16px;font-size:13px;color:var(--text-light);">
+      <span id="greetingDate" style="font-weight:600;color:var(--primary);"></span>
+      <span id="greetingTime"></span>
+      <span id="greetingMsg" style="margin-left:auto;color:var(--accent2);font-weight:500;"></span>
+    </div>
   </div>
 
   <div id="trainingProgress" style="display:none;margin:12px 0 16px;">
