@@ -801,25 +801,22 @@ function renderTrainingQuestion(idx) {
     }
     html += '<p style="font-size:13px;color:var(--text-light);margin-bottom:10px;">' + htmlesc(item.question || '请判断此句是否有语病') + '</p>';
   } else if (item.type === 'essay' || item.type === 'scaffold' || item.type === 'semi_open') {
-    // 写作表达：显示话题 + 要求 + 可选提示
     var raw = item.content || '';
     if (raw) {
-      html += '<div style="background:#f0f4ff;padding:14px 18px;border-radius:8px;margin-bottom:10px;border-left:3px solid #1a73e8;">';
-      html += '<p style="font-size:15px;font-weight:600;margin-bottom:6px;">' + htmlesc(raw) + '</p>';
-      if (item.question) {
-        html += '<p style="font-size:13px;color:var(--text-light);">' + htmlesc(item.question) + '</p>';
-      }
+      html += '<div style="background:#fafafa;padding:14px 18px;border-radius:6px;margin-bottom:10px;font-size:14px;line-height:2;border-left:3px solid var(--primary);">' + htmlesc(raw).replace(/\n/g,'<br>') + '</div>';
+    }
+    if (item.question) {
+      html += '<div style="background:#f0f4ff;padding:10px 14px;border-radius:6px;margin-bottom:10px;border-left:3px solid #1a73e8;">';
+      html += '<p style="font-size:14px;font-weight:600;margin:0;">📝 ' + htmlesc(item.question) + '</p>';
       html += '</div>';
     }
-    // Show explanation as hint (collapsed)
     if (item.explanation) {
-      html += '<details style="margin-bottom:10px;font-size:12px;"><summary style="cursor:pointer;color:var(--accent);">💡 查看写作指导</summary>';
+      html += '<details style="margin-bottom:10px;font-size:12px;"><summary style="cursor:pointer;color:var(--accent);">💡 查看写作指导（立意+高分元素）</summary>';
       html += '<div style="background:#fafafa;padding:10px;border-radius:6px;margin-top:6px;line-height:1.8;">' + htmlesc(item.explanation).replace(/\n/g,'<br>') + '</div>';
       html += '</details>';
     }
-    // Text area for free-form writing
-    html += '<textarea id="train-input-' + idx + '" class="gram-input" rows="5" style="font-size:14px;width:100%;" placeholder="在此写作…"></textarea>';
-    html += '<button class="btn-small" onclick="checkTrainingAnswer(' + idx + ',-1)" style="margin-top:8px;font-size:13px;">提交</button>';
+    html += '<textarea id="train-input-' + idx + '" class="gram-input" rows="12" style="font-size:14px;width:100%;" placeholder="在此写作（不少于800字）…"></textarea>';
+    html += '<button class="btn-small" onclick="checkTrainingAnswer(' + idx + ',-1)" style="margin-top:8px;font-size:13px;">✅ 提交（提交后视作完成）</button>';
   } else if (item.type === 'neirong') {
     // 内容概括：显示原文 + 问题
     var raw = item.content || '';
