@@ -118,14 +118,32 @@ class TestExercises:
         r = client.get("/api/exercises?module=grammar")
         assert r.status_code == 200
 
+    def setup_method(self):
+        """清理测试残留（仅删空内容测试题）"""
+        from backend.database import get_db
+        conn = get_db()
+        conn.execute("DELETE FROM exercises WHERE module='grammar' AND content=''")
+        conn.commit()
+        conn.close()
+
     def test_add_exercise(self):
         r = client.post("/api/exercises", json={
             "module": "grammar", "type": "bingju",
             "content": "通过这次学习，使我认识到自己的不足。",
-            "answer": "缺主语", "explanation": "介词导致主语被淹没"
+            "question": "请判断此句是否有语病，如有请指出类型并修改。",
+            "options_json": '["A. 无语病","B. 成分残缺(缺主语)","C. 搭配不当","D. 句式杂糅"]',
+            "answer": "B", "explanation": "介词导致主语被淹没"
         })
         assert r.status_code == 200
         assert r.json()["ok"] is True
+        # 清理测试数据
+        rid = r.json().get("id")
+        if rid:
+            from backend.database import get_db
+            conn = get_db()
+            conn.execute("DELETE FROM exercises WHERE id=?", (rid,))
+            conn.commit()
+            conn.close()
 
 
 class TestDaily:

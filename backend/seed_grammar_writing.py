@@ -50,12 +50,16 @@ def seed_grammar_writing(conn):
                 if not content:
                     continue
 
-                # 确保 options_json 是合法 JSON
+                # 确保 options_json 是合法 JSON 数组
                 try:
                     parsed = json.loads(options_json)
+                    if isinstance(parsed, str):
+                        # 双重编码：CSV 给出的是 JSON 字符串，再解析一次
+                        parsed = json.loads(parsed)
+                    if not isinstance(parsed, list):
+                        parsed = [parsed]
                     options_json = json.dumps(parsed, ensure_ascii=False)
                 except (json.JSONDecodeError, TypeError):
-                    # 裸字符串 → 包装为数组
                     if options_json:
                         options_json = json.dumps([options_json], ensure_ascii=False)
                     else:
