@@ -988,9 +988,9 @@ function checkTrainingAnswer(idx, choiceIdx, el) {
   // Auto-advance after delay
   setTimeout(function() {
     if (_trainingIdx === idx) {
-      renderTrainingQuestion(idx + 1);
+      try { renderTrainingQuestion(idx + 1); } catch(e) { console.error('advance', e); }
     }
-  }, 1200);
+  }, 1500);
 }
 
 function finishTraining() {
