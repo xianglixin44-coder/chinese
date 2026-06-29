@@ -7,7 +7,7 @@ from backend.models import DailyAssign
 
 router = APIRouter(prefix="/api/daily", tags=["daily"])
 
-TOTAL_PER_DAY = 18  # 每日默认题量（全部模块合计）
+TOTAL_PER_DAY = 19  # 每日默认题量（全部模块合计）
 
 # 每日各题型题量配置
 DAILY_PLAN = [
@@ -18,6 +18,7 @@ DAILY_PLAN = [
     ("classical_reading", "moxie", 2),
     ("classical_reading", "translation", 2),
     ("classical_reading", "neirong", 2),
+    ("writing", "essay", 1),
 ]
 
 # 各模块独立训练配置
@@ -33,6 +34,10 @@ MODULE_CONFIG = {
     "grammar": {
         "label": "语言文字运用", "icon": "✍️", "total": 5,
         "plan": [("grammar", "", 5)],
+    },
+    "writing": {
+        "label": "写作训练", "icon": "📝", "total": 1,
+        "plan": [("writing", "essay", 1)],
     },
 }
 
