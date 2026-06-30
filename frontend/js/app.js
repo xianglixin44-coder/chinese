@@ -1075,7 +1075,7 @@ async function renderReferenceBooks() {
         if (row) {
           var bookId = row.getAttribute('data-book-id');
           if (bookId) {
-            console.log('Opening book:', bookId);
+            // book opened
             openBookReader(bookId);
           }
         }
@@ -1090,7 +1090,7 @@ async function renderReferenceBooks() {
 window.renderReferenceBooks = renderReferenceBooks;
 
 async function openBookReader(bookId) {
-  console.log('openBookReader:', bookId);
+  // book reader opened
   refState.bookId = bookId;
   refState.page = 1;
   var listEl = document.getElementById('refBookList');

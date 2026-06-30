@@ -661,7 +661,7 @@ let dbLocal = null;
     dbLocal.run("CREATE TABLE IF NOT EXISTS assessments (item TEXT, week INTEGER, score INTEGER DEFAULT 0, updated_at TEXT DEFAULT (datetime('now','localtime')), PRIMARY KEY(item, week))");
     dbLocal.run("CREATE TABLE IF NOT EXISTS training_sessions (id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, module TEXT, duration_min INTEGER, created_at TEXT DEFAULT (datetime('now','localtime')))");
     dbLocal.run("CREATE TABLE IF NOT EXISTS daily_tasks (date TEXT, task TEXT, PRIMARY KEY(date, task))");
-    dbLocal.run("CREATE TABLE IF NOT EXISTS wrong_items (id INTEGER PRIMARY KEY AUTOINCREMENT, exercise_id INTEGER, module TEXT, question TEXT, user_answer TEXT, correct_answer TEXT, wrong_count INTEGER DEFAULT 1, wrong_at TEXT DEFAULT (datetime('now','localtime')), reviewed INTEGER DEFAULT 0)");
+    dbLocal.run("CREATE TABLE IF NOT EXISTS wrong_items (id INTEGER PRIMARY KEY AUTOINCREMENT, exercise_id INTEGER, module TEXT, question_type TEXT DEFAULT '', question TEXT, user_answer TEXT, correct_answer TEXT, explanation TEXT DEFAULT '', wrong_count INTEGER DEFAULT 1, wrong_at TEXT DEFAULT (datetime('now','localtime')), reviewed INTEGER DEFAULT 0)");
     dbLocal.run("CREATE TABLE IF NOT EXISTS training_log (id INTEGER PRIMARY KEY AUTOINCREMENT, module TEXT, exercise_id INTEGER DEFAULT 0, question TEXT, user_answer TEXT, correct_answer TEXT, is_correct INTEGER DEFAULT 0, score INTEGER DEFAULT 0, correction_note TEXT DEFAULT '', reviewed INTEGER DEFAULT 0, attempt_count INTEGER DEFAULT 1, created_at TEXT DEFAULT (datetime('now','localtime')))");
     console.log('📦 Local SQLite ready');
   } catch(e) { console.warn('Local DB:', e.message); }
@@ -786,7 +786,7 @@ const SYMBOLS = [
     ["晨实词10个","午限时读+仅做?标记","晚拆自己作文长句"],
     ["晨实词10个","午对比阅读★(A)★(B)","晚用模板拆高分范文"],
     ["晨实词10个","午完整标记+3句批注","晚不同A/B/C同话题"],
-    ["晨文学常识10条","午重读W1文章对比标记","晚语法拆解+病句"],
+    ["晨文学常识10条","午重读W1文章对比标记","晚语言运用"],
     ["晨总复习50实词","午读《他们说/我说》","晚做本周总结"],
   ]},
   week3:{title:"第3周·综合应用",days:[
@@ -880,7 +880,7 @@ async function fetchExercises(module, type) {
   var params = new URLSearchParams();
   if (module) params.set('module', module);
   if (type) params.set('type', type);
-  params.set('limit', '200');
+  params.set('limit', '2000');
   var qs = params.toString();
   return await apiCall('GET', '/api/exercises' + (qs ? '?' + qs : ''));
 }
@@ -1095,10 +1095,45 @@ window.flipCard = flipCard;
 window.rateCard = rateCard;
 window.initDeck = initDeck;
 
-document.addEventListener('click', e => { const btn = e.target.closest('.deck-btn'); if (btn) initDeck(btn.dataset.deck); });// exercises.js — 训练练习模块
+document.addEventListener('click', e => { const btn = e.target.closest('.deck-btn'); if (btn) initDeck(btn.dataset.deck); });
+// ================================================================
+//  Mac / iPad 键盘快捷键（空格翻卡，数字键评分）
+// ================================================================
+document.addEventListener('keydown', function(e) {
+  if (typeof S === 'undefined' || !S.currentPage || S.currentPage !== 'classical') return;
+  if (typeof deckQueue === 'undefined' || deckQueue.length === 0) return;
+  var tag = document.activeElement ? document.activeElement.tagName : '';
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+  switch (e.code) {
+    case 'Space':
+      e.preventDefault();
+      flipCard();
+      break;
+    case 'Digit1': case 'Numpad1':
+      if (S.flipped) rateCard('again');
+      break;
+    case 'Digit2': case 'Numpad2':
+      if (S.flipped) rateCard('hard');
+      break;
+    case 'Digit3': case 'Numpad3':
+      if (S.flipped) rateCard('easy');
+      break;
+    case 'ArrowRight':
+      e.preventDefault();
+      if (!S.flipped) flipCard();
+      break;
+    case 'ArrowLeft':
+      e.preventDefault();
+      if (S.flipped) rateCard('again');
+      break;
+  }
+});
+// exercises.js — 训练练习模块
 // Depends on: config.js, utils.js, data.js, api.js
 // Provides: reading, daily, templates, grammar, syntax, rhetoric, translation, novel analysis
 
+(function(){
 function checkReadingAnswer(qid, chosen, correct) {
   var resultEl = document.getElementById(qid + '-result');
   if (!resultEl) return;
@@ -1196,14 +1231,21 @@ function renderDailyExercise(container, ex, isNew) {
     }
     html += '<div class="ex-answer" id="dailyQ-result" style="display:none;margin-top:8px;"></div>';
   } else if (ex.module === 'grammar') {
-    html += '<p style="font-size:15px;margin-bottom:8px;"><strong>句子：</strong>' + htmlesc(ex.content) + '</p>';
-    if (ex.question) html += '<p>' + htmlesc(ex.question) + '</p>';
-    html += '<input class="gram-input" id="dailyInput" placeholder="输入你的分析或答案…"><button class="btn-primary" onclick="checkDailyText(\'' + ex.module + '\')">提交</button>';
+    html += '<p style="font-size:15px;margin-bottom:8px;"><strong>材料：</strong>' + htmlesc(ex.content) + '</p>';
+    if (ex.question) html += '<p><strong>' + htmlesc(ex.question) + '</strong></p>';
+    if (ex.options_json && ex.options_json !== '[]') {
+      try {
+        JSON.parse(ex.options_json).forEach(function(o, i) {
+          html += '<div class="ex-option"><input type="radio" name="dailyQ" value="' + i + '" onchange="checkDailyAnswer(\'grammar\',' + i + ',\'' + ex.answer + '\')"> ' + htmlesc(o) + '</label>';
+        });
+      } catch(e) {}
+    } else {
+      html += '<input class="gram-input" id="dailyInput" placeholder="输入你的答案…"><button class="btn-primary" onclick="checkDailyText(\'grammar\')">提交</button>';
+    }
     html += '<div class="ex-answer" id="dailyQ-result" style="display:none;margin-top:8px;"></div>';
     if (ex.explanation) {
       html += '<div id="dailyQ-explanation" style="display:none;margin-top:8px;background:#faf8f5;padding:10px;border-radius:6px;font-size:13px;">' + htmlesc(ex.explanation).replace(/\n/g,'<br>') + '</div>';
     }
-  } else if (ex.module === 'writing') {
     html += '<p style="font-size:15px;margin-bottom:8px;"><strong>🎯 今日话题：</strong>' + htmlesc(ex.content) + '</p>';
     try {
       var extra = JSON.parse(ex.extra_json || '{}');
@@ -1276,7 +1318,7 @@ function loadGrammarExample(idx) {
   document.getElementById('grammarInput').value = GRAMMAR_EXAMPLES[idx].sentence;
   document.getElementById('grammarResult').innerHTML = `<div class="gram-step"><h4>🔍 诊断结果</h4><pre class="analysis">${GRAMMAR_EXAMPLES[idx].analysis}</pre></div>`;
   apiCall('POST', '/api/grammar/log', {sentence: GRAMMAR_EXAMPLES[idx].sentence, example_idx: idx, module: '语言运用'});
-  apiCall('POST', '/api/training/session', {date: today, module: '语法', duration_min: 5});
+  apiCall('POST', '/api/training/session', {date: today, module: '语言文字运用', duration_min: 5});
   dbRun("INSERT INTO grammar_log (sentence, example_idx, module) VALUES (?, ?, 'language')", [GRAMMAR_EXAMPLES[idx].sentence, idx]);
   grammarCount = getGrammarCount();
   checkStreak(); updateHomeStats();
@@ -1288,7 +1330,7 @@ function analyzeGrammar() {
   if (!input) { alert('请输入句子'); return; }
   document.getElementById('grammarResult').innerHTML = `<div class="gram-step"><h4>🔍 你的句子</h4><p style="font-size:13px;margin-bottom:6px"><strong>原文：</strong>${htmlesc(input)}</p><pre class="analysis">请按三步手动拆解：\n\n1️⃣ 提主干：找出 S+V+O\n  主语：___  谓语：___  宾语：___\n\n2️⃣ 配逻辑：\n  □搭配不当 □成分残缺 □句式杂糅 □语序不当\n\n3️⃣ 画结构：还原完整修饰关系</pre></div>`;
   apiCall('POST', '/api/grammar/log', {sentence: input, example_idx: -1, module: '语言运用'});
-  apiCall('POST', '/api/training/session', {date: today, module: '语法', duration_min: 5});
+  apiCall('POST', '/api/training/session', {date: today, module: '语言文字运用', duration_min: 5});
   dbRun("INSERT INTO grammar_log (sentence, example_idx, module) VALUES (?, -1, 'language')", [input]);
   grammarCount = getGrammarCount();
   checkStreak(); updateHomeStats();
@@ -1298,7 +1340,7 @@ function loadSyntaxExample(idx) {
   document.getElementById('syntaxInput').value = SYNTAX_EXAMPLES[idx].sentence;
   document.getElementById('syntaxResult').innerHTML = `<div class="gram-step"><h4>🧩 拆解结果</h4><pre class="analysis">${SYNTAX_EXAMPLES[idx].analysis}</pre></div>`;
   apiCall('POST', '/api/grammar/log', {sentence: SYNTAX_EXAMPLES[idx].sentence, example_idx: idx, module: '古诗文'});
-  apiCall('POST', '/api/training/session', {date: today, module: '语法', duration_min: 5});
+  apiCall('POST', '/api/training/session', {date: today, module: '语言文字运用', duration_min: 5});
   dbRun("INSERT INTO grammar_log (sentence, example_idx, module) VALUES (?, ?, 'classical')", [SYNTAX_EXAMPLES[idx].sentence, idx]);
   grammarCount = getGrammarCount();
   checkStreak(); updateHomeStats();
@@ -1309,7 +1351,7 @@ function analyzeSyntax() {
   if (!input) { alert('请输入文言句子'); return; }
   document.getElementById('syntaxResult').innerHTML = `<div class="gram-step"><h4>🧩 你的句子</h4><p><strong>原文：</strong>${htmlesc(input)}</p><pre class="analysis">请按三步拆解：\n\n1️⃣ 提主干：找出 S+V+O\n2️⃣ 识别句式：□宾语前置 □介宾后置 □定语后置 □被动句 □省略句\n3️⃣ 还原现代汉语语序</pre></div>`;
   apiCall('POST', '/api/grammar/log', {sentence: input, example_idx: -1, module: '古诗文'});
-  apiCall('POST', '/api/training/session', {date: today, module: '语法', duration_min: 5});
+  apiCall('POST', '/api/training/session', {date: today, module: '语言文字运用', duration_min: 5});
   dbRun("INSERT INTO grammar_log (sentence, example_idx, module) VALUES (?, -1, 'classical')", [input]);
   grammarCount = getGrammarCount();
   checkStreak(); updateHomeStats();
@@ -1728,23 +1770,120 @@ function showMethodIntro(method) {
     '</div>';
 }
 
-function startDailyTraining() {
+// ====== 训练模块配置 ======
+var TRAINING_MODULES = [
+  {id:'classical_reading', icon:'🏛️', title:'古诗文阅读', desc:'断句·文化常识·默写·翻译·内容概括', count:10, time:'20分钟'},
+  {id:'modern_reading', icon:'📖', title:'现代文阅读', desc:'论述类文本', count:3, time:'10分钟'},
+  {id:'grammar', icon:'✍️', title:'语言文字运用', desc:'语用辨析', count:5, time:'8分钟'},
+  {id:'writing', icon:'📝', title:'写作训练', desc:'审题立意·结构搭建', count:1, time:'5分钟'}
+];
+
+function updateGreeting() {
+  var now = new Date();
+  var weekdays = ['日','一','二','三','四','五','六'];
+  var wd = '星期' + weekdays[now.getDay()];
+  var dateStr = now.getFullYear() + '年' + (now.getMonth()+1) + '月' + now.getDate() + '日';
+  var timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+  var hour = now.getHours();
+  var msgs = [
+    '🌅 一日之计在于晨，开始今天的训练吧！',
+    '☀️ 上午好！保持专注，每天进步一点点。',
+    '🌤 下午好！坚持就是胜利。',
+    '🌙 晚上好！利用碎片时间，查漏补缺。'
+  ];
+  var msg = msgs[0];
+  if (hour >= 6 && hour < 11) msg = msgs[0];
+  else if (hour >= 11 && hour < 13) msg = msgs[1];
+  else if (hour >= 13 && hour < 18) msg = msgs[2];
+  else msg = msgs[3];
+
+  var elD = document.getElementById('greetingDate');
+  var elT = document.getElementById('greetingTime');
+  var elM = document.getElementById('greetingMsg');
+  if (elD) elD.textContent = dateStr + ' ' + wd;
+  if (elT) elT.textContent = '🕐 ' + timeStr;
+  if (elM) elM.textContent = msg;
+}
+
+function renderTrainingModules() {
+  updateGreeting();
+  var container = document.getElementById('trainingModules');
+  if (!container) return;
+  var today = new Date().toISOString().slice(0, 10);
+
+  var html = '';
+  TRAINING_MODULES.forEach(function(mod) {
+    html += '<div class="card" style="padding:20px;cursor:default;" id="mod-card-' + mod.id + '">';
+    html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">';
+    html += '<span style="font-size:28px;">' + mod.icon + '</span>';
+    html += '<div><h4 style="margin:0;font-size:15px;">' + mod.title + '</h4>';
+    html += '<p style="font-size:11px;color:var(--text-light);margin:2px 0 0;">' + mod.desc + '</p></div>';
+    html += '</div>';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;">';
+    html += '<span style="font-size:12px;color:var(--text-light);">' + mod.count + '题 · ' + mod.time + '</span>';
+    html += '<button class="btn-small" onclick="startDailyTraining(\'' + mod.id + '\')" style="font-size:13px;padding:6px 16px;" id="btn-' + mod.id + '">开始训练</button>';
+    html += '</div>';
+    html += '<p id="mod-status-' + mod.id + '" style="font-size:11px;margin-top:8px;display:none;"></p>';
+    html += '</div>';
+  });
+  container.innerHTML = html;
+
+  // Check status for each module
+  TRAINING_MODULES.forEach(function(mod) {
+    checkModuleStatus(mod.id);
+  });
+}
+
+function checkModuleStatus(moduleId) {
+  apiCall('GET', '/api/daily/session?module=' + moduleId + '&check_only=1').then(function(r) {
+    var statusEl = document.getElementById('mod-status-' + moduleId);
+    var btnEl = document.getElementById('btn-' + moduleId);
+    if (!r || !r.items) return;
+    var allDone = r.total > 0 && r.items.every(function(it) { return it.is_correct >= 0; });
+    var inProgress = r.total > 0 && r.items.some(function(it) { return it.is_correct >= 0; }) && !allDone;
+    if (allDone) {
+      if (statusEl) { statusEl.style.display = 'block'; statusEl.style.color = '#27ae60'; statusEl.textContent = '✅ 今日已完成'; }
+      if (btnEl) { btnEl.textContent = '重新训练'; btnEl.style.background = '#e8f5e9'; btnEl.style.color = '#27ae60'; }
+    } else if (inProgress) {
+      if (statusEl) { statusEl.style.display = 'block'; statusEl.style.color = '#f39c12'; statusEl.textContent = '⏳ 进行中，点击继续'; }
+      if (btnEl) { btnEl.textContent = '继续训练'; btnEl.style.background = '#fff3e0'; btnEl.style.color = '#e67e22'; }
+    }
+  }).catch(function() {});
+}
+
+function startDailyTraining(moduleName) {
   _lastMethod = '';
-  document.getElementById('trainingStart').style.display = 'none';
+  _currentModule = moduleName || '';
+  var wrap = document.getElementById('trainingStartWrap');
+  var start = document.getElementById('trainingStart');
+  if (wrap && start) {
+    start.style.display = 'none';
+    // 隐藏模块选择区，收缩 wrapper 以免撑开巨大间隙
+    wrap.style.display = 'none';
+  }
   document.getElementById('trainingProgress').style.display = 'block';
   document.getElementById('trainingQuiz').style.display = 'block';
   document.getElementById('trainingResult').style.display = 'none';
   
-  apiCall('GET', '/api/daily/session?count=10').then(function(r) {
+  var url = '/api/daily/session';
+  if (moduleName) {
+    url += '?module=' + encodeURIComponent(moduleName);
+  }
+  // 模块名称显示在进度条内，不动 header
+  var modLabel = '';
+  TRAINING_MODULES.forEach(function(m) { if (m.id === moduleName) modLabel = m.icon + ' ' + m.title; });
+  var labelEl = document.getElementById('trainingModLabel');
+  if (labelEl) labelEl.textContent = modLabel || '📅 综合训练';
+  
+  apiCall('GET', url).then(function(r) {
     if (!r || !r.items || !r.items.length) {
-      document.getElementById('trainingQuiz').innerHTML = '<div class="card" style="text-align:center;padding:24px;"><p>📭 题库暂无题目，请先导入数据。</p></div>';
+      document.getElementById('trainingQuiz').innerHTML = '<div class="card" style="text-align:center;padding:24px;"><p>📭 该模块暂无可用题目，请先导入数据。</p><button class="btn-small" onclick="resetTraining()" style="margin-top:12px;">← 返回模块列表</button></div>';
       return;
     }
     _trainingSession = r;
     _trainingIdx = 0;
     updateTrainingProgress();
     renderTrainingQuestion(0);
-    document.getElementById('trainingDate').textContent = '📅 ' + (r.date || '');
   });
 }
 
@@ -1775,7 +1914,7 @@ function renderTrainingQuestion(idx) {
   updateTrainingProgress();
   
   var item = _trainingSession.items[idx];
-  var typeNames = {duanju:'断句', wenhua:'文化常识', moxie:'默写', translation:'翻译', neirong:'内容概括'};
+  var typeNames = {discourse:"论述类",literary:"文学类",practical:"实用类",duanju:'断句', wenhua:'文化常识', moxie:'默写', translation:'翻译', neirong:'内容概括', bingju:'病句辨析', chengyu:'成语辨析', biaodian:'标点符号', buxie:'补写句子', yasuo:'语段压缩', essay:'写作审题', scaffold:'写作脚手架', semi_open:'半开放写作'};
   var typeName = typeNames[item.type] || item.type;
   
   var html = '';
@@ -1806,8 +1945,54 @@ function renderTrainingQuestion(idx) {
   } else if (item.type === 'moxie') {
     // 默写：显示情境描述
     html += '<p style="font-size:14px;line-height:1.7;margin-bottom:12px;">' + htmlesc(item.question || item.content || '') + '</p>';
+  } else if (item.type === 'discourse' || item.type === 'literary' || item.type === 'practical' || item.type === 'chengyu' || item.type === 'biaodian' || item.type === 'buxie' || item.type === 'yasuo') {
+    // 现代文/语言运用：显示原文 + 题目
+    var raw = item.content || '';
+    var isGrammar = item.module === 'grammar';
+    if (raw) {
+      html += '<div style="background:#fafafa;padding:14px 18px;border-radius:6px;margin-bottom:10px;font-size:14px;line-height:2;border-left:3px solid var(--primary);' + (isGrammar ? '' : 'max-height:300px;overflow-y:auto;') + '">' + htmlesc(raw) + '</div>';
+    }
+    html += '<p style="font-size:14px;line-height:1.7;margin-bottom:12px;">' + htmlesc(item.question || '') + '</p>';
+  } else if (item.type === 'bingju') {
+    // 病句辨析：显示句子 + 问题
+    var raw = item.content || '';
+    if (raw) {
+      html += '<div style="background:#fff8f0;padding:12px 16px;border-radius:6px;margin-bottom:8px;font-size:15px;line-height:1.8;border-left:3px solid #e67e22;">' + htmlesc(raw) + '</div>';
+    }
+    html += '<p style="font-size:13px;color:var(--text-light);margin-bottom:10px;">' + htmlesc(item.question || '请判断此句是否有语病') + '</p>';
+  } else if (item.type === 'essay' || item.type === 'scaffold' || item.type === 'semi_open') {
+    var raw = item.content || '';
+    if (raw) {
+      html += '<div style="background:#fafafa;padding:14px 18px;border-radius:6px;margin-bottom:10px;font-size:14px;line-height:2;border-left:3px solid var(--primary);">' + htmlesc(raw).replace(/\n/g,'<br>') + '</div>';
+    }
+    if (item.question) {
+      html += '<div style="background:#f0f4ff;padding:10px 14px;border-radius:6px;margin-bottom:10px;border-left:3px solid #1a73e8;">';
+      html += '<p style="font-size:14px;font-weight:600;margin:0;">📝 ' + htmlesc(item.question) + '</p>';
+      html += '</div>';
+    }
+    if (item.explanation) {
+      html += '<details style="margin-bottom:10px;font-size:12px;"><summary style="cursor:pointer;color:var(--accent);">💡 查看写作指导（立意+高分元素）</summary>';
+      html += '<div style="background:#fafafa;padding:10px;border-radius:6px;margin-top:6px;line-height:1.8;">' + htmlesc(item.explanation).replace(/\n/g,'<br>') + '</div>';
+      html += '</details>';
+    }
+    html += '<textarea id="train-input-' + idx + '" class="gram-input" rows="12" style="font-size:14px;width:100%;" placeholder="在此写作（不少于800字）…"></textarea>';
+    html += '<button class="btn-small" onclick="checkTrainingAnswer(' + idx + ',-1)" style="margin-top:8px;font-size:13px;">✅ 提交（提交后视作完成）</button>';
+  } else if (item.type === 'neirong') {
+    // 内容概括：显示原文 + 问题
+    var raw = item.content || '';
+    if (raw) {
+      html += '<div style="background:#f0f4f0;padding:14px 18px;border-radius:6px;margin-bottom:10px;font-size:14px;line-height:2;font-family:serif;border-left:3px solid #27ae60;max-height:260px;overflow-y:auto;">' + htmlesc(raw) + '</div>';
+    }
+    html += '<p style="font-size:14px;line-height:1.7;margin-bottom:12px;">' + htmlesc(item.question || '下列对文章内容的概括和分析，不正确的一项是') + '</p>';
+  } else if (item.type === 'wenhua') {
+    // 文化常识：显示问题（通常没有长文content）
+    var raw = item.content || '';
+    if (raw) {
+      html += '<div style="background:#fff8e1;padding:10px 14px;border-radius:6px;margin-bottom:8px;font-size:14px;line-height:1.8;border-left:3px solid #f1c40f;">' + htmlesc(raw) + '</div>';
+    }
+    html += '<p style="font-size:14px;line-height:1.7;margin-bottom:12px;">' + htmlesc(item.question || '') + '</p>';
   } else {
-    // 文化常识/内容概括：显示题目
+    // 其他类型：显示题目
     html += '<p style="font-size:14px;line-height:1.7;margin-bottom:12px;">' + htmlesc(item.question || item.content || '') + '</p>';
   }
   
@@ -1905,7 +2090,7 @@ function checkTrainingAnswer(idx, choiceIdx, el) {
     var wrongQ = item.question || item.content || '';
     apiCall('POST', '/api/wrong', {
       exercise_id: item.exercise_id || 0,
-      module: 'classical_reading',
+      module: item.module || 'classical_reading',
       question_type: item.type || '',
       question: wrongQ,
       user_answer: userAnswer,
@@ -1913,8 +2098,15 @@ function checkTrainingAnswer(idx, choiceIdx, el) {
       explanation: item.explanation || ''
     });
     if (typeof recordTrainingLog === 'function') {
-      recordTrainingLog('classical_reading', wrongQ, userAnswer, item.answer || '', 0);
+      recordTrainingLog(item.module || 'classical_reading', wrongQ, userAnswer, item.answer || '', 0);
     }
+  }
+
+  // 写作类题目：提交即视作完成（无标准答案）
+  var isWriting = item.type === 'essay' || item.type === 'scaffold' || item.type === 'semi_open';
+  if (isWriting && userAnswer) {
+    item.is_correct = 1;  // 写作题提交即算完成
+    isCorrect = true;
   }
   
   // Show result with method highlighted
@@ -1953,9 +2145,9 @@ function checkTrainingAnswer(idx, choiceIdx, el) {
   // Auto-advance after delay
   setTimeout(function() {
     if (_trainingIdx === idx) {
-      renderTrainingQuestion(idx + 1);
+      try { renderTrainingQuestion(idx + 1); } catch(e) { console.error('advance', e); }
     }
-  }, 1200);
+  }, 1500);
 }
 
 function finishTraining() {
@@ -2011,10 +2203,16 @@ function reviewTraining() {
 function resetTraining() {
   _trainingSession = null;
   _trainingIdx = 0;
+  _currentModule = '';
+  var wrap = document.getElementById('trainingStartWrap');
+  if (wrap) wrap.style.display = '';
   document.getElementById('trainingStart').style.display = 'block';
   document.getElementById('trainingProgress').style.display = 'none';
   document.getElementById('trainingQuiz').style.display = 'none';
   document.getElementById('trainingResult').style.display = 'none';
+  document.getElementById('trainingDate').textContent = '';
+  document.getElementById('trainingModLabel').textContent = '';
+  renderTrainingModules();
 }
 
 window.startDailyTraining = startDailyTraining;
@@ -2023,36 +2221,14 @@ window.reviewTraining = reviewTraining;
 window.resetTraining = resetTraining;
 
 function checkTrainingStatus() {
-  // 仅检查是否存在未完成session，不创建新session
-  var today = new Date().toISOString().slice(0, 10);
-  apiCall('GET', '/api/daily/session?check_only=1').then(function(r) {
-    if (!r || !r.items) return;
-    // Check if all items are completed
-    var allDone = r.items.every(function(it) { return it.is_correct >= 0; });
-    if (allDone && r.items.length > 0) {
-      document.getElementById('trainingAlreadyDone').style.display = 'block';
-      document.getElementById('trainingDate').textContent = '📅 ' + today + ' ✅ 已完成';
-    } else if (r.items.some(function(it) { return it.is_correct >= 0; })) {
-      // Partially done - resume
-      document.getElementById('trainingStart').style.display = 'none';
-      document.getElementById('trainingProgress').style.display = 'block';
-      document.getElementById('trainingQuiz').style.display = 'block';
-      _trainingSession = r;
-      _trainingIdx = r.items.findIndex(function(it) { return it.is_correct < 0; });
-      if (_trainingIdx < 0) _trainingIdx = r.total;
-      if (_trainingIdx >= r.total) {
-        finishTraining();
-      } else {
-        updateTrainingProgress();
-        renderTrainingQuestion(_trainingIdx);
-      }
-      document.getElementById('trainingDate').textContent = '📅 ' + today;
-    }
-  }).catch(function() {
-    // No existing session - show start button
-  });
+  // 渲染模块卡片 + 检查各模块状态
+  renderTrainingModules();
 }
 window.checkTrainingStatus = checkTrainingStatus;
+window.renderTrainingModules = renderTrainingModules;
+window.startDailyTraining = startDailyTraining;
+
+var _currentModule = '';
 
 // ====== 方法掌握度面板 ======
 function renderMethodStats() {
@@ -2146,6 +2322,7 @@ function renderTrainingSessions() {
 }
 
 window.renderTrainingSessions = renderTrainingSessions;
+})();
 var htmlesc = App.htmlesc;
 var sanitizeHTML = App.sanitizeHTML;
 
@@ -2238,6 +2415,9 @@ function navigate(page, keepNav, anchor) {
   }
   S.currentPage = page;
   document.getElementById('sidebar').classList.remove('open');
+  // 切换页面时重置滚动位置，防止内容被"遮挡"
+  var mc = document.getElementById('mainContent');
+  if (mc) mc.scrollTop = 0;
   if (page === 'calendar') { renderCalendar(); }
   if (page === 'records') { renderRecords(); }
   if (page === 'classical' && deckQueue && deckQueue.length > 0) { showCard(); }
@@ -2292,7 +2472,7 @@ S.timerSeconds = 25 * 60; S.timerRunning = false; S.timerInterval = null;
 // ================================================================
 //  ③ DAILY: 每日任务清单 + 进度条 + 庆祝页
 // ================================================================
-const DAILY_TASKS = ['flashcard', 'reading', 'classical', 'language', 'writing'];
+const DAILY_TASKS = ['flashcard', 'modern_reading', 'classical_reading'];
 S.completedTasks = {};
 async function loadCompletedTasks() {
   const today = new Date().toISOString().slice(0, 10);
@@ -2327,13 +2507,33 @@ function saveQuota(el) {
   try { localStorage.setItem('quota_'+key, el.value); } catch(e) {}
   updateTaskCounts();
 }
-function updateTaskCounts() {
-  var counts = {flashcard:193, reading:9, classical:50, language:9, writing:9};
-  for (var t in counts) {
+var _taskCounts = null;
+async function fetchTaskCounts() {
+  if (_taskCounts) return _taskCounts;
+  try {
+    var r = await fetch(API_BASE + '/api/exercises/counts');
+    var data = await r.json();
+    _taskCounts = data.counts || {};
+  } catch(e) { _taskCounts = {}; }
+  return _taskCounts;
+}
+async function updateTaskCounts() {
+  var counts = await fetchTaskCounts();
+  var modMap = {
+    flashcard: 'flashcard', modern_reading: 'modern_reading',
+    classical_reading: 'classical_reading'
+  };
+  // Map frontend task IDs to backend module names
+  var taskTotals = {
+    flashcard: (counts.flashcard||0),
+    modern_reading: (counts.modern_reading||0),
+    classical_reading: (counts.classical_reading||0)
+  };
+  for (var t in taskTotals) {
     var el = document.getElementById('taskCnt-'+t);
     var inp = document.getElementById('quota-'+t);
     var d = inp ? parseInt(inp.value)||1 : (App.DAILY_COUNTS[t]||1);
-    if (el) { el.textContent = ' · ' + d + '/' + counts[t] + '题'; }
+    if (el) { el.textContent = ' · ' + d + '/' + taskTotals[t] + '题'; }
   }
 }
 function renderDailyChecklist() {
@@ -2365,10 +2565,24 @@ function renderDailyChecklist() {
   }
 }
 function startTask(page) {
-  if (page === 'flashcard') navigate('classical', true);
-  else navigate(page, true);
-  // Task completion is tracked by actual activity (rateCard, applyTemplate, etc.)
-  // which call markTaskDone() when the user genuinely completes an exercise.
+  // Map legacy names to training
+  var trainingPage = 'training';
+  if (page === 'reading') { page = 'modern_reading'; }
+  if (page === 'classical') { page = 'classical_reading'; }
+  // All daily tasks go to unified training
+  navigate('training');
+  if (document.getElementById('trainingStart').style.display !== 'none') {
+    startDailyTraining();
+  }
+  // Route all daily tasks to the unified daily training flow
+  navigate('training');
+  // Auto-launch training if not yet started
+  setTimeout(function() {
+    var startBtn = document.getElementById('trainingStart');
+    if (startBtn && startBtn.style.display !== 'none') {
+      if (typeof startDailyTraining === 'function') startDailyTraining();
+    }
+  }, 600);
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -2418,7 +2632,7 @@ function renderPlan() {
 async function renderSelfAssessment() {
   const el = document.getElementById('selfAssessment'); if (!el) return;
   let h = '<div style="overflow-x:auto"><table class="plan-table"><thead><tr><th>评估项</th><th>W1</th><th>W2</th><th>W3</th><th>W4</th></tr></thead><tbody>';
-  ['每天坚持闪卡？', '阅读主动标记？', '作文用上模板？', '语法拆解越来越快？'].forEach((item) => {
+  ['每天坚持闪卡？', '阅读主动标记？', '作文用上模板？', '语言运用越来越快？'].forEach((item) => {
     h += `<tr><td>${item}</td>`;
     for (let w = 1; w <= 4; w++) {
       const r = dbGet("SELECT score FROM assessments WHERE item=? AND week=?", [item, w]);
@@ -2487,7 +2701,7 @@ async function renderMethodPage() {
     items = [
       {id:1,sort_order:1,icon:'🏷️',title:'主动标记阅读法',source:'《如何阅读一本书》分析阅读法',description:'8种符号+批注三层法+三遍阅读流程',target_page:'现代文阅读页',extra_json:'{"steps":["通读5min","细读15min","整合5min"]}'},
       {id:2,sort_order:2,icon:'🃏',title:'费曼闪卡法',source:'间隔重复+费曼学习法',description:'1→2→4→8→16→32→64→128天',target_page:'古诗文阅读页',extra_json:'{"tips":["每日新卡上限20张","答对升级答错重置","间隔≥32天=已掌握"]}'},
-      {id:3,sort_order:3,icon:'🧩',title:'语法成分解构图',source:'结构主义语法',description:'三步法:提主干→配逻辑→画结构',target_page:'语言文字运用页',extra_json:'{}'},
+      {id:3,sort_order:3,icon:'🧩',title:'语言成分解构图',source:'结构主义语言学',description:'三步法:提主干→配逻辑→画结构',target_page:'语言文字运用页',extra_json:'{}'},
       {id:4,sort_order:4,icon:'🗣️',title:'他们说/我说模板',source:'《They Say / I Say》',description:'A引入对立+B推进己方+C升华收束',target_page:'写作表达页',extra_json:'{}'},
       {id:5,sort_order:5,icon:'🕵️\u200d♂️',title:'小说叙事密码拆解',source:'热奈特叙事学',description:'三维度:叙事视角+时空结构+核心物象',target_page:'现代文阅读页',extra_json:'{"steps":["判视角","析时空","解物象"]}'},
       {id:6,sort_order:6,icon:'🎭',title:'修辞效果三步拆解法',source:'高考阅卷标准',description:'明手法(1分)→析具体(2分)→阐效果(2分)',target_page:'语言文字运用页',extra_json:'{"formula":"手法(1分)+具体分析(2分)+效果情感(2分)=5分"}'},
@@ -2583,7 +2797,7 @@ async function renderRecords() {
   if (!el) return;
 
   var MOD_ICON = { modern_reading: '📖', classical_reading: '🏛️', grammar: '✍️', writing: '📝' };
-  var MOD_LABEL = { modern_reading: '现代文', classical_reading: '古诗文', grammar: '语言运用', writing: '写作' };
+  var MOD_LABEL = { modern_reading: '现代文', classical_reading: '古诗文', grammar: '语言文字运用', writing: '写作' };
 
   if (apiAvailable) {
     try {
@@ -2630,7 +2844,7 @@ async function renderRecords() {
       (data.grammar || []).forEach(function(g) {
         allItems.push({
           date: (g.created_at || '').slice(0,10),
-          icon: '✍️', label: '语法 · ' + (g.sentence||'').substring(0,30),
+          icon: '✍️', label: '语言运用 · ' + (g.sentence||'').substring(0,30),
           result: '📝', detail: g.module || ''
         });
       });
@@ -2669,7 +2883,7 @@ async function renderRecords() {
       allLocal.push({ date: (r[0]||'').slice(0,10), icon: '🃏', label: '闪卡·'+r[1], result: r[2]==='easy'?'✅':'🔄' });
     });
     grRows.forEach(function(r) {
-      allLocal.push({ date: (r[0]||'').slice(0,10), icon: '✍️', label: '语法·'+(r[1]||'').substring(0,25), result: '📝' });
+      allLocal.push({ date: (r[0]||'').slice(0,10), icon: '✍️', label: '语言运用·'+(r[1]||'').substring(0,25), result: '📝' });
     });
     tpRows.forEach(function(r) {
       allLocal.push({ date: (r[0]||'').slice(0,10), icon: '📝', label: '模板·'+(r[1]||'').substring(0,20), result: '📝' });
@@ -2857,7 +3071,7 @@ async function executeImport() {
       });
       if (r && r.ok) count++;
     }
-  // 语法练习题库 — CSV 列: question_type, sentence, options_json, answer, explanation, points
+  // 语言运用题库 — CSV 列: question_type, sentence, options_json, answer, explanation, points
   } else if (deck === 'grammar') {
     for (const row of importData) {
       if (row.length < 4) continue;
@@ -3142,13 +3356,14 @@ var _stateVars = ['currentPage','currentDeck','deckIndex','deckQueue','flipped',
 
 // ================================================================
 // ================================================================
+// ================================================================
 //  REFERENCE BOOKS — 参考书模块
 // ================================================================
 var refState = { bookId: null, page: 1, size: 300, totalPages: 1 };
 
 async function renderReferenceBooks() {
   var el = document.getElementById('refBookList');
-  if (!el) return;
+  if (!el) { console.error('refBookList not found'); return; }
   var reader = document.getElementById('refReader');
   if (reader) reader.style.display = 'none';
   el.style.display = '';
@@ -3156,6 +3371,7 @@ async function renderReferenceBooks() {
 
   try {
     var resp = await fetch('/api/books');
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
     var data = await resp.json();
     var books = data.books || [];
     var html = '';
@@ -3164,33 +3380,42 @@ async function renderReferenceBooks() {
       var availAttr = b.exists ? '' : ' style="opacity:0.4"';
       var badgeHtml = b.exists ? '<span class="tag" style="background:var(--primary);color:#fff">可读</span>'
                                : '<span class="tag" style="background:var(--text-light)">缺失</span>';
+      var linesInfo = b.lines ? b.lines.toLocaleString() + ' 行' : (b.format === 'pdf' ? 'PDF' : '');
       html += '<div class="book-row"' + availAttr + ' data-book-id="' + b.id + '" style="cursor:pointer;border-bottom:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;gap:14px;transition:background .2s">'
         + '<div style="font-size:32px">' + b.icon + '</div>'
         + '<div style="flex:1;min-width:0">'
         + '<h4 style="margin:0 0 4px 0">' + b.title + '</h4>'
         + '<div style="font-size:12px;color:var(--text-light)">' + b.author + '</div>'
         + '<div style="font-size:12px;color:var(--text-light);margin-top:2px">' + b.desc + '</div>'
-        + '<div style="font-size:11px;color:var(--text-light)">' + (b.lines ? b.lines.toLocaleString() + ' 行' : 'PDF') + '</div>'
+        + '<div style="font-size:11px;color:var(--text-light)">' + linesInfo + '</div>'
         + '</div>'
         + badgeHtml
         + '</div>';
     }
     el.innerHTML = html;
-    // Use event delegation instead of inline onclick for reliability
-    el.onclick = function(e) {
-      var row = e.target.closest('.book-row');
-      if (row) {
-        var bookId = row.getAttribute('data-book-id');
-        if (bookId) openBookReader(bookId);
-      }
-    };
+    // Event delegation via addEventListener (only once)
+    if (!el._refClickBound) {
+      el.addEventListener('click', function(e) {
+        var row = e.target.closest('.book-row');
+        if (row) {
+          var bookId = row.getAttribute('data-book-id');
+          if (bookId) {
+            // book opened
+            openBookReader(bookId);
+          }
+        }
+      });
+      el._refClickBound = true;
+    }
   } catch (e) {
+    console.error('renderReferenceBooks error:', e);
     el.innerHTML = '<div style="padding:20px;color:red">加载失败: ' + e.message + '</div>';
   }
 }
 window.renderReferenceBooks = renderReferenceBooks;
 
 async function openBookReader(bookId) {
+  // book reader opened
   refState.bookId = bookId;
   refState.page = 1;
   var listEl = document.getElementById('refBookList');
@@ -3203,36 +3428,31 @@ async function openBookReader(bookId) {
   var pdfFrame = document.getElementById('refPdfFrame');
   if (titleEl) titleEl.textContent = '加载中…';
 
+  // Reset visibility defaults
+  if (contentEl) contentEl.style.display = '';
+  if (pdfFrame) { pdfFrame.style.display = 'none'; pdfFrame.removeAttribute('src'); }
+  var paginationEls = document.querySelectorAll('#refPageSize, #refPrevBtn, #refNextBtn, #refPageInfo, #refPageJump');
+  for (var j = 0; j < paginationEls.length; j++) { paginationEls[j].style.display = ''; }
+
   try {
     var resp = await fetch('/api/books');
     var data = await resp.json();
     var book = (data.books || []).find(function(b) { return b.id === bookId; });
-    if (titleEl) titleEl.textContent = book ? book.icon + ' ' + book.title + ' — ' + book.author : bookId;
+    var title = book ? book.icon + ' ' + book.title + ' — ' + book.author : bookId;
+    if (titleEl) titleEl.textContent = title;
+    refState._format = book ? book.format : 'md';
 
-    // PDF: show iframe, hide text reader + pagination
     if (book && book.format === 'pdf') {
       if (contentEl) contentEl.style.display = 'none';
       if (pdfFrame) {
         pdfFrame.style.display = '';
-        pdfFrame.src = '/api/books/' + bookId + '/file';
+        pdfFrame.setAttribute('src', '/api/books/' + bookId + '/file');
       }
-      // Hide pagination controls
-      var paginationEls = document.querySelectorAll('#refPageSize, #refPrevBtn, #refNextBtn, #refPageInfo, #refPageJump');
-      for (var i = 0; i < paginationEls.length; i++) {
-        paginationEls[i].style.display = 'none';
-      }
+      for (var k = 0; k < paginationEls.length; k++) { paginationEls[k].style.display = 'none'; }
       return;
     }
-
-    // Markdown: show text reader
-    if (contentEl) contentEl.style.display = '';
-    if (pdfFrame) { pdfFrame.style.display = 'none'; pdfFrame.src = ''; }
-    // Show pagination controls
-    var paginationEls2 = document.querySelectorAll('#refPageSize, #refPrevBtn, #refNextBtn, #refPageInfo, #refPageJump');
-    for (var j = 0; j < paginationEls2.length; j++) {
-      paginationEls2[j].style.display = '';
-    }
   } catch (e) {
+    console.error('openBookReader metadata error:', e);
     if (titleEl) titleEl.textContent = bookId;
   }
 
@@ -3242,16 +3462,17 @@ window.openBookReader = openBookReader;
 
 async function loadRefPage() {
   if (!refState.bookId) return;
-  var size = refState.size;
   var contentEl = document.getElementById('refReaderContent');
   if (contentEl) contentEl.textContent = '加载中…';
   try {
-    var resp = await fetch('/api/books/' + refState.bookId + '?page=' + refState.page + '&size=' + size);
+    var url = '/api/books/' + refState.bookId + '?page=' + refState.page + '&size=' + refState.size;
+    var resp = await fetch(url);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
     var text = await resp.text();
 
     var totalPages = 1;
     var match = text.match(/第 (\d+)\/(\d+) 页/);
-    if (match) totalPages = parseInt(match[2]);
+    if (match) totalPages = parseInt(match[2]);  // group[2] = total pages
     refState.totalPages = totalPages;
 
     if (contentEl) contentEl.textContent = text;
@@ -3259,25 +3480,26 @@ async function loadRefPage() {
     if (infoEl) infoEl.textContent = '第 ' + refState.page + ' / ' + totalPages + ' 页';
 
     var jumpEl = document.getElementById('refPageJump');
-    if (jumpEl && jumpEl.options.length !== totalPages) {
-      jumpEl.innerHTML = '';
-      for (var i = 1; i <= totalPages; i++) {
-        var opt = document.createElement('option');
-        opt.value = i;
-        opt.textContent = '第 ' + i + ' 页';
-        if (i === refState.page) opt.selected = true;
-        jumpEl.appendChild(opt);
+    if (jumpEl) {
+      if (jumpEl.options.length !== totalPages) {
+        jumpEl.innerHTML = '';
+        for (var i = 1; i <= totalPages; i++) {
+          var opt = document.createElement('option');
+          opt.value = i; opt.textContent = '第 ' + i + ' 页';
+          if (i === refState.page) opt.selected = true;
+          jumpEl.appendChild(opt);
+        }
+      } else {
+        jumpEl.value = refState.page;
       }
-    } else if (jumpEl) {
-      jumpEl.value = refState.page;
     }
 
     var prevBtn = document.getElementById('refPrevBtn');
     var nextBtn = document.getElementById('refNextBtn');
     if (prevBtn) { prevBtn.disabled = refState.page <= 1; prevBtn.style.opacity = refState.page <= 1 ? '0.4' : '1'; }
     if (nextBtn) { nextBtn.disabled = refState.page >= totalPages; nextBtn.style.opacity = refState.page >= totalPages ? '0.4' : '1'; }
-
   } catch (e) {
+    console.error('loadRefPage error:', e);
     if (contentEl) contentEl.textContent = '加载失败: ' + e.message;
   }
 }
@@ -3291,13 +3513,13 @@ function flipRefPage(delta) {
 window.flipRefPage = flipRefPage;
 
 function jumpRefPage(pageStr) {
-  refState.page = parseInt(pageStr);
+  refState.page = parseInt(pageStr) || 1;
   loadRefPage();
 }
 window.jumpRefPage = jumpRefPage;
 
 function changeRefPageSize(newSize) {
-  refState.size = parseInt(newSize);
+  refState.size = parseInt(newSize) || 300;
   refState.page = 1;
   loadRefPage();
 }
@@ -3305,12 +3527,9 @@ window.changeRefPageSize = changeRefPageSize;
 
 function closeBookReader() {
   var pdfFrame = document.getElementById('refPdfFrame');
-  if (pdfFrame) { pdfFrame.src = ''; pdfFrame.style.display = 'none'; }
-  // Reset pagination visibility
+  if (pdfFrame) { pdfFrame.removeAttribute('src'); pdfFrame.style.display = 'none'; }
   var paginationEls = document.querySelectorAll('#refPageSize, #refPrevBtn, #refNextBtn, #refPageInfo, #refPageJump');
-  for (var i = 0; i < paginationEls.length; i++) {
-    paginationEls[i].style.display = '';
-  }
+  for (var i = 0; i < paginationEls.length; i++) { paginationEls[i].style.display = ''; }
   renderReferenceBooks();
 }
 window.closeBookReader = closeBookReader;

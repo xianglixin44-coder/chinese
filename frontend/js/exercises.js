@@ -2,6 +2,7 @@
 // Depends on: config.js, utils.js, data.js, api.js
 // Provides: reading, daily, templates, grammar, syntax, rhetoric, translation, novel analysis
 
+(function(){
 function checkReadingAnswer(qid, chosen, correct) {
   var resultEl = document.getElementById(qid + '-result');
   if (!resultEl) return;
@@ -1190,3 +1191,4 @@ function renderTrainingSessions() {
 }
 
 window.renderTrainingSessions = renderTrainingSessions;
+})();
